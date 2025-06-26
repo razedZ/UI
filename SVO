@@ -1,16 +1,24 @@
+-- PizdecWare UI Library
+-- Version: 1.0
+-- GitHub: https://github.com/yourusername/PizdecWareUI
+
 local PizdecWareUI = {}
 
-function PizdecWareUI:CreateWindow(params)
+function PizdecWareUI:CreateWindow(config)
+    config = config or {}
+    local infoText = config.Info or "MTC V2.0"
+    local fileName = config.FileName or "UI"
+
     local Players = game:GetService("Players")
     local UserInputService = game:GetService("UserInputService")
     local RunService = game:GetService("RunService")
 
     -- Основной UI
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "PWareUI"
+    ScreenGui.Name = fileName
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
-    ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+    ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
     -- Главный контейнер
     local MainFrame = Instance.new("Frame")
@@ -66,6 +74,9 @@ function PizdecWareUI:CreateWindow(params)
     -- Логотип PWare
     local PWareLogo = Instance.new("Frame")
     PWareLogo.Name = "PWareLogo"
+    PWareLogo.Interactable = false
+    PWareLogo.ZIndex = 2
+    PWareLogo.BorderSizePixel = 0
     PWareLogo.BackgroundColor3 = Color3.fromRGB(171, 0, 255)
     PWareLogo.Size = UDim2.new(0, 23, 0, 25)
     PWareLogo.Position = UDim2.new(0.01714, 0, 0.14722, 0)
@@ -75,35 +86,70 @@ function PizdecWareUI:CreateWindow(params)
     PWareLogoCorner.CornerRadius = UDim.new(0, 9)
     PWareLogoCorner.Parent = PWareLogo
 
-    -- Надпись PizdecWare
-    local PizdecWareLabel = Instance.new("TextLabel")
-    PizdecWareLabel.Name = "PizdecWare"
-    PizdecWareLabel.Text = "PizdecWare"
-    PizdecWareLabel.TextColor3 = Color3.fromRGB(171, 0, 255)
-    PizdecWareLabel.BackgroundTransparency = 1
-    PizdecWareLabel.Size = UDim2.new(0, 76, 0, 20)
-    PizdecWareLabel.Position = UDim2.new(0.1, 0, 0.21056, 0)
-    PizdecWareLabel.Font = Enum.Font.SourceSansBold
-    PizdecWareLabel.TextSize = 16
-    PizdecWareLabel.Parent = Header
+    -- Буква P
+    local pLetter = Instance.new("TextLabel")
+    pLetter.Name = "p"
+    pLetter.BorderSizePixel = 0
+    pLetter.TextSize = 20
+    pLetter.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    pLetter.Font = Enum.Font.SourceSans
+    pLetter.TextColor3 = Color3.fromRGB(255, 255, 255)
+    pLetter.BackgroundTransparency = 1
+    pLetter.Size = UDim2.new(0, 201, 0, 48)
+    pLetter.Text = "P"
+    pLetter.Position = UDim2.new(-4.14354, 0, -0.46, 0)
+    pLetter.Parent = PWareLogo
 
-    -- Инфо (центрируется к правой части)
-    local InfoLabel = Instance.new("TextLabel")
-    InfoLabel.Name = "Info"
-    InfoLabel.Text = params.Info or "TOWN V1.0"
-    InfoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    InfoLabel.TextTransparency = 0.5
-    InfoLabel.BackgroundTransparency = 1
-    InfoLabel.Size = UDim2.new(0, 100, 0, 28)
-    InfoLabel.Position = UDim2.new(0.8, 0, 0.09167, 0)
-    InfoLabel.Font = Enum.Font.SourceSansBold
-    InfoLabel.TextSize = 14
-    InfoLabel.TextXAlignment = Enum.TextXAlignment.Right
-    InfoLabel.Parent = Header
+    -- Буква W
+    local wLetter = Instance.new("TextLabel")
+    wLetter.Name = "W"
+    wLetter.BorderSizePixel = 0
+    wLetter.TextSize = 20
+    wLetter.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    wLetter.Font = Enum.Font.SourceSans
+    wLetter.TextColor3 = Color3.fromRGB(0, 0, 0)
+    wLetter.BackgroundTransparency = 1
+    wLetter.Size = UDim2.new(0, 182, 0, 48)
+    wLetter.Text = "W"
+    wLetter.Position = UDim2.new(-3.29, 0, -0.46, 0)
+    wLetter.Parent = PWareLogo
+
+    -- Надпись PizdecWare
+    local PizdecWare = Instance.new("TextLabel")
+    PizdecWare.Name = "PizdecWare"
+    PizdecWare.ZIndex = 2
+    PizdecWare.BorderSizePixel = 0
+    PizdecWare.TextSize = 16
+    PizdecWare.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    PizdecWare.Font = Enum.Font.SourceSansBold
+    PizdecWare.TextColor3 = Color3.fromRGB(171, 0, 255)
+    PizdecWare.BackgroundTransparency = 1
+    PizdecWare.Size = UDim2.new(0, 76, 0, 20)
+    PizdecWare.Text = "PizdecWare"
+    PizdecWare.Position = UDim2.new(0.1, 0, 0.21056, 0)
+    PizdecWare.Parent = Header
+
+    -- Инфо
+    local Info = Instance.new("TextLabel")
+    Info.Name = "Info"
+    Info.ZIndex = 2
+    Info.BorderSizePixel = 0
+    Info.TextSize = 14
+    Info.TextTransparency = 0.5
+    Info.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+    Info.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Info.Font = Enum.Font.SourceSansBold
+    Info.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Info.BackgroundTransparency = 1
+    Info.Size = UDim2.new(0, 47, 0, 28)
+    Info.Text = infoText
+    Info.Position = UDim2.new(0.84857, 0, 0.09167, 0)
+    Info.Parent = Header
 
     -- Зона табов
     local TabZone = Instance.new("Frame")
     TabZone.Name = "TabZone"
+    TabZone.BorderSizePixel = 0
     TabZone.BackgroundTransparency = 1
     TabZone.Size = UDim2.new(0, 338, 0, 16)
     TabZone.Position = UDim2.new(0.019, 0, 0.06917, 0)
@@ -129,24 +175,28 @@ function PizdecWareUI:CreateWindow(params)
     -- Название таба
     local CurrentTabLabel = Instance.new("TextLabel")
     CurrentTabLabel.Name = "MainTab"
-    CurrentTabLabel.Text = "Main"
+    CurrentTabLabel.ZIndex = 2
+    CurrentTabLabel.BorderSizePixel = 0
+    CurrentTabLabel.TextSize = 15
+    CurrentTabLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    CurrentTabLabel.Font = Enum.Font.SourceSansBold
     CurrentTabLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     CurrentTabLabel.BackgroundTransparency = 1
     CurrentTabLabel.Size = UDim2.new(0, 41, 0, 24)
+    CurrentTabLabel.Text = "Main"
     CurrentTabLabel.Position = UDim2.new(0, 0, -0.04715, 0)
-    CurrentTabLabel.Font = Enum.Font.SourceSansBold
-    CurrentTabLabel.TextSize = 15
     CurrentTabLabel.Parent = ElementContainer
 
     -- Таблица для управления UI
     local UI = {
         Tabs = {},
         ActiveTab = nil,
-        SectionPadding = 15,
-        ElementPadding = 10,
-        HeaderHeight = 30,
-        ElementHeight = 20,
-        WindowName = params.FileName or "UI"
+        SectionPadding = 15,  -- Отступ между секциями
+        ElementPadding = 10,  -- Отступ между элементами
+        HeaderHeight = 30,    -- Фиксированная высота заголовка секции
+        ElementHeight = 20,   -- Высота каждого элемента
+        ScreenGui = ScreenGui,
+        MainFrame = MainFrame
     }
 
     -- Создание нового таба
@@ -221,7 +271,7 @@ function PizdecWareUI:CreateWindow(params)
         local corner = Instance.new("UICorner")
         corner.Parent = section
 
-        -- Заголовок секции
+        -- Заголовок секции (фиксированная позиция)
         local nameLabel = Instance.new("TextLabel")
         nameLabel.Name = "SectionName"
         nameLabel.Text = name
@@ -234,7 +284,7 @@ function PizdecWareUI:CreateWindow(params)
         nameLabel.TextXAlignment = Enum.TextXAlignment.Left
         nameLabel.Parent = section
 
-        -- Контейнер для элементов
+        -- Контейнер для элементов (располагается под заголовком)
         local elementsContainer = Instance.new("Frame")
         elementsContainer.Name = "ElementsContainer"
         elementsContainer.BackgroundTransparency = 1
@@ -273,7 +323,7 @@ function PizdecWareUI:CreateWindow(params)
         end
     end
 
-    -- Обновление высоты секции
+    -- Обновление высоты секции при добавлении элементов
     function UI.UpdateSectionHeight(section)
         local contentHeight = section.ElementCount * (UI.ElementHeight + UI.ElementPadding)
         section.Frame.Size = UDim2.new(0, 160, 0, UI.HeaderHeight + contentHeight)
@@ -424,16 +474,18 @@ function PizdecWareUI:CreateWindow(params)
         stroke.Color = Color3.fromRGB(26, 25, 26)
         stroke.Parent = input
 
+        -- Обработчик изменений текста (автоматическое сохранение)
         local lastText = ""
         input:GetPropertyChangedSignal("Text"):Connect(function()
             if input.Text ~= lastText then
                 lastText = input.Text
                 if params.Callback then 
-                    params.Callback(input.Text, false)
+                    params.Callback(input.Text, false) -- false - не по Enter
                 end
             end
         end)
 
+        -- Обработчик потери фокуса (на случай, если нужно дополнительное действие)
         input.FocusLost:Connect(function(enterPressed)
             if input.Text == "" then
                 input.Text = params.Placeholder or "Input..."
@@ -567,7 +619,7 @@ function PizdecWareUI:CreateWindow(params)
         stroke.Color = Color3.fromRGB(26, 25, 26)
         stroke.Parent = mainButton
 
-        -- Создаем отдельный ScreenGui для dropdown options
+        -- Создаем отдельный ScreenGui для dropdown options, чтобы он был поверх всего
         local dropdownGui = Instance.new("ScreenGui")
         dropdownGui.Name = "DropdownGui"
         dropdownGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -777,7 +829,9 @@ function PizdecWareUI:CreateWindow(params)
             end
         end)
 
+        -- Инициализация
         updateSlider(currentValue)
+
         section.ElementCount = section.ElementCount + 1
         UI.UpdateSectionHeight(section)
         
