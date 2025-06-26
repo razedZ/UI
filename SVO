@@ -87,6 +87,33 @@ function PizdecWareUI:CreateWindow(config)
     local PWareLogoCorner = Instance.new("UICorner")
     PWareLogoCorner.CornerRadius = UDim.new(0, 9)
     PWareLogoCorner.Parent = PWareLogo
+    
+    local pLetter = Instance.new("TextLabel")
+    pLetter.Name = "p"
+    pLetter.BorderSizePixel = 0
+    pLetter.TextSize = 20
+    pLetter.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    pLetter.Font = Enum.Font.SourceSans
+    pLetter.TextColor3 = Color3.fromRGB(255, 255, 255)
+    pLetter.BackgroundTransparency = 1
+    pLetter.Size = UDim2.new(0, 201, 0, 48)
+    pLetter.Text = "P"
+    pLetter.Position = UDim2.new(-4.14354, 0, -0.46, 0)
+    pLetter.Parent = PWareLogo
+    
+    -- Буква W
+    local wLetter = Instance.new("TextLabel")
+    wLetter.Name = "W"
+    wLetter.BorderSizePixel = 0
+    wLetter.TextSize = 20
+    wLetter.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    wLetter.Font = Enum.Font.SourceSans
+    wLetter.TextColor3 = Color3.fromRGB(0, 0, 0)
+    wLetter.BackgroundTransparency = 1
+    wLetter.Size = UDim2.new(0, 182, 0, 48)
+    wLetter.Text = "W"
+    wLetter.Position = UDim2.new(-3.29, 0, -0.46, 0)
+    wLetter.Parent = PWareLogo
 
     -- Title
     local PizdecWare = Instance.new("TextLabel")
