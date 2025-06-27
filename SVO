@@ -1,5 +1,5 @@
--- PizdecWare UI Library v3.0
--- Complete Fixed Version
+-- PizdecWare UI Library v3.2
+-- Fixed Tab Spacing (7px between tabs)
 
 local PizdecWareUI = {}
 
@@ -87,33 +87,6 @@ function PizdecWareUI:CreateWindow(config)
     local PWareLogoCorner = Instance.new("UICorner")
     PWareLogoCorner.CornerRadius = UDim.new(0, 9)
     PWareLogoCorner.Parent = PWareLogo
-    
-    local pLetter = Instance.new("TextLabel")
-    pLetter.Name = "p"
-    pLetter.BorderSizePixel = 0
-    pLetter.TextSize = 20
-    pLetter.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    pLetter.Font = Enum.Font.SourceSans
-    pLetter.TextColor3 = Color3.fromRGB(255, 255, 255)
-    pLetter.BackgroundTransparency = 1
-    pLetter.Size = UDim2.new(0, 201, 0, 48)
-    pLetter.Text = "P"
-    pLetter.Position = UDim2.new(-4.14354, 0, -0.46, 0)
-    pLetter.Parent = PWareLogo
-    
-    -- Буква W
-    local wLetter = Instance.new("TextLabel")
-    wLetter.Name = "W"
-    wLetter.BorderSizePixel = 0
-    wLetter.TextSize = 20
-    wLetter.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    wLetter.Font = Enum.Font.SourceSans
-    wLetter.TextColor3 = Color3.fromRGB(0, 0, 0)
-    wLetter.BackgroundTransparency = 1
-    wLetter.Size = UDim2.new(0, 182, 0, 48)
-    wLetter.Text = "W"
-    wLetter.Position = UDim2.new(-3.29, 0, -0.46, 0)
-    wLetter.Parent = PWareLogo
 
     -- Title
     local PizdecWare = Instance.new("TextLabel")
@@ -127,7 +100,7 @@ function PizdecWareUI:CreateWindow(config)
     PizdecWare.BackgroundTransparency = 1
     PizdecWare.Parent = Header
 
-    -- Info Label (Fixed Right Alignment)
+    -- Info Label
     local Info = Instance.new("TextLabel")
     Info.Name = "Info"
     Info.Text = infoText
@@ -159,7 +132,7 @@ function PizdecWareUI:CreateWindow(config)
     ElementContainer.BorderColor3 = Color3.fromRGB(26, 25, 26)
     ElementContainer.Parent = MainFrame
 
-    -- Current Tab Label (Fixed Boundaries)
+    -- Current Tab Label
     local CurrentTabLabel = Instance.new("TextLabel")
     CurrentTabLabel.Name = "MainTab"
     CurrentTabLabel.Text = "Main"
@@ -182,23 +155,29 @@ function PizdecWareUI:CreateWindow(config)
         HeaderHeight = 30,
         ElementHeight = 20,
         ScreenGui = ScreenGui,
-        MainFrame = MainFrame
+        MainFrame = MainFrame,
+        LastTabPosition = 0 -- Добавлено для отслеживания позиции
     }
 
-    -- Tab Management
+    -- Tab Management (FIXED - 7px spacing)
     function UI.AddTab(name)
         local tabButton = Instance.new("TextButton")
         tabButton.Name = name
         tabButton.Text = name
         tabButton.Size = UDim2.new(0, 38 + (string.len(name) > 4 and (string.len(name)-4)*3 or 0), 0, 16)
+        
+        -- FIXED POSITIONING (используем LastTabPosition вместо AbsolutePosition)
         tabButton.Position = #UI.Tabs == 0 and UDim2.new(0, 0, 0, 0) or 
-                           UDim2.new(0, (UI.Tabs[#UI.Tabs].Button.AbsolutePosition.X + 
-                           UI.Tabs[#UI.Tabs].Button.AbsoluteSize.X + 5), 0, 0)
+                           UDim2.new(0, UI.LastTabPosition + 7, 0, 0)
+        
         tabButton.BackgroundTransparency = 1
         tabButton.TextColor3 = Color3.fromRGB(171, 0, 255)
         tabButton.Font = Enum.Font.SourceSansBold
         tabButton.TextSize = 14
         tabButton.Parent = TabZone
+
+        -- Обновляем позицию для следующего таба
+        UI.LastTabPosition = UI.LastTabPosition + tabButton.Size.X.Offset + 7
 
         local container = Instance.new("Frame")
         container.Name = name.."Container"
@@ -326,7 +305,7 @@ function PizdecWareUI:CreateWindow(config)
 
         local button = Instance.new("TextButton")
         button.Name = "Button_"..params.Text
-        button.Text = tostring(params.Text) -- Guaranteed string conversion
+        button.Text = tostring(params.Text)
         button.Size = UDim2.new(1, 0, 0, UI.ElementHeight)
         button.Position = UDim2.new(0, 0, 0, yPos)
         button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
