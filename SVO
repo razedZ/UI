@@ -197,7 +197,7 @@ function PizdecWareUI:CreateWindow(config)
         
         -- FIXED POSITIONING (используем LastTabPosition вместо AbsolutePosition)
         tabButton.Position = #UI.Tabs == 0 and UDim2.new(0, 0, 0, 0) or 
-                           UDim2.new(0, UI.LastTabPosition + 4, 0, 0)
+                           UDim2.new(0, UI.LastTabPosition + 2, 0, 0)
         
         tabButton.BackgroundTransparency = 1
         tabButton.TextColor3 = Color3.fromRGB(171, 0, 255)
@@ -206,7 +206,7 @@ function PizdecWareUI:CreateWindow(config)
         tabButton.Parent = TabZone
 
         -- Обновляем позицию для следующего таба
-        UI.LastTabPosition = UI.LastTabPosition + tabButton.Size.X.Offset + 4
+        UI.LastTabPosition = UI.LastTabPosition + tabButton.Size.X.Offset + 2
 
         local container = Instance.new("Frame")
         container.Name = name.."Container"
