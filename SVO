@@ -1,5 +1,5 @@
 -- PizdecWare UI Library v3.2
--- Fixed Tab Spacing (dynamic spacing based on text length)
+-- Fixed Tab Spacing (distance calculated from text edges)
 
 local PizdecWareUI = {}
 
@@ -12,7 +12,6 @@ function PizdecWareUI:CreateWindow(config)
     local Players = game:GetService("Players")
     local UserInputService = game:GetService("UserInputService")
     local RunService = game:GetService("RunService")
-    local TextService = game:GetService("TextService")
 
     -- Main UI Container
     local ScreenGui = Instance.new("ScreenGui")
@@ -89,7 +88,7 @@ function PizdecWareUI:CreateWindow(config)
     PWareLogoCorner.CornerRadius = UDim.new(0, 9)
     PWareLogoCorner.Parent = PWareLogo
 
-    -- Буква P (точно как в исходном коде)
+    -- Буква P
     local pLetter = Instance.new("TextLabel")
     pLetter.Name = "p"
     pLetter.BorderSizePixel = 0
@@ -103,7 +102,7 @@ function PizdecWareUI:CreateWindow(config)
     pLetter.Position = UDim2.new(-4.14354, 0, -0.46, 0)
     pLetter.Parent = PWareLogo
 
-    -- Буква W (точно как в исходном коде)
+    -- Буква W
     local wLetter = Instance.new("TextLabel")
     wLetter.Name = "W"
     wLetter.BorderSizePixel = 0
@@ -184,22 +183,11 @@ function PizdecWareUI:CreateWindow(config)
         HeaderHeight = 30,
         ElementHeight = 20,
         ScreenGui = ScreenGui,
-        MainFrame = MainFrame
+        MainFrame = MainFrame,
+        LastTabEnd = 0 -- Точка окончания последней вкладки
     }
 
-    -- Helper function to calculate text width
-    function UI:CalculateTextWidth(text, font, size)
-        local textParams = Instance.new("GetTextBoundsParams")
-        textParams.Text = text
-        textParams.Font = font
-        textParams.Size = size
-        textParams.Width = 10000
-        
-        local bounds = TextService:GetTextBoundsAsync(textParams)
-        return bounds.X
-    end
-
-    -- Tab Management (Fixed spacing based on text length)
+    -- Tab Management (Fixed spacing between text edges)
     function UI.AddTab(name)
         local tabButton = Instance.new("TextButton")
         tabButton.Name = name
@@ -207,22 +195,20 @@ function PizdecWareUI:CreateWindow(config)
         tabButton.Font = Enum.Font.SourceSansBold
         tabButton.TextSize = 14
         
-        -- Calculate required width based on text length
-        local textWidth = UI:CalculateTextWidth(name, Enum.Font.SourceSansBold, 14)
-        tabButton.Size = UDim2.new(0, textWidth + 10, 0, 16) -- Add some padding
+        -- Фиксированная ширина с небольшим отступом
+        local textPadding = 10 -- Отступ вокруг текста
+        local textWidth = string.len(name) * 7 -- Приблизительная ширина текста
+        tabButton.Size = UDim2.new(0, textWidth + textPadding, 0, 16)
         
-        -- Position the tab based on previous tabs
-        if #UI.Tabs == 0 then
-            tabButton.Position = UDim2.new(0, 0, 0, 0)
-        else
-            local lastTab = UI.Tabs[#UI.Tabs]
-            local lastTabEnd = lastTab.Button.Position.X.Offset + lastTab.Button.Size.X.Offset
-            tabButton.Position = UDim2.new(0, lastTabEnd + 2, 0, 0) -- 2px spacing between tabs
-        end
+        -- Позиционируем вкладку с учетом окончания предыдущей
+        tabButton.Position = UDim2.new(0, UI.LastTabEnd + 2, 0, 0) -- 2px отступ от конца текста предыдущей вкладки
         
         tabButton.BackgroundTransparency = 1
         tabButton.TextColor3 = Color3.fromRGB(171, 0, 255)
         tabButton.Parent = TabZone
+
+        -- Обновляем точку окончания для следующей вкладки
+        UI.LastTabEnd = UI.LastTabEnd + tabButton.Size.X.Offset + 2
 
         local container = Instance.new("Frame")
         container.Name = name.."Container"
