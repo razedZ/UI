@@ -1,5 +1,8 @@
--- PizdecWare UI Library v3.3
--- Added horizontal scrolling for tabs
+-- PizdecWare UI Library v3.4
+-- Changes:
+-- 1. UI теперь создается в CoreGui вместо PlayerGui
+-- 2. Дропдаун ограничен 5 видимыми ячейками с возможностью прокрутки
+-- 3. Улучшена обработка больших списков в дропдауне
 
 local PizdecWareUI = {}
 
@@ -9,16 +12,16 @@ function PizdecWareUI:CreateWindow(config)
     local fileName = config.FileName or "PWareUI"
 
     -- Services
-    local Players = game:GetService("Players")
     local UserInputService = game:GetService("UserInputService")
     local RunService = game:GetService("RunService")
+    local CoreGui = game:GetService("CoreGui")
 
     -- Main UI Container
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = fileName
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
-    ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+    ScreenGui.Parent = CoreGui
 
     -- Main Window Frame
     local MainFrame = Instance.new("Frame")
@@ -87,34 +90,6 @@ function PizdecWareUI:CreateWindow(config)
     local PWareLogoCorner = Instance.new("UICorner")
     PWareLogoCorner.CornerRadius = UDim.new(0, 9)
     PWareLogoCorner.Parent = PWareLogo
-
-    -- Буква P
-    local pLetter = Instance.new("TextLabel")
-    pLetter.Name = "p"
-    pLetter.BorderSizePixel = 0
-    pLetter.TextSize = 20
-    pLetter.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    pLetter.Font = Enum.Font.SourceSans
-    pLetter.TextColor3 = Color3.fromRGB(255, 255, 255)
-    pLetter.BackgroundTransparency = 1
-    pLetter.Size = UDim2.new(0, 201, 0, 48)
-    pLetter.Text = "P"
-    pLetter.Position = UDim2.new(-4.14354, 0, -0.46, 0)
-    pLetter.Parent = PWareLogo
-
-    -- Буква W
-    local wLetter = Instance.new("TextLabel")
-    wLetter.Name = "W"
-    wLetter.BorderSizePixel = 0
-    wLetter.TextSize = 20
-    wLetter.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    wLetter.Font = Enum.Font.SourceSans
-    wLetter.TextColor3 = Color3.fromRGB(0, 0, 0)
-    wLetter.BackgroundTransparency = 1
-    wLetter.Size = UDim2.new(0, 182, 0, 48)
-    wLetter.Text = "W"
-    wLetter.Position = UDim2.new(-3.29, 0, -0.46, 0)
-    wLetter.Parent = PWareLogo
 
     -- Title
     local PizdecWare = Instance.new("TextLabel")
@@ -312,7 +287,6 @@ function PizdecWareUI:CreateWindow(config)
         end
     end)
 
-    -- [Остальной код остается без изменений...]
     -- Section Management
     function UI.AddSection(params)
         local tab = params.Tab
@@ -368,7 +342,6 @@ function PizdecWareUI:CreateWindow(config)
         return sectionData
     end
 
-    -- [Остальные функции остаются без изменений...]
     -- Position Updating
     function UI.UpdateSectionsPositions(tab)
         local leftY, rightY = UI.SectionPadding, UI.SectionPadding
@@ -650,7 +623,7 @@ function PizdecWareUI:CreateWindow(config)
         }
     end
 
-    -- Dropdown
+    -- Dropdown with scrollable list (max 5 visible items)
     function UI.AddDropdown(params)
         local section = params.Section
         local yPos = (section.ElementCount * (UI.ElementHeight + UI.ElementPadding))
@@ -703,10 +676,20 @@ function PizdecWareUI:CreateWindow(config)
         optionsFrame.Position = UDim2.new(0, mainButton.AbsolutePosition.X, 0, mainButton.AbsolutePosition.Y + mainButton.AbsoluteSize.Y)
         optionsFrame.Visible = false
         optionsFrame.ZIndex = 100
+        optionsFrame.ClipsDescendants = true
         optionsFrame.Parent = dropdownGui
 
+        local optionsScrollingFrame = Instance.new("ScrollingFrame")
+        optionsScrollingFrame.Name = "ScrollingFrame"
+        optionsScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+        optionsScrollingFrame.BackgroundTransparency = 1
+        optionsScrollingFrame.ScrollBarThickness = 4
+        optionsScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(171, 0, 255)
+        optionsScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+        optionsScrollingFrame.Parent = optionsFrame
+
         local optionsListLayout = Instance.new("UIListLayout")
-        optionsListLayout.Parent = optionsFrame
+        optionsListLayout.Parent = optionsScrollingFrame
 
         local optionsStroke = Instance.new("UIStroke")
         optionsStroke.Color = Color3.fromRGB(26, 25, 26)
@@ -725,8 +708,9 @@ function PizdecWareUI:CreateWindow(config)
             
             if isOpen then
                 updatePosition()
-                local optionCount = #params.Options
+                local optionCount = math.min(#params.Options, 5) -- Max 5 visible items
                 optionsFrame.Size = UDim2.new(0, 70, 0, optionCount * UI.ElementHeight)
+                optionsScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, #params.Options * UI.ElementHeight)
             end
         end
 
@@ -747,7 +731,7 @@ function PizdecWareUI:CreateWindow(config)
             optionButton.Font = Enum.Font.SourceSans
             optionButton.TextSize = 15
             optionButton.ZIndex = 101
-            optionButton.Parent = optionsFrame
+            optionButton.Parent = optionsScrollingFrame
 
             local optionStroke = Instance.new("UIStroke")
             optionStroke.Color = Color3.fromRGB(26, 25, 26)
