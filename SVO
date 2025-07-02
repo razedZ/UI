@@ -1,9 +1,3 @@
--- PizdecWare UI Library v3.4
--- Changes:
--- 1. UI теперь создается в CoreGui вместо PlayerGui
--- 2. Дропдаун ограничен 5 видимыми ячейками с возможностью прокрутки
--- 3. Улучшена обработка больших списков в дропдауне
-
 local PizdecWareUI = {}
 
 function PizdecWareUI:CreateWindow(config)
