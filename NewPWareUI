@@ -122,13 +122,19 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local UICorner_2 = Instance.new("UICorner")
     UICorner_2.Parent = ElementContainer
 
-    -- Animation for fading in
+    -- Modified fadeIn function to preserve background transparency for text and images
     local function fadeIn(element)
         if not TweenService then return end
         local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+        
         if element:IsA("TextLabel") or element:IsA("TextButton") then
             local tween = TweenService:Create(element, tweenInfo, {
                 TextTransparency = element.TextTransparency == 1 and 0 or element.TextTransparency
+            })
+            tween:Play()
+        elseif element:IsA("ImageLabel") or element:IsA("ImageButton") then
+            local tween = TweenService:Create(element, tweenInfo, {
+                ImageTransparency = element.ImageTransparency == 1 and 0 or element.ImageTransparency
             })
             tween:Play()
         else
@@ -202,7 +208,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     ImageButton.Position = UDim2.new(0.949206471, 0, 0.0173913036, 0)
     ImageButton.Size = UDim2.new(0, 25, 0, 25)
     ImageButton.Image = "rbxassetid://12653789995"
-    ImageButton.BackgroundTransparency = 1
+    ImageButton.ImageTransparency = 1
     fadeIn(ImageButton)
 
     -- Tab selection logic
