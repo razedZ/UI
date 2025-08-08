@@ -122,11 +122,10 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local UICorner_2 = Instance.new("UICorner")
     UICorner_2.Parent = ElementContainer
 
-    -- Modified fadeIn function to preserve transparency
+    -- Animation for fading in
     local function fadeIn(element)
         if not TweenService then return end
         local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-        
         if element:IsA("TextLabel") or element:IsA("TextButton") then
             local tween = TweenService:Create(element, tweenInfo, {
                 TextTransparency = element.TextTransparency == 1 and 0 or element.TextTransparency
@@ -185,14 +184,14 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
     local SelectedTab = Instance.new("Frame")
     SelectedTab.Name = "SelectedTab"
-    SelectedTab.Parent = MainFrame
+    SelectedTab.Parent = TabZone
     SelectedTab.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
     SelectedTab.BackgroundTransparency = 0.900
     SelectedTab.BorderColor3 = Color3.fromRGB(0, 0, 0)
     SelectedTab.BorderSizePixel = 0
-    SelectedTab.Position = UDim2.new(0, 0, 0.166353564, 0)
+    SelectedTab.Position = UDim2.new(0, 0, 0.0501253121, 0)
     SelectedTab.Size = UDim2.new(0, 163, 0, 30)
-    SelectedTab.ZIndex = 4
+    SelectedTab.ZIndex = 2
     fadeIn(SelectedTab)
 
     local ImageButton = Instance.new("ImageButton")
@@ -230,7 +229,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
                 currentTab.TextColor3 = Color3.fromRGB(147, 152, 156)
             end
 
-            local newPosition = UDim2.new(0, 0, 0.166353564 + (0.0902255669 * (tab.LayoutOrder - 1)), 0)
+            local newPosition = UDim2.new(0, 0, tab.Position.Y.Scale, 0)
             local moveTween = TweenService:Create(SelectedTab, tweenInfo, { Position = newPosition })
             moveTween:Play()
 
@@ -262,7 +261,6 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         tab.TextXAlignment = Enum.TextXAlignment.Left
         tab.TextTransparency = 1
         tab.ZIndex = 5
-        tab.LayoutOrder = tabCount + 1
         fadeIn(tab)
 
         local image = Instance.new("ImageLabel")
