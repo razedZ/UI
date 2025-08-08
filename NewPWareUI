@@ -1,8 +1,8 @@
-local HttpService = game:GetService("HttpService") or nil -- Проверка на наличие сервиса
-local TweenService = game:GetService("TweenService") or nil -- Проверка на наличие сервиса
+local success, HttpService = pcall(game.GetService, game, "HttpService")
+local success2, TweenService = pcall(game.GetService, game, "TweenService")
 
-if not HttpService or not TweenService then
-    warn("Required services (HttpService or TweenService) are not available.")
+if not (success and success2) or not HttpService or not TweenService then
+    warn("Required services (HttpService or TweenService) are not available. Script will not function fully.")
     return
 end
 
@@ -11,6 +11,7 @@ PizdecWare.__index = PizdecWare
 
 function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local ScreenGui = Instance.new("ScreenGui")
+    if not ScreenGui then return nil end
     ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Name = guiName
@@ -45,9 +46,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local W = Instance.new("TextLabel")
     W.Name = "W"
     W.Parent = Logo
-    W.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    W.BackgroundTransparency = 1.000
-    W.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    W.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Убрал белый фон
+    W.BackgroundTransparency = 1
+    W.BorderColor3 = Color3.fromRGB(0, 0, 0)
     W.BorderSizePixel = 0
     W.Position = UDim2.new(0.28230226, 0, 0.75999999, 0)
     W.Size = UDim2.new(0, 23, 0, -14)
@@ -61,9 +62,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local PizdecWareLabel = Instance.new("TextLabel")
     PizdecWareLabel.Name = "PizdecWare"
     PizdecWareLabel.Parent = Logo
-    PizdecWareLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    PizdecWareLabel.BackgroundTransparency = 1.000
-    PizdecWareLabel.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    PizdecWareLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Убрал белый фон
+    PizdecWareLabel.BackgroundTransparency = 1
+    PizdecWareLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
     PizdecWareLabel.BorderSizePixel = 0
     PizdecWareLabel.Position = UDim2.new(2.21097422, 0, 1.29638064, 0)
     PizdecWareLabel.Size = UDim2.new(0, 60, 0, -41)
@@ -77,9 +78,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local P = Instance.new("TextLabel")
     P.Name = "P"
     P.Parent = Logo
-    P.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    P.BackgroundTransparency = 1.000
-    P.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    P.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Убрал белый фон
+    P.BackgroundTransparency = 1
+    P.BorderColor3 = Color3.fromRGB(0, 0, 0)
     P.BorderSizePixel = 0
     P.Position = UDim2.new(-0.304138184, 0, 0.75999999, 0)
     P.Size = UDim2.new(0, 27, 0, -14)
@@ -93,8 +94,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local Info = Instance.new("TextLabel")
     Info.Name = "Info"
     Info.Parent = MainFrame
-    Info.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Info.BackgroundTransparency = 1.000
+    Info.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Убрал белый фон
+    Info.BackgroundTransparency = 1
     Info.BorderColor3 = Color3.fromRGB(0, 0, 0)
     Info.BorderSizePixel = 0
     Info.Position = UDim2.new(0.0543069504, 0, 0.0833290443, 0)
@@ -155,8 +156,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local TabZone = Instance.new("Frame")
     TabZone.Name = "TabZone"
     TabZone.Parent = MainFrame
-    TabZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TabZone.BackgroundTransparency = 1.000 -- Убрал белый фон
+    TabZone.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Убрал белый фон
+    TabZone.BackgroundTransparency = 1
     TabZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
     TabZone.BorderSizePixel = 0
     TabZone.Position = UDim2.new(0, 0, 0.116228454, 0)
@@ -166,8 +167,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local Tabs = Instance.new("TextLabel")
     Tabs.Name = "Tabs"
     Tabs.Parent = TabZone
-    Tabs.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Tabs.BackgroundTransparency = 1.000
+    Tabs.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Убрал белый фон
+    Tabs.BackgroundTransparency = 1
     Tabs.BorderColor3 = Color3.fromRGB(0, 0, 0)
     Tabs.BorderSizePixel = 0
     Tabs.Size = UDim2.new(0, 50, 0, 20)
@@ -193,8 +194,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
     local ImageButton = Instance.new("ImageButton")
     ImageButton.Parent = MainFrame
-    ImageButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    ImageButton.BackgroundTransparency = 1.000
+    ImageButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Убрал белый фон
+    ImageButton.BackgroundTransparency = 1
     ImageButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
     ImageButton.BorderSizePixel = 0
     ImageButton.Position = UDim2.new(0.949206471, 0, 0.0173913036, 0)
@@ -218,12 +219,13 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
             if currentTab then
                 local otherTween = TweenService:Create(currentTab, tweenInfo, { TextTransparency = 1 })
                 otherTween:Play()
-                local otherImageTween = TweenService:Create(currentTab:FindFirstChildOfClass("ImageLabel"), tweenInfo, { ImageTransparency = 1 })
-                otherImageTween:Play()
-                currentTab.TextColor3 = Color3.fromRGB(147, 152, 156)
-                if currentTab:FindFirstChildOfClass("ImageLabel") then
-                    currentTab:FindFirstChildOfClass("ImageLabel").ImageColor3 = Color3.fromRGB(150, 17, 255)
+                local otherImage = currentTab:FindFirstChild("TabImage")
+                if otherImage then
+                    local otherImageTween = TweenService:Create(otherImage, tweenInfo, { ImageTransparency = 1 })
+                    otherImageTween:Play()
+                    otherImage.ImageColor3 = Color3.fromRGB(150, 17, 255)
                 end
+                currentTab.TextColor3 = Color3.fromRGB(147, 152, 156)
             end
 
             local newPosition = UDim2.new(0, 0, tab.Position.Y.Scale + (tab.Position.Y.Offset / MainFrame.AbsoluteSize.Y), 0)
@@ -242,15 +244,17 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
                 infoText = infoText
             }
             local json = HttpService:JSONEncode(settings)
-            writefile(saveFileName, json)
+            pcall(function() writefile(saveFileName, json) end) -- Добавлена защита от ошибок
         end
     end
 
     local function loadSettings()
         if HttpService and isfile(saveFileName) then
-            local json = readfile(saveFileName)
-            local settings = HttpService:JSONDecode(json)
-            Info.Text = settings.infoText
+            local success, result = pcall(function() return readfile(saveFileName) end)
+            if success then
+                local settings = HttpService:JSONDecode(result)
+                Info.Text = settings.infoText
+            end
         end
     end
 
@@ -268,8 +272,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         local tab = Instance.new("TextLabel")
         tab.Name = visualName
         tab.Parent = TabZone
-        tab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        tab.BackgroundTransparency = 1.000
+        tab.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Убрал белый фон
+        tab.BackgroundTransparency = 1
         tab.BorderColor3 = Color3.fromRGB(0, 0, 0)
         tab.BorderSizePixel = 0
         tab.Position = newPosition
@@ -286,8 +290,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         local image = Instance.new("ImageLabel")
         image.Name = "TabImage"
         image.Parent = tab
-        image.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        image.BackgroundTransparency = 1.000
+        image.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Убрал белый фон
+        image.BackgroundTransparency = 1
         image.BorderColor3 = Color3.fromRGB(0, 0, 0)
         image.BorderSizePixel = 0
         image.Position = UDim2.new(-0.364666939, 0, 0.036599841, 0)
