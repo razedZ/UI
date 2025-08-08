@@ -1,1 +1,250 @@
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
 
+local PizdecWare = {}
+PizdecWare.__index = PizdecWare
+
+function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.Name = guiName
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = ScreenGui
+    MainFrame.BackgroundColor3 = Color3.fromRGB(19, 21, 25)
+    MainFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Position = UDim2.new(0.0323343836, 0, 0.194723621, 0)
+    MainFrame.Size = UDim2.new(0, 630, 0, 460)
+    MainFrame.BackgroundTransparency = 1
+
+    local UICorner = Instance.new("UICorner")
+    UICorner.Parent = MainFrame
+
+    local Logo = Instance.new("Frame")
+    Logo.Name = "Logo"
+    Logo.Parent = MainFrame
+    Logo.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+    Logo.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Logo.BorderSizePixel = 0
+    Logo.Position = UDim2.new(0.0215927847, 0, 0.0306019653, 0)
+    Logo.Size = UDim2.new(0, 25, 0, 25)
+    Logo.ZIndex = 3
+    Logo.BackgroundTransparency = 1
+
+    local UICorner_17 = Instance.new("UICorner")
+    UICorner_17.Parent = Logo
+
+    local W = Instance.new("TextLabel")
+    W.Name = "W"
+    W.Parent = Logo
+    W.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    W.BackgroundTransparency = 1.000
+    W.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    W.BorderSizePixel = 0
+    W.Position = UDim2.new(0.28230226, 0, 0.75999999, 0)
+    W.Size = UDim2.new(0, 23, 0, -14)
+    W.ZIndex = 4
+    W.Font = Enum.Font.SourceSansBold
+    W.Text = "W"
+    W.TextColor3 = Color3.fromRGB(0, 0, 0)
+    W.TextSize = 20.000
+    W.TextTransparency = 1
+
+    local PizdecWareLabel = Instance.new("TextLabel")
+    PizdecWareLabel.Name = "PizdecWare"
+    PizdecWareLabel.Parent = Logo
+    PizdecWareLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    PizdecWareLabel.BackgroundTransparency = 1.000
+    PizdecWareLabel.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    PizdecWareLabel.BorderSizePixel = 0
+    PizdecWareLabel.Position = UDim2.new(2.21097422, 0, 1.29638064, 0)
+    PizdecWareLabel.Size = UDim2.new(0, 60, 0, -41)
+    PizdecWareLabel.ZIndex = 4
+    PizdecWareLabel.Font = Enum.Font.SourceSansBold
+    PizdecWareLabel.Text = "PizdecWare"
+    PizdecWareLabel.TextColor3 = Color3.fromRGB(150, 17, 255)
+    PizdecWareLabel.TextSize = 25.000
+    PizdecWareLabel.TextTransparency = 1
+
+    local P = Instance.new("TextLabel")
+    P.Name = "P"
+    P.Parent = Logo
+    P.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    P.BackgroundTransparency = 1.000
+    P.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    P.BorderSizePixel = 0
+    P.Position = UDim2.new(-0.304138184, 0, 0.75999999, 0)
+    P.Size = UDim2.new(0, 27, 0, -14)
+    P.ZIndex = 4
+    P.Font = Enum.Font.SourceSansBold
+    P.Text = "P"
+    P.TextColor3 = Color3.fromRGB(255, 255, 255)
+    P.TextSize = 20.000
+    P.TextTransparency = 1
+
+    local Info = Instance.new("TextLabel")
+    Info.Name = "Info"
+    Info.Parent = MainFrame
+    Info.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Info.BackgroundTransparency = 1.000
+    Info.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Info.BorderSizePixel = 0
+    Info.Position = UDim2.new(0.0543069504, 0, 0.0833290443, 0)
+    Info.Size = UDim2.new(0, 116, 0, 10)
+    Info.Font = Enum.Font.SourceSansBold
+    Info.Text = infoText
+    Info.TextColor3 = Color3.fromRGB(170, 176, 183)
+    Info.TextSize = 10.000
+    Info.TextXAlignment = Enum.TextXAlignment.Right
+    Info.TextTransparency = 1
+
+    local ElementContainer = Instance.new("Frame")
+    ElementContainer.Name = "ElementContainer"
+    ElementContainer.Parent = MainFrame
+    ElementContainer.Active = true
+    ElementContainer.BackgroundColor3 = Color3.fromRGB(23, 24, 28)
+    ElementContainer.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    ElementContainer.BorderSizePixel = 0
+    ElementContainer.LayoutOrder = 3
+    ElementContainer.Position = UDim2.new(0.259076893, 0, 0.116228454, 0)
+    ElementContainer.Size = UDim2.new(0, 460, 0, 400)
+    ElementContainer.ZIndex = 3
+    ElementContainer.BackgroundTransparency = 1
+
+    local UICorner_2 = Instance.new("UICorner")
+    UICorner_2.Parent = ElementContainer
+
+    -- Animation for fading in
+    local function fadeIn(element)
+        local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+        local tween = TweenService:Create(element, tweenInfo, {
+            BackgroundTransparency = element.BackgroundTransparency == 1 and 0 or element.BackgroundTransparency,
+            TextTransparency = element.TextTransparency == 1 and 0 or element.TextTransparency
+        })
+        tween:Play()
+    end
+
+    -- Apply fade-in animation to specified elements
+    fadeIn(MainFrame)
+    fadeIn(Logo)
+    fadeIn(W)
+    fadeIn(PizdecWareLabel)
+    fadeIn(P)
+    fadeIn(Info)
+    fadeIn(ElementContainer)
+
+    -- Placeholder for other elements (as per instructions, no functionality added)
+    local function createPlaceholderSection(name, position, size)
+        local section = Instance.new("Frame")
+        section.Name = name
+        section.Parent = ElementContainer
+        section.BackgroundColor3 = Color3.fromRGB(17, 19, 23)
+        section.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        section.BorderSizePixel = 0
+        section.Position = position
+        section.Size = size
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 3)
+        corner.Parent = section
+
+        local line = Instance.new("Frame")
+        line.Name = "Line"
+        line.Parent = section
+        line.BackgroundColor3 = Color3.fromRGB(66, 63, 71)
+        line.BorderColor3 = Color3.fromRGB(20, 21, 25)
+        line.BorderSizePixel = 0
+        line.Position = UDim2.new(0.0449740589, 0, 0.200355425, 0)
+        line.Rotation = 0.060
+        line.Size = UDim2.new(0, 180, 0, -1)
+
+        local label = Instance.new("TextLabel")
+        label.Name = "Label"
+        label.Parent = section
+        label.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        label.BackgroundTransparency = 1.000
+        label.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        label.BorderSizePixel = 0
+        label.Position = UDim2.new(0.0849743634, 0, 0, 0)
+        label.Size = UDim2.new(0, 100, 0, 29)
+        label.Font = Enum.Font.ArialBold
+        label.Text = name
+        label.TextColor3 = Color3.fromRGB(147, 152, 156)
+        label.TextSize = 14.000
+        label.TextXAlignment = Enum.TextXAlignment.Left
+
+        local showSection = Instance.new("TextButton")
+        showSection.Name = "ShowSection"
+        showSection.Parent = section
+        showSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        showSection.BackgroundTransparency = 1.000
+        showSection.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        showSection.BorderSizePixel = 0
+        showSection.Position = UDim2.new(0.860000014, 0, 0.0666666701, 0)
+        showSection.Size = UDim2.new(0, 10, 0, 10)
+        showSection.Font = Enum.Font.SourceSans
+        showSection.Text = "▼"
+        showSection.TextColor3 = Color3.fromRGB(147, 152, 156)
+        showSection.TextSize = 14.000
+    end
+
+    -- Create placeholder sections
+    createPlaceholderSection("Section1", UDim2.new(0.0434783921, 0, 0.0500000007, 0), UDim2.new(0, 200, 0, 150))
+    createPlaceholderSection("Section2", UDim2.new(0.519565344, 0, 0.0474999994, 0), UDim2.new(0, 200, 0, 250))
+    createPlaceholderSection("Section3", UDim2.new(0.0434783921, 0, 0.474999994, 0), UDim2.new(0, 200, 0, 150))
+
+    -- Placeholder for TabZone
+    local TabZone = Instance.new("Frame")
+    TabZone.Name = "TabZone"
+    TabZone.Parent = MainFrame
+    TabZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    TabZone.BackgroundTransparency = 1.000
+    TabZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    TabZone.BorderSizePixel = 0
+    TabZone.Position = UDim2.new(0, 0, 0.116228454, 0)
+    TabZone.Size = UDim2.new(0, 163, 0, 399)
+
+    local Tabs = Instance.new("TextLabel")
+    Tabs.Name = "Tabs"
+    Tabs.Parent = TabZone
+    Tabs.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Tabs.BackgroundTransparency = 1.000
+    Tabs.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Tabs.BorderSizePixel = 0
+    Tabs.Size = UDim2.new(0, 50, 0, 20)
+    Tabs.Font = Enum.Font.ArialBold
+    Tabs.Text = "Tabs"
+    Tabs.TextColor3 = Color3.fromRGB(147, 152, 156)
+    Tabs.TextSize = 14.000
+
+    -- Save file functionality
+    local function saveSettings()
+        local settings = {
+            guiName = guiName,
+            infoText = infoText
+        }
+        local json = HttpService:JSONEncode(settings)
+        writefile(saveFileName, json)
+    end
+
+    local function loadSettings()
+        if isfile(saveFileName) then
+            local json = readfile(saveFileName)
+            local settings = HttpService:JSONDecode(json)
+            Info.Text = settings.infoText
+        end
+    end
+
+    -- Load settings on initialization
+    loadSettings()
+
+    -- Save settings when GUI is closed (example trigger)
+    game:BindToClose(saveSettings)
+
+    return setmetatable({}, PizdecWare)
+end
+
+return PizdecWare
