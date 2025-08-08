@@ -32,7 +32,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     Logo.Position = UDim2.new(0.0215927847, 0, 0.0306019653, 0)
     Logo.Size = UDim2.new(0, 25, 0, 25)
     Logo.ZIndex = 3
-    Logo.BackgroundTransparency = 1
+    Logo.BackgroundTransparency = 0 -- Убрал белый фон, вернул прозрачность к 0 как в оригинале
 
     local UICorner_17 = Instance.new("UICorner")
     UICorner_17.Parent = Logo
@@ -133,8 +133,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
             tween:Play()
         end
     end
-    
-    -- Apply fade-in animation to specified elements
+
+    -- Phase 1: Fade in initial elements
+    wait(0) -- Small delay to ensure proper order
     fadeIn(MainFrame)
     fadeIn(Logo)
     fadeIn(W)
@@ -142,68 +143,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     fadeIn(P)
     fadeIn(Info)
     fadeIn(ElementContainer)
+    wait(1) -- Wait for initial elements to fade in
 
-    -- Placeholder for other elements (as per instructions, no functionality added)
-    local function createPlaceholderSection(name, position, size)
-        local section = Instance.new("Frame")
-        section.Name = name
-        section.Parent = ElementContainer
-        section.BackgroundColor3 = Color3.fromRGB(17, 19, 23)
-        section.BorderColor3 = Color3.fromRGB(0, 0, 0)
-        section.BorderSizePixel = 0
-        section.Position = position
-        section.Size = size
-
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 3)
-        corner.Parent = section
-
-        local line = Instance.new("Frame")
-        line.Name = "Line"
-        line.Parent = section
-        line.BackgroundColor3 = Color3.fromRGB(66, 63, 71)
-        line.BorderColor3 = Color3.fromRGB(20, 21, 25)
-        line.BorderSizePixel = 0
-        line.Position = UDim2.new(0.0449740589, 0, 0.200355425, 0)
-        line.Rotation = 0.060
-        line.Size = UDim2.new(0, 180, 0, -1)
-
-        local label = Instance.new("TextLabel")
-        label.Name = "Label"
-        label.Parent = section
-        label.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        label.BackgroundTransparency = 1.000
-        label.BorderColor3 = Color3.fromRGB(0, 0, 0)
-        label.BorderSizePixel = 0
-        label.Position = UDim2.new(0.0849743634, 0, 0, 0)
-        label.Size = UDim2.new(0, 100, 0, 29)
-        label.Font = Enum.Font.ArialBold
-        label.Text = name
-        label.TextColor3 = Color3.fromRGB(147, 152, 156)
-        label.TextSize = 14.000
-        label.TextXAlignment = Enum.TextXAlignment.Left
-
-        local showSection = Instance.new("TextButton")
-        showSection.Name = "ShowSection"
-        showSection.Parent = section
-        showSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        showSection.BackgroundTransparency = 1.000
-        showSection.BorderColor3 = Color3.fromRGB(0, 0, 0)
-        showSection.BorderSizePixel = 0
-        showSection.Position = UDim2.new(0.860000014, 0, 0.0666666701, 0)
-        showSection.Size = UDim2.new(0, 10, 0, 10)
-        showSection.Font = Enum.Font.SourceSans
-        showSection.Text = "▼"
-        showSection.TextColor3 = Color3.fromRGB(147, 152, 156)
-        showSection.TextSize = 14.000
-    end
-
-    -- Create placeholder sections
-    createPlaceholderSection("Section1", UDim2.new(0.0434783921, 0, 0.0500000007, 0), UDim2.new(0, 200, 0, 150))
-    createPlaceholderSection("Section2", UDim2.new(0.519565344, 0, 0.0474999994, 0), UDim2.new(0, 200, 0, 250))
-    createPlaceholderSection("Section3", UDim2.new(0.0434783921, 0, 0.474999994, 0), UDim2.new(0, 200, 0, 150))
-
-    -- Placeholder for TabZone
+    -- Phase 2: Create and fade in other elements
     local TabZone = Instance.new("Frame")
     TabZone.Name = "TabZone"
     TabZone.Parent = MainFrame
@@ -213,6 +155,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     TabZone.BorderSizePixel = 0
     TabZone.Position = UDim2.new(0, 0, 0.116228454, 0)
     TabZone.Size = UDim2.new(0, 163, 0, 399)
+    fadeIn(TabZone)
 
     local Tabs = Instance.new("TextLabel")
     Tabs.Name = "Tabs"
@@ -226,6 +169,92 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     Tabs.Text = "Tabs"
     Tabs.TextColor3 = Color3.fromRGB(147, 152, 156)
     Tabs.TextSize = 14.000
+    Tabs.TextTransparency = 1
+    fadeIn(Tabs)
+
+    local Tab1 = Instance.new("TextLabel")
+    Tab1.Name = "Tab 1"
+    Tab1.Parent = TabZone
+    Tab1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Tab1.BackgroundTransparency = 1.000
+    Tab1.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Tab1.BorderSizePixel = 0
+    Tab1.Position = UDim2.new(0.30674848, 0, 0.0501253121, 0)
+    Tab1.Size = UDim2.new(0, 101, 0, 28)
+    Tab1.Font = Enum.Font.Unknown
+    Tab1.Text = "Tab 1"
+    Tab1.TextColor3 = Color3.fromRGB(150, 17, 255)
+    Tab1.TextSize = 20.000
+    Tab1.TextXAlignment = Enum.TextXAlignment.Left
+    Tab1.TextTransparency = 1
+    fadeIn(Tab1)
+
+    local ImageLabel = Instance.new("ImageLabel")
+    ImageLabel.Parent = Tab1
+    ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ImageLabel.BackgroundTransparency = 1.000
+    ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    ImageLabel.BorderSizePixel = 0
+    ImageLabel.Position = UDim2.new(-0.364666939, 0, 0.036599841, 0)
+    ImageLabel.Size = UDim2.new(0, 26, 0, 26)
+    ImageLabel.ZIndex = 3
+    ImageLabel.Image = "rbxassetid://14134388410"
+    ImageLabel.ImageColor3 = Color3.fromRGB(150, 17, 255)
+    ImageLabel.BackgroundTransparency = 1
+    fadeIn(ImageLabel)
+
+    local Tab2 = Instance.new("TextLabel")
+    Tab2.Name = "Tab 2"
+    Tab2.Parent = TabZone
+    Tab2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Tab2.BackgroundTransparency = 1.000
+    Tab2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Tab2.BorderSizePixel = 0
+    Tab2.Position = UDim2.new(0.30674848, 0, 0.140350878, 0)
+    Tab2.Size = UDim2.new(0, 101, 0, 30)
+    Tab2.Font = Enum.Font.Unknown
+    Tab2.Text = "Tab 2"
+    Tab2.TextColor3 = Color3.fromRGB(147, 152, 156)
+    Tab2.TextSize = 20.000
+    Tab2.TextXAlignment = Enum.TextXAlignment.Left
+    Tab2.TextTransparency = 1
+    fadeIn(Tab2)
+
+    local ImageLabel_2 = Instance.new("ImageLabel")
+    ImageLabel_2.Parent = Tab2
+    ImageLabel_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ImageLabel_2.BackgroundTransparency = 1.000
+    ImageLabel_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    ImageLabel_2.BorderSizePixel = 0
+    ImageLabel_2.Position = UDim2.new(-0.364666939, 0, 0.0365966782, 0)
+    ImageLabel_2.Size = UDim2.new(0, 26, 0, 26)
+    ImageLabel_2.Image = "rbxassetid://13557340523"
+    fadeIn(ImageLabel_2)
+
+    local SelectedTab = Instance.new("Frame")
+    SelectedTab.Name = "SelectedTab"
+    SelectedTab.Parent = TabZone
+    SelectedTab.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+    SelectedTab.BackgroundTransparency = 0.900
+    SelectedTab.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    SelectedTab.BorderSizePixel = 0
+    SelectedTab.Position = UDim2.new(0, 0, 0.0476190485, 0)
+    SelectedTab.Size = UDim2.new(0, 163, 0, 30)
+    SelectedTab.ZIndex = 2
+    SelectedTab.BackgroundTransparency = 1
+    fadeIn(SelectedTab)
+
+    local ImageButton = Instance.new("ImageButton")
+    ImageButton.Parent = MainFrame
+    ImageButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ImageButton.BackgroundTransparency = 1.000
+    ImageButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    ImageButton.BorderSizePixel = 0
+    ImageButton.Position = UDim2.new(0.949206471, 0, 0.0173913036, 0)
+    ImageButton.Size = UDim2.new(0, 25, 0, 25)
+    ImageButton.Image = "rbxassetid://12653789995"
+    ImageButton.BackgroundTransparency = 1
+    fadeIn(ImageButton)
 
     -- Save file functionality
     local function saveSettings()
@@ -248,8 +277,44 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     -- Load settings on initialization
     loadSettings()
 
-    -- Save settings when GUI is closed (example trigger)
+    -- Save settings when GUI is closed
     game:BindToClose(saveSettings)
+
+    -- Method to create a tab
+    function PizdecWare:CreateTab(visualName, imageId)
+        local tab = Instance.new("TextLabel")
+        tab.Name = visualName
+        tab.Parent = TabZone
+        tab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        tab.BackgroundTransparency = 1.000
+        tab.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        tab.BorderSizePixel = 0
+        tab.Position = UDim2.new(0.30674848, 0, 0, 0) -- Adjust position dynamically if needed
+        tab.Size = UDim2.new(0, 101, 0, 28)
+        tab.Font = Enum.Font.Unknown
+        tab.Text = visualName
+        tab.TextColor3 = Color3.fromRGB(147, 152, 156)
+        tab.TextSize = 20.000
+        tab.TextXAlignment = Enum.TextXAlignment.Left
+        tab.TextTransparency = 1
+        fadeIn(tab)
+
+        local image = Instance.new("ImageLabel")
+        image.Parent = tab
+        image.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        image.BackgroundTransparency = 1.000
+        image.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        image.BorderSizePixel = 0
+        image.Position = UDim2.new(-0.364666939, 0, 0.036599841, 0)
+        image.Size = UDim2.new(0, 26, 0, 26)
+        image.ZIndex = 3
+        image.Image = "rbxassetid://" .. imageId
+        image.ImageColor3 = Color3.fromRGB(150, 17, 255)
+        image.BackgroundTransparency = 1
+        fadeIn(image)
+
+        return tab
+    end
 
     return setmetatable({}, PizdecWare)
 end
