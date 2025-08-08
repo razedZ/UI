@@ -113,7 +113,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     ElementContainer.Active = true
     ElementContainer.BackgroundColor3 = Color3.fromRGB(23, 24, 28)
     ElementContainer.BorderColor3 = Color3.fromRGB(66, 63, 71)
-    ElementContainer.BorderSizePixel = 1
+    ElementContainer.BorderSizePixel = 0
     ElementContainer.LayoutOrder = 3
     ElementContainer.Position = UDim2.new(0.259076893, 0, 0.116228454, 0)
     ElementContainer.Size = UDim2.new(0, 460, 0, 400)
@@ -146,11 +146,13 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
                 TextTransparency = element.TextTransparency == 1 and 0 or element.TextTransparency
             })
             tween:Play()
+            element.BackgroundTransparency = 1 -- Восстанавливаем прозрачность после анимации
         elseif element:IsA("ImageLabel") or element:IsA("ImageButton") then
             local tween = TweenService:Create(element, tweenInfo, {
                 ImageTransparency = element.ImageTransparency == 1 and 0 or element.ImageTransparency
             })
             tween:Play()
+            element.BackgroundTransparency = 1 -- Восстанавливаем прозрачность после анимации
         else
             local tween = TweenService:Create(element, tweenInfo, {
                 BackgroundTransparency = element.BackgroundTransparency == 1 and 0 or element.BackgroundTransparency
@@ -173,8 +175,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local TabZone = Instance.new("Frame")
     TabZone.Name = "TabZone"
     TabZone.Parent = MainFrame
-    TabZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TabZone.BackgroundTransparency = 1
+    TabZone.BackgroundColor3 = Color3.fromRGB(23, 24, 28)
     TabZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
     TabZone.BorderSizePixel = 0
     TabZone.Position = UDim2.new(0, 0, 0.116228454, 0)
@@ -239,12 +240,14 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
                             TextColor3 = Color3.fromRGB(147, 152, 156)
                         })
                         textTween:Play()
+                        child.BackgroundTransparency = 1
                         
                         if childImage then
                             local imageTween = TweenService:Create(childImage, tweenInfo, {
                                 ImageColor3 = Color3.fromRGB(147, 152, 156)
                             })
                             imageTween:Play()
+                            childImage.BackgroundTransparency = 1
                         end
                     end
                 end
@@ -253,13 +256,15 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
                     TextColor3 = Color3.fromRGB(150, 17, 255)
                 })
                 tabTween:Play()
+                tab.BackgroundTransparency = 1
                 
                 local imageTween = TweenService:Create(image, tweenInfo, {
                     ImageColor3 = Color3.fromRGB(150, 17, 255)
                 })
                 imageTween:Play()
+                image.BackgroundTransparency = 1
 
-                local newPosition = UDim2.new(0, 0, tab.Position.Y.Scale, tab.AbsolutePosition.Y)
+                local newPosition = UDim2.new(0, 0, tab.Position.Y.Scale, 0)
                 local moveTween = TweenService:Create(SelectedTab, tweenInfo, { Position = newPosition })
                 moveTween:Play()
 
@@ -272,9 +277,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
     function PizdecWare:CreateTab(visualName, imageId)
         if not TweenService then return nil end
-        local tabCount = #TabZone:GetChildren() - 1
+        local tabCount = #TabZone:GetChildren() - 2 -- Exclude Tabs and SelectedTab
         local spacing = 0.0902255669
-        local initialOffset = 0.0501253121
+        local initialOffset = 0.0501253121 + (Tabs.Size.Y.Scale * 2) -- Start below Tabs with small offset
         local newPosition = UDim2.new(0.30674848, 0, initialOffset + (tabCount * spacing), 0)
         
         local tab = Instance.new("TextLabel")
