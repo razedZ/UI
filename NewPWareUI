@@ -122,7 +122,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local UICorner_2 = Instance.new("UICorner")
     UICorner_2.Parent = ElementContainer
 
-    -- Modified fadeIn function to preserve background transparency for text and images
+    -- Animation for fading in
     local function fadeIn(element)
         if not TweenService then return end
         local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
@@ -184,7 +184,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     Tabs.Text = "Tabs"
     Tabs.TextColor3 = Color3.fromRGB(147, 152, 156)
     Tabs.TextSize = 14.000
-    Tabs.TextTransparency = 1
+    Tabs.TextTransparency = 0
     Tabs.ZIndex = 5
     fadeIn(Tabs)
 
@@ -214,32 +214,54 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     -- Tab selection logic
     local currentTab = nil
     local function selectTab(tab, image)
-        if tab ~= currentTab and TweenService then
+        if TweenService then
             local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear)
-            local tabTween = TweenService:Create(tab, tweenInfo, { TextTransparency = 0 })
-            tabTween:Play()
-            local imageTween = TweenService:Create(image, tweenInfo, { ImageTransparency = 0 })
-            imageTween:Play()
-            tab.TextColor3 = Color3.fromRGB(150, 17, 255)
-            image.ImageColor3 = Color3.fromRGB(150, 17, 255)
-
-            if currentTab then
-                local otherTween = TweenService:Create(currentTab, tweenInfo, { TextTransparency = 1 })
-                otherTween:Play()
-                local otherImage = currentTab:FindFirstChild("TabImage")
-                if otherImage then
-                    local otherImageTween = TweenService:Create(otherImage, tweenInfo, { ImageTransparency = 1 })
-                    otherImageTween:Play()
-                    otherImage.ImageColor3 = Color3.fromRGB(150, 17, 255)
+            
+            -- Reset all tabs to default state (visible with gray text)
+            for _, child in ipairs(TabZone:GetChildren()) do
+                if child:IsA("TextLabel") and child ~= Tabs then
+                    local childImage = child:FindFirstChild("TabImage")
+                    local textTween = TweenService:Create(child, tweenInfo, {
+                        TextTransparency = 0,
+                        TextColor3 = Color3.fromRGB(147, 152, 156)
+                    })
+                    textTween:Play()
+                    
+                    if childImage then
+                        local imageTween = TweenService:Create(childImage, tweenInfo, {
+                            ImageTransparency = 0,
+                            ImageColor3 = Color3.fromRGB(147, 152, 156)
+                        })
+                        imageTween:Play()
+                    end
                 end
-                currentTab.TextColor3 = Color3.fromRGB(147, 152, 156)
             end
+            
+            -- Highlight selected tab
+            if tab ~= currentTab then
+                local tabTween = TweenService:Create(tab, tweenInfo, {
+                    TextTransparency = 0,
+                    TextColor3 = Color3.fromRGB(150, 17, 255)
+                })
+                tabTween:Play()
+                
+                local imageTween = TweenService:Create(image, tweenInfo, {
+                    ImageTransparency = 0,
+                    ImageColor3 = Color3.fromRGB(150, 17, 255)
+                })
+                imageTween:Play()
 
-            local newPosition = UDim2.new(0, 0, tab.Position.Y.Scale, 0)
-            local moveTween = TweenService:Create(SelectedTab, tweenInfo, { Position = newPosition })
-            moveTween:Play()
+                local newPosition = UDim2.new(0, 0, tab.Position.Y.Scale, 0)
+                local moveTween = TweenService:Create(SelectedTab, tweenInfo, { Position = newPosition })
+                moveTween:Play()
 
-            currentTab = tab
+                currentTab = tab
+            else
+                -- If clicking the same tab, deselect it
+                currentTab = nil
+                local moveTween = TweenService:Create(SelectedTab, tweenInfo, { Position = UDim2.new(0, 0, -0.1, 0) })
+                moveTween:Play()
+            end
         end
     end
 
@@ -264,8 +286,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         tab.Text = visualName
         tab.TextColor3 = Color3.fromRGB(147, 152, 156)
         tab.TextSize = 20.000
+        tab.TextTransparency = 0
         tab.TextXAlignment = Enum.TextXAlignment.Left
-        tab.TextTransparency = 1
         tab.ZIndex = 5
         fadeIn(tab)
 
@@ -280,8 +302,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         image.Size = UDim2.new(0, 26, 0, 26)
         image.ZIndex = 5
         image.Image = "rbxassetid://" .. imageId
-        image.ImageColor3 = Color3.fromRGB(150, 17, 255)
-        image.ImageTransparency = 1
+        image.ImageColor3 = Color3.fromRGB(147, 152, 156)
+        image.ImageTransparency = 0
         fadeIn(image)
 
         tab.InputBegan:Connect(function(input)
