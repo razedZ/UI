@@ -1,5 +1,10 @@
-local HttpService = game:GetService("HttpService")
-local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService") or nil -- Проверка на наличие сервиса
+local TweenService = game:GetService("TweenService") or nil -- Проверка на наличие сервиса
+
+if not HttpService or not TweenService then
+    warn("Required services (HttpService or TweenService) are not available.")
+    return
+end
 
 local PizdecWare = {}
 PizdecWare.__index = PizdecWare
@@ -119,6 +124,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
     -- Animation for fading in
     local function fadeIn(element)
+        if not TweenService then return end
         local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
         if element:IsA("TextLabel") or element:IsA("TextButton") then
             local tween = TweenService:Create(element, tweenInfo, {
@@ -150,7 +156,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     TabZone.Name = "TabZone"
     TabZone.Parent = MainFrame
     TabZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TabZone.BackgroundTransparency = 1.000
+    TabZone.BackgroundTransparency = 1.000 -- Убрал белый фон
     TabZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
     TabZone.BorderSizePixel = 0
     TabZone.Position = UDim2.new(0, 0, 0.116228454, 0)
@@ -179,9 +185,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     SelectedTab.BackgroundTransparency = 0.900
     SelectedTab.BorderColor3 = Color3.fromRGB(0, 0, 0)
     SelectedTab.BorderSizePixel = 0
-    SelectedTab.Position = UDim2.new(0, 0, 0.0476190485, 0) -- Initial position under first tab
+    SelectedTab.Position = UDim2.new(0, 0, 0.166353564, 0) -- Начальная позиция под первым возможным табом
     SelectedTab.Size = UDim2.new(0, 163, 0, 30)
-    SelectedTab.ZIndex = 4 -- Above MainFrame
+    SelectedTab.ZIndex = 4
     SelectedTab.BackgroundTransparency = 0.900
     fadeIn(SelectedTab)
 
@@ -200,7 +206,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     -- Tab selection logic
     local currentTab = nil
     local function selectTab(tab, image)
-        if tab ~= currentTab then
+        if tab ~= currentTab and TweenService then
             local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear)
             local tabTween = TweenService:Create(tab, tweenInfo, { TextTransparency = 0 })
             tabTween:Play()
@@ -215,10 +221,12 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
                 local otherImageTween = TweenService:Create(currentTab:FindFirstChildOfClass("ImageLabel"), tweenInfo, { ImageTransparency = 1 })
                 otherImageTween:Play()
                 currentTab.TextColor3 = Color3.fromRGB(147, 152, 156)
-                currentTab:FindFirstChildOfClass("ImageLabel").ImageColor3 = Color3.fromRGB(150, 17, 255)
+                if currentTab:FindFirstChildOfClass("ImageLabel") then
+                    currentTab:FindFirstChildOfClass("ImageLabel").ImageColor3 = Color3.fromRGB(150, 17, 255)
+                end
             end
 
-            local newPosition = UDim2.new(0, 0, tab.Position.Y.Scale + tab.Position.Y.Offset / MainFrame.AbsoluteSize.Y, 0)
+            local newPosition = UDim2.new(0, 0, tab.Position.Y.Scale + (tab.Position.Y.Offset / MainFrame.AbsoluteSize.Y), 0)
             local moveTween = TweenService:Create(SelectedTab, tweenInfo, { Position = newPosition })
             moveTween:Play()
 
@@ -228,16 +236,18 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
     -- Save file functionality
     local function saveSettings()
-        local settings = {
-            guiName = guiName,
-            infoText = infoText
-        }
-        local json = HttpService:JSONEncode(settings)
-        writefile(saveFileName, json)
+        if HttpService then
+            local settings = {
+                guiName = guiName,
+                infoText = infoText
+            }
+            local json = HttpService:JSONEncode(settings)
+            writefile(saveFileName, json)
+        end
     end
 
     local function loadSettings()
-        if isfile(saveFileName) then
+        if HttpService and isfile(saveFileName) then
             local json = readfile(saveFileName)
             local settings = HttpService:JSONDecode(json)
             Info.Text = settings.infoText
@@ -252,6 +262,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
     -- Method to create a tab
     function PizdecWare:CreateTab(visualName, imageId)
+        if not TweenService then return nil end
         local tabCount = #TabZone:GetChildren() - 1 -- Exclude Tabs label
         local newPosition = UDim2.new(0.30674848, 0, 0.0501253121 + (tabCount * 0.0902255669), 0)
         local tab = Instance.new("TextLabel")
@@ -273,6 +284,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         fadeIn(tab)
 
         local image = Instance.new("ImageLabel")
+        image.Name = "TabImage"
         image.Parent = tab
         image.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         image.BackgroundTransparency = 1.000
