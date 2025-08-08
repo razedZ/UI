@@ -32,7 +32,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     Logo.Position = UDim2.new(0.0215927847, 0, 0.0306019653, 0)
     Logo.Size = UDim2.new(0, 25, 0, 25)
     Logo.ZIndex = 3
-    Logo.BackgroundTransparency = 0 -- Убрал белый фон, вернул прозрачность к 0 как в оригинале
+    Logo.BackgroundTransparency = 0
 
     local UICorner_17 = Instance.new("UICorner")
     UICorner_17.Parent = Logo
@@ -135,7 +135,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     end
 
     -- Phase 1: Fade in initial elements
-    wait(0) -- Small delay to ensure proper order
+    wait(0)
     fadeIn(MainFrame)
     fadeIn(Logo)
     fadeIn(W)
@@ -143,7 +143,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     fadeIn(P)
     fadeIn(Info)
     fadeIn(ElementContainer)
-    wait(1) -- Wait for initial elements to fade in
+    wait(1)
 
     -- Phase 2: Create and fade in other elements
     local TabZone = Instance.new("Frame")
@@ -172,6 +172,19 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     Tabs.TextTransparency = 1
     fadeIn(Tabs)
 
+    local SelectedTab = Instance.new("Frame")
+    SelectedTab.Name = "SelectedTab"
+    SelectedTab.Parent = MainFrame
+    SelectedTab.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+    SelectedTab.BackgroundTransparency = 0.900
+    SelectedTab.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    SelectedTab.BorderSizePixel = 0
+    SelectedTab.Position = UDim2.new(0, 0, 0.0476190485, 0)
+    SelectedTab.Size = UDim2.new(0, 163, 0, 30)
+    SelectedTab.ZIndex = 4 -- Above MainFrame
+    SelectedTab.BackgroundTransparency = 0.900
+    fadeIn(SelectedTab)
+
     local Tab1 = Instance.new("TextLabel")
     Tab1.Name = "Tab 1"
     Tab1.Parent = TabZone
@@ -183,10 +196,11 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     Tab1.Size = UDim2.new(0, 101, 0, 28)
     Tab1.Font = Enum.Font.Unknown
     Tab1.Text = "Tab 1"
-    Tab1.TextColor3 = Color3.fromRGB(150, 17, 255)
+    Tab1.TextColor3 = Color3.fromRGB(150, 17, 255) -- Default selected color
     Tab1.TextSize = 20.000
     Tab1.TextXAlignment = Enum.TextXAlignment.Left
     Tab1.TextTransparency = 1
+    Tab1.ZIndex = 5 -- Above SelectedTab
     fadeIn(Tab1)
 
     local ImageLabel = Instance.new("ImageLabel")
@@ -197,7 +211,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     ImageLabel.BorderSizePixel = 0
     ImageLabel.Position = UDim2.new(-0.364666939, 0, 0.036599841, 0)
     ImageLabel.Size = UDim2.new(0, 26, 0, 26)
-    ImageLabel.ZIndex = 3
+    ImageLabel.ZIndex = 5
     ImageLabel.Image = "rbxassetid://14134388410"
     ImageLabel.ImageColor3 = Color3.fromRGB(150, 17, 255)
     ImageLabel.BackgroundTransparency = 1
@@ -218,6 +232,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     Tab2.TextSize = 20.000
     Tab2.TextXAlignment = Enum.TextXAlignment.Left
     Tab2.TextTransparency = 1
+    Tab2.ZIndex = 5
     fadeIn(Tab2)
 
     local ImageLabel_2 = Instance.new("ImageLabel")
@@ -229,20 +244,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     ImageLabel_2.Position = UDim2.new(-0.364666939, 0, 0.0365966782, 0)
     ImageLabel_2.Size = UDim2.new(0, 26, 0, 26)
     ImageLabel_2.Image = "rbxassetid://13557340523"
+    ImageLabel_2.BackgroundTransparency = 1
     fadeIn(ImageLabel_2)
-
-    local SelectedTab = Instance.new("Frame")
-    SelectedTab.Name = "SelectedTab"
-    SelectedTab.Parent = TabZone
-    SelectedTab.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-    SelectedTab.BackgroundTransparency = 0.900
-    SelectedTab.BorderColor3 = Color3.fromRGB(0, 0, 0)
-    SelectedTab.BorderSizePixel = 0
-    SelectedTab.Position = UDim2.new(0, 0, 0.0476190485, 0)
-    SelectedTab.Size = UDim2.new(0, 163, 0, 30)
-    SelectedTab.ZIndex = 2
-    SelectedTab.BackgroundTransparency = 1
-    fadeIn(SelectedTab)
 
     local ImageButton = Instance.new("ImageButton")
     ImageButton.Parent = MainFrame
@@ -255,6 +258,51 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     ImageButton.Image = "rbxassetid://12653789995"
     ImageButton.BackgroundTransparency = 1
     fadeIn(ImageButton)
+
+    -- Tab selection logic
+    local currentTab = Tab1
+    local function selectTab(tab)
+        if tab ~= currentTab then
+            local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear)
+            local tabTween = TweenService:Create(tab, tweenInfo, { TextTransparency = 0 })
+            tabTween:Play()
+            tab.TextColor3 = Color3.fromRGB(150, 17, 255)
+            local otherTab = (tab == Tab1) and Tab2 or Tab1
+            local otherTween = TweenService:Create(otherTab, tweenInfo, { TextTransparency = 1 })
+            otherTween:Play()
+            otherTab.TextColor3 = Color3.fromRGB(147, 152, 156)
+
+            local newPosition = (tab == Tab1) and UDim2.new(0, 0, 0.0476190485, 0) or UDim2.new(0, 0, 0.137974485, 0)
+            local moveTween = TweenService:Create(SelectedTab, tweenInfo, { Position = newPosition })
+            moveTween:Play()
+
+            currentTab = tab
+        end
+    end
+
+    Tab1.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            selectTab(Tab1)
+        end
+    end)
+
+    ImageLabel.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            selectTab(Tab1)
+        end
+    end)
+
+    Tab2.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            selectTab(Tab2)
+        end
+    end)
+
+    ImageLabel_2.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            selectTab(Tab2)
+        end
+    end)
 
     -- Save file functionality
     local function saveSettings()
@@ -282,6 +330,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
     -- Method to create a tab
     function PizdecWare:CreateTab(visualName, imageId)
+        local tabCount = #TabZone:GetChildren() - 1 -- Exclude Tabs label
+        local newPosition = UDim2.new(0.30674848, 0, 0.0501253121 + (tabCount * 0.0902255669), 0)
         local tab = Instance.new("TextLabel")
         tab.Name = visualName
         tab.Parent = TabZone
@@ -289,7 +339,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         tab.BackgroundTransparency = 1.000
         tab.BorderColor3 = Color3.fromRGB(0, 0, 0)
         tab.BorderSizePixel = 0
-        tab.Position = UDim2.new(0.30674848, 0, 0, 0) -- Adjust position dynamically if needed
+        tab.Position = newPosition
         tab.Size = UDim2.new(0, 101, 0, 28)
         tab.Font = Enum.Font.Unknown
         tab.Text = visualName
@@ -297,6 +347,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         tab.TextSize = 20.000
         tab.TextXAlignment = Enum.TextXAlignment.Left
         tab.TextTransparency = 1
+        tab.ZIndex = 5
         fadeIn(tab)
 
         local image = Instance.new("ImageLabel")
@@ -307,11 +358,23 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         image.BorderSizePixel = 0
         image.Position = UDim2.new(-0.364666939, 0, 0.036599841, 0)
         image.Size = UDim2.new(0, 26, 0, 26)
-        image.ZIndex = 3
+        image.ZIndex = 5
         image.Image = "rbxassetid://" .. imageId
         image.ImageColor3 = Color3.fromRGB(150, 17, 255)
         image.BackgroundTransparency = 1
         fadeIn(image)
+
+        tab.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                selectTab(tab)
+            end
+        end)
+
+        image.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                selectTab(tab)
+            end
+        end)
 
         return tab
     end
