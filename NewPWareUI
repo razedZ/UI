@@ -46,6 +46,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local W = Instance.new("TextLabel")
     W.Name = "W"
     W.Parent = Logo
+    W.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     W.BackgroundTransparency = 1
     W.BorderColor3 = Color3.fromRGB(0, 0, 0)
     W.BorderSizePixel = 0
@@ -61,6 +62,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local PizdecWareLabel = Instance.new("TextLabel")
     PizdecWareLabel.Name = "PizdecWare"
     PizdecWareLabel.Parent = Logo
+    PizdecWareLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     PizdecWareLabel.BackgroundTransparency = 1
     PizdecWareLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
     PizdecWareLabel.BorderSizePixel = 0
@@ -76,6 +78,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local P = Instance.new("TextLabel")
     P.Name = "P"
     P.Parent = Logo
+    P.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     P.BackgroundTransparency = 1
     P.BorderColor3 = Color3.fromRGB(0, 0, 0)
     P.BorderSizePixel = 0
@@ -166,9 +169,11 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local Tabs = Instance.new("TextLabel")
     Tabs.Name = "Tabs"
     Tabs.Parent = TabZone
+    Tabs.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Tabs.BackgroundTransparency = 1
     Tabs.BorderColor3 = Color3.fromRGB(0, 0, 0)
     Tabs.BorderSizePixel = 0
+    Tabs.Position = UDim2.new(0.30674848, 0, 0.0100250627, 0)
     Tabs.Size = UDim2.new(0, 50, 0, 20)
     Tabs.Font = Enum.Font.ArialBold
     Tabs.Text = "Tabs"
@@ -225,7 +230,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
                 currentTab.TextColor3 = Color3.fromRGB(147, 152, 156)
             end
 
-            local newPosition = UDim2.new(0, tab.AbsolutePosition.X, tab.Position.Y.Scale, tab.AbsolutePosition.Y)
+            local newPosition = UDim2.new(0, 0, 0.166353564 + (0.0902255669 * (tab.LayoutOrder - 1)), 0)
             local moveTween = TweenService:Create(SelectedTab, tweenInfo, { Position = newPosition })
             moveTween:Play()
 
@@ -240,9 +245,11 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         local spacing = 0.0902255669
         local initialOffset = 0.0501253121 -- Original initial offset
         local newPosition = UDim2.new(0.30674848, 0, initialOffset + (tabCount * spacing), 0)
+        
         local tab = Instance.new("TextLabel")
         tab.Name = visualName
         tab.Parent = TabZone
+        tab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         tab.BackgroundTransparency = 1
         tab.BorderColor3 = Color3.fromRGB(0, 0, 0)
         tab.BorderSizePixel = 0
@@ -255,11 +262,13 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         tab.TextXAlignment = Enum.TextXAlignment.Left
         tab.TextTransparency = 1
         tab.ZIndex = 5
+        tab.LayoutOrder = tabCount + 1
         fadeIn(tab)
 
         local image = Instance.new("ImageLabel")
         image.Name = "TabImage"
         image.Parent = tab
+        image.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         image.BackgroundTransparency = 1
         image.BorderColor3 = Color3.fromRGB(0, 0, 0)
         image.BorderSizePixel = 0
