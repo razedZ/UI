@@ -144,52 +144,36 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local UICorner_3 = Instance.new("UICorner")
     UICorner_3.Parent = Line
 
-    local Section1 = Instance.new("Frame")
-    Section1.Name = "Section1"
-    Section1.Parent = ElementContainer
-    Section1.BackgroundColor3 = Color3.fromRGB(17, 19, 23)
-    Section1.BorderColor3 = Color3.fromRGB(0, 0, 0)
-    Section1.BorderSizePixel = 0
-    Section1.Position = UDim2.new(0.0434783921, 0, 0.0500000007, 0)
-    Section1.Size = UDim2.new(0, 200, 0, 150)
-
-    local UICorner_12 = Instance.new("UICorner")
-    UICorner_12.CornerRadius = UDim.new(0, 3)
-    UICorner_12.Parent = Section1
-
-    local Line_3 = Instance.new("Frame")
-    Line_3.Name = "Line"
-    Line_3.Parent = Section1
-    Line_3.BackgroundColor3 = Color3.fromRGB(66, 63, 71)
-    Line_3.BorderColor3 = Color3.fromRGB(20, 21, 25)
-    Line_3.BorderSizePixel = 0
-    Line_3.Position = UDim2.new(0.0449740589, 0, 0.200355425, 0)
-    Line_3.Rotation = 0.060
-    Line_3.Size = UDim2.new(0, 180, 0, -1)
-
     local function fadeIn(element)
         if not TweenService then return end
         local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
         if element:IsA("TextLabel") or element:IsA("TextButton") then
+            local initialTransparency = element.BackgroundTransparency
             local tween = TweenService:Create(element, tweenInfo, {
                 TextTransparency = element.TextTransparency == 1 and 0 or element.TextTransparency
             })
             tween:Play()
-            element.BackgroundTransparency = 1 -- Восстанавливаем прозрачность после анимации
+            tween.Completed:Connect(function()
+                element.BackgroundTransparency = initialTransparency -- Восстанавливаем исходную прозрачность
+            end)
         elseif element:IsA("ImageLabel") or element:IsA("ImageButton") then
+            local initialTransparency = element.BackgroundTransparency
             local tween = TweenService:Create(element, tweenInfo, {
                 ImageTransparency = element.ImageTransparency == 1 and 0 or element.ImageTransparency
             })
             tween:Play()
-            element.BackgroundTransparency = 1 -- Восстанавливаем прозрачность после анимации
+            tween.Completed:Connect(function()
+                element.BackgroundTransparency = initialTransparency -- Восстанавливаем исходную прозрачность
+            end)
         else
+            local initialTransparency = element.BackgroundTransparency
             local tween = TweenService:Create(element, tweenInfo, {
                 BackgroundTransparency = element.BackgroundTransparency == 1 and 0 or element.BackgroundTransparency
             })
             tween:Play()
-        end
-        if element.Name == "TabZone" then
-            element.BackgroundTransparency = 1 -- Устанавливаем прозрачность 1 после анимации для TabZone
+            tween.Completed:Connect(function()
+                element.BackgroundTransparency = initialTransparency -- Восстанавливаем исходную прозрачность
+            end)
         end
     end
 
@@ -202,8 +186,6 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     fadeIn(Info)
     fadeIn(ElementContainer)
     fadeIn(Line)
-    fadeIn(Section1)
-    fadeIn(Line_3)
     wait(1)
 
     local TabZone = Instance.new("Frame")
@@ -218,6 +200,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local UICorner_TabZone = Instance.new("UICorner")
     UICorner_TabZone.Parent = TabZone
     fadeIn(TabZone)
+    TabZone.BackgroundTransparency = 1 -- Устанавливаем прозрачность 1 после анимации
 
     local Tabs = Instance.new("TextLabel")
     Tabs.Name = "Tabs"
@@ -311,9 +294,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
     function PizdecWare:CreateTab(visualName, imageId)
         if not TweenService then return nil end
-        local tabCount = #TabZone:GetChildren() - 2
+        local tabCount = #TabZone:GetChildren() - 2 -- Exclude Tabs and SelectedTab
         local spacing = 0.0902255669
-        local initialOffset = 0.0501253121 + (Tabs.Size.Y.Scale * 2)
+        local initialOffset = 0.0501253121 + (Tabs.Size.Y.Scale * 2) + 0.0902255669 -- Поднимаем на высоту ещё одного таба
         local newPosition = UDim2.new(0.30674848, 0, initialOffset + (tabCount * spacing), 0)
         
         local tab = Instance.new("TextLabel")
