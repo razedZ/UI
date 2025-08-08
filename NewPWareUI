@@ -46,8 +46,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local W = Instance.new("TextLabel")
     W.Name = "W"
     W.Parent = Logo
-    W.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    W.BackgroundTransparency = 1 -- Полная прозрачность
+    W.BackgroundTransparency = 1 -- Полная прозрачность, убран фон
     W.BorderColor3 = Color3.fromRGB(0, 0, 0)
     W.BorderSizePixel = 0
     W.Position = UDim2.new(0.28230226, 0, 0.75999999, 0)
@@ -62,8 +61,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local PizdecWareLabel = Instance.new("TextLabel")
     PizdecWareLabel.Name = "PizdecWare"
     PizdecWareLabel.Parent = Logo
-    PizdecWareLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    PizdecWareLabel.BackgroundTransparency = 1 -- Полная прозрачность
+    PizdecWareLabel.BackgroundTransparency = 1 -- Полная прозрачность, убран фон
     PizdecWareLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
     PizdecWareLabel.BorderSizePixel = 0
     PizdecWareLabel.Position = UDim2.new(2.21097422, 0, 1.29638064, 0)
@@ -78,8 +76,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local P = Instance.new("TextLabel")
     P.Name = "P"
     P.Parent = Logo
-    P.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    P.BackgroundTransparency = 1 -- Полная прозрачность
+    P.BackgroundTransparency = 1 -- Полная прозрачность, убран фон
     P.BorderColor3 = Color3.fromRGB(0, 0, 0)
     P.BorderSizePixel = 0
     P.Position = UDim2.new(-0.304138184, 0, 0.75999999, 0)
@@ -94,8 +91,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local Info = Instance.new("TextLabel")
     Info.Name = "Info"
     Info.Parent = MainFrame
-    Info.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    Info.BackgroundTransparency = 1 -- Полная прозрачность
+    Info.BackgroundTransparency = 1 -- Полная прозрачность, убран фон
     Info.BorderColor3 = Color3.fromRGB(0, 0, 0)
     Info.BorderSizePixel = 0
     Info.Position = UDim2.new(0.0543069504, 0, 0.0833290443, 0)
@@ -156,8 +152,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local TabZone = Instance.new("Frame")
     TabZone.Name = "TabZone"
     TabZone.Parent = MainFrame
-    TabZone.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    TabZone.BackgroundTransparency = 1 -- Полная прозрачность
+    TabZone.BackgroundTransparency = 1 -- Полная прозрачность, убран фон
     TabZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
     TabZone.BorderSizePixel = 0
     TabZone.Position = UDim2.new(0, 0, 0.116228454, 0)
@@ -168,8 +163,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local Tabs = Instance.new("TextLabel")
     Tabs.Name = "Tabs"
     Tabs.Parent = TabZone
-    Tabs.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    Tabs.BackgroundTransparency = 1 -- Полная прозрачность
+    Tabs.BackgroundTransparency = 1 -- Полная прозрачность, убран фон
     Tabs.BorderColor3 = Color3.fromRGB(0, 0, 0)
     Tabs.BorderSizePixel = 0
     Tabs.Size = UDim2.new(0, 50, 0, 20)
@@ -195,8 +189,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
     local ImageButton = Instance.new("ImageButton")
     ImageButton.Parent = MainFrame
-    ImageButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    ImageButton.BackgroundTransparency = 1
+    ImageButton.BackgroundTransparency = 1 -- Полная прозрачность, убран фон
     ImageButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
     ImageButton.BorderSizePixel = 0
     ImageButton.Position = UDim2.new(0.949206471, 0, 0.0173913036, 0)
@@ -273,8 +266,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         local tab = Instance.new("TextLabel")
         tab.Name = visualName
         tab.Parent = TabZone
-        tab.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        tab.BackgroundTransparency = 1 -- Полная прозрачность
+        tab.BackgroundTransparency = 1 -- Полная прозрачность, убран фон
         tab.BorderColor3 = Color3.fromRGB(0, 0, 0)
         tab.BorderSizePixel = 0
         tab.Position = newPosition
@@ -291,8 +283,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         local image = Instance.new("ImageLabel")
         image.Name = "TabImage"
         image.Parent = tab
-        image.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        image.BackgroundTransparency = 1 -- Полная прозрачность
+        image.BackgroundTransparency = 1 -- Полная прозрачность, убран фон
         image.BorderColor3 = Color3.fromRGB(0, 0, 0)
         image.BorderSizePixel = 0
         image.Position = UDim2.new(-0.364666939, 0, 0.036599841, 0)
