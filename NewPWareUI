@@ -97,7 +97,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     Info.Position = UDim2.new(0.0543069504, 0, 0.0833290443, 0)
     Info.Size = UDim2.new(0, 116, 0, 10)
     Info.Font = Enum.Font.SourceSansBold
-    Info.Text = infoText
+    Info.Text = infoText or ""
     Info.TextColor3 = Color3.fromRGB(170, 176, 183)
     Info.TextSize = 10.000
     Info.TextXAlignment = Enum.TextXAlignment.Right
@@ -152,14 +152,14 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     local TabZone = Instance.new("Frame")
     TabZone.Name = "TabZone"
     TabZone.Parent = MainFrame
-    TabZone.BackgroundColor3 = Color3.fromRGB(23, 24, 28) -- Added background color
-    TabZone.BackgroundTransparency = 0 -- Removed transparency
+    TabZone.BackgroundColor3 = Color3.fromRGB(23, 24, 28)
+    TabZone.BackgroundTransparency = 0
     TabZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
     TabZone.BorderSizePixel = 0
     TabZone.Position = UDim2.new(0, 0, 0.116228454, 0)
     TabZone.Size = UDim2.new(0, 163, 0, 399)
     TabZone.ZIndex = 4
-    local UICorner_TabZone = Instance.new("UICorner") -- Added corner for consistency
+    local UICorner_TabZone = Instance.new("UICorner")
     UICorner_TabZone.Parent = TabZone
     fadeIn(TabZone)
 
@@ -233,40 +233,12 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         end
     end
 
-    -- Save file functionality
-    local function saveSettings()
-        if HttpService then
-            local settings = {
-                guiName = guiName,
-                infoText = infoText
-            }
-            local json = HttpService:JSONEncode(settings)
-            pcall(function() writefile(saveFileName, json) end)
-        end
-    end
-
-    local function loadSettings()
-        if HttpService and isfile(saveFileName) then
-            local success, result = pcall(function() return readfile(saveFileName) end)
-            if success then
-                local settings = HttpService:JSONDecode(result)
-                Info.Text = settings.infoText
-            end
-        end
-    end
-
-    -- Load settings on initialization
-    loadSettings()
-
-    -- Save settings when GUI is closed
-    game:BindToClose(saveSettings)
-
     -- Method to create a tab
     function PizdecWare:CreateTab(visualName, imageId)
         if not TweenService then return nil end
         local tabCount = #TabZone:GetChildren() - 1 -- Exclude Tabs label
-        local spacing = 0.0902255669 -- Consistent spacing from original
-        local initialOffset = 0.0501253121 + spacing -- Start below Tabs label
+        local spacing = 0.0902255669
+        local initialOffset = 0.0501253121 + spacing
         local newPosition = UDim2.new(0.30674848, 0, initialOffset + (tabCount * spacing), 0)
         local tab = Instance.new("TextLabel")
         tab.Name = visualName
@@ -276,7 +248,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         tab.BorderSizePixel = 0
         tab.Position = newPosition
         tab.Size = UDim2.new(0, 101, 0, 28)
-        tab.Font = Enum.Font.SourceSansBold -- Changed to SourceSansBold for consistency
+        tab.Font = Enum.Font.SourceSansBold
         tab.Text = visualName
         tab.TextColor3 = Color3.fromRGB(147, 152, 156)
         tab.TextSize = 20.000
