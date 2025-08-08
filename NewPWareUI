@@ -225,7 +225,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
                 currentTab.TextColor3 = Color3.fromRGB(147, 152, 156)
             end
 
-            local newPosition = UDim2.new(0, 0, tab.Position.Y.Scale + (tab.Position.Y.Offset / MainFrame.AbsoluteSize.Y), 0)
+            local newPosition = UDim2.new(0, 0, tab.Position.Y.Scale, 0) -- Align directly with tab's Y position
             local moveTween = TweenService:Create(SelectedTab, tweenInfo, { Position = newPosition })
             moveTween:Play()
 
@@ -238,7 +238,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         if not TweenService then return nil end
         local tabCount = #TabZone:GetChildren() - 1 -- Exclude Tabs label
         local spacing = 0.0902255669
-        local initialOffset = 0.0501253121 + spacing
+        local initialOffset = 0.0501253121 -- Restore original initial offset
         local newPosition = UDim2.new(0.30674848, 0, initialOffset + (tabCount * spacing), 0)
         local tab = Instance.new("TextLabel")
         tab.Name = visualName
