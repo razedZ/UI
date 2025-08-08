@@ -120,13 +120,20 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     -- Animation for fading in
     local function fadeIn(element)
         local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-        local tween = TweenService:Create(element, tweenInfo, {
-            BackgroundTransparency = element.BackgroundTransparency == 1 and 0 or element.BackgroundTransparency,
-            TextTransparency = element.TextTransparency == 1 and 0 or element.TextTransparency
-        })
-        tween:Play()
+        if element:IsA("TextLabel") or element:IsA("TextButton") then
+            local tween = TweenService:Create(element, tweenInfo, {
+                BackgroundTransparency = element.BackgroundTransparency == 1 and 0 or element.BackgroundTransparency,
+                TextTransparency = element.TextTransparency == 1 and 0 or element.TextTransparency
+            })
+            tween:Play()
+        else
+            local tween = TweenService:Create(element, tweenInfo, {
+                BackgroundTransparency = element.BackgroundTransparency == 1 and 0 or element.BackgroundTransparency
+            })
+            tween:Play()
+        end
     end
-
+    
     -- Apply fade-in animation to specified elements
     fadeIn(MainFrame)
     fadeIn(Logo)
