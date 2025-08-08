@@ -111,8 +111,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     ElementContainer.Parent = MainFrame
     ElementContainer.Active = true
     ElementContainer.BackgroundColor3 = Color3.fromRGB(23, 24, 28)
-    ElementContainer.BorderColor3 = Color3.fromRGB(0, 0, 0)
-    ElementContainer.BorderSizePixel = 0
+    ElementContainer.BorderColor3 = Color3.fromRGB(66, 63, 71)
+    ElementContainer.BorderSizePixel = 1
     ElementContainer.LayoutOrder = 3
     ElementContainer.Position = UDim2.new(0.259076893, 0, 0.116228454, 0)
     ElementContainer.Size = UDim2.new(0, 460, 0, 400)
@@ -121,6 +121,22 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
     local UICorner_2 = Instance.new("UICorner")
     UICorner_2.Parent = ElementContainer
+
+    -- Добавляем Line как разделитель
+    local Line = Instance.new("Frame")
+    Line.Name = "Line"
+    Line.Parent = ElementContainer
+    Line.Active = true
+    Line.BackgroundColor3 = Color3.fromRGB(23, 24, 28)
+    Line.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Line.BorderSizePixel = 0
+    Line.LayoutOrder = 3
+    Line.Position = UDim2.new(1.32685116e-07, 0, -0.124946594, 0)
+    Line.Size = UDim2.new(0, 0, 0, 57)
+    Line.ZIndex = 3
+
+    local UICorner_3 = Instance.new("UICorner")
+    UICorner_3.Parent = Line
 
     -- Animation for fading in
     local function fadeIn(element)
@@ -154,6 +170,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     fadeIn(P)
     fadeIn(Info)
     fadeIn(ElementContainer)
+    fadeIn(Line)
     wait(1)
 
     -- Phase 2: Create and fade in other elements
@@ -161,7 +178,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     TabZone.Name = "TabZone"
     TabZone.Parent = MainFrame
     TabZone.BackgroundColor3 = Color3.fromRGB(23, 24, 28)
-    TabZone.BackgroundTransparency = 0
+    TabZone.BackgroundTransparency = 1
     TabZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
     TabZone.BorderSizePixel = 0
     TabZone.Position = UDim2.new(0, 0, 0.116228454, 0)
@@ -178,13 +195,14 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     Tabs.BackgroundTransparency = 1
     Tabs.BorderColor3 = Color3.fromRGB(0, 0, 0)
     Tabs.BorderSizePixel = 0
-    Tabs.Position = UDim2.new(0.30674848, 0, 0.0100250627, 0)
+    Tabs.Position = UDim2.new(0.0449740589, 0, 0.0100250627, 0)
     Tabs.Size = UDim2.new(0, 50, 0, 20)
     Tabs.Font = Enum.Font.ArialBold
     Tabs.Text = "Tabs"
     Tabs.TextColor3 = Color3.fromRGB(147, 152, 156)
     Tabs.TextSize = 14.000
     Tabs.TextTransparency = 0
+    Tabs.TextXAlignment = Enum.TextXAlignment.Left
     Tabs.ZIndex = 5
     fadeIn(Tabs)
 
@@ -217,36 +235,32 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         if TweenService then
             local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear)
             
-            -- Reset all tabs to default state (visible with gray text)
-            for _, child in ipairs(TabZone:GetChildren()) do
-                if child:IsA("TextLabel") and child ~= Tabs then
-                    local childImage = child:FindFirstChild("TabImage")
-                    local textTween = TweenService:Create(child, tweenInfo, {
-                        TextTransparency = 0,
-                        TextColor3 = Color3.fromRGB(147, 152, 156)
-                    })
-                    textTween:Play()
-                    
-                    if childImage then
-                        local imageTween = TweenService:Create(childImage, tweenInfo, {
-                            ImageTransparency = 0,
-                            ImageColor3 = Color3.fromRGB(147, 152, 156)
+            if tab ~= currentTab then
+                -- Reset all tabs to default state
+                for _, child in ipairs(TabZone:GetChildren()) do
+                    if child:IsA("TextLabel") and child ~= Tabs then
+                        local childImage = child:FindFirstChild("TabImage")
+                        local textTween = TweenService:Create(child, tweenInfo, {
+                            TextColor3 = Color3.fromRGB(147, 152, 156)
                         })
-                        imageTween:Play()
+                        textTween:Play()
+                        
+                        if childImage then
+                            local imageTween = TweenService:Create(childImage, tweenInfo, {
+                                ImageColor3 = Color3.fromRGB(147, 152, 156)
+                            })
+                            imageTween:Play()
+                        end
                     end
                 end
-            end
-            
-            -- Highlight selected tab
-            if tab ~= currentTab then
+                
+                -- Highlight selected tab
                 local tabTween = TweenService:Create(tab, tweenInfo, {
-                    TextTransparency = 0,
                     TextColor3 = Color3.fromRGB(150, 17, 255)
                 })
                 tabTween:Play()
                 
                 local imageTween = TweenService:Create(image, tweenInfo, {
-                    ImageTransparency = 0,
                     ImageColor3 = Color3.fromRGB(150, 17, 255)
                 })
                 imageTween:Play()
@@ -257,10 +271,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
                 currentTab = tab
             else
-                -- If clicking the same tab, deselect it
-                currentTab = nil
-                local moveTween = TweenService:Create(SelectedTab, tweenInfo, { Position = UDim2.new(0, 0, -0.1, 0) })
-                moveTween:Play()
+                -- Don't move selection tab when clicking the same tab
+                currentTab = tab
             end
         end
     end
@@ -271,7 +283,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         local tabCount = #TabZone:GetChildren() - 1 -- Exclude Tabs label
         local spacing = 0.0902255669
         local initialOffset = 0.0501253121 -- Original initial offset
-        local newPosition = UDim2.new(0.30674848, 0, initialOffset + (tabCount * spacing), 0)
+        local newPosition = UDim2.new(0.0449740589, 0, initialOffset + (tabCount * spacing), 0)
         
         local tab = Instance.new("TextLabel")
         tab.Name = visualName
