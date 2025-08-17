@@ -1411,7 +1411,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         elseif last_type == "dropdown" and new_type == "toggle" then
             spacing = 5
         else
-            spacing = 2
+            spacing = 5 -- Увеличил расстояние между элементами
         end
         yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
     end
@@ -1446,7 +1446,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
     InputFrame.BorderSizePixel = 0
     InputFrame.Position = UDim2.new(0.085, 0, 0, 15)
-    InputFrame.Size = UDim2.new(0, 50, 0, 30)
+    InputFrame.Size = UDim2.new(0, 165, 0, 30) -- Увеличил ширину до 165 как у dropdown
     InputFrame.AutoButtonColor = false
     InputFrame.Text = ""
     InputFrame.ZIndex = 6
@@ -1460,22 +1460,22 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputTextLabel.Name = "InputText"
     InputTextLabel.Parent = InputFrame
     InputTextLabel.BackgroundTransparency = 1
-    InputTextLabel.Size = UDim2.new(1, 0, 1, 0)
+    InputTextLabel.Size = UDim2.new(1, -10, 1, 0) -- Добавил отступ
+    InputTextLabel.Position = UDim2.new(0, 5, 0, 0) -- Добавил отступ
     InputTextLabel.Font = Enum.Font.SourceSans
     InputTextLabel.Text = defaultText
     InputTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
     InputTextLabel.TextSize = 14
-    InputTextLabel.TextXAlignment = Enum.TextXAlignment.Center
+    InputTextLabel.TextXAlignment = Enum.TextXAlignment.Left -- Изменил на Left для лучшего отображения
     InputTextLabel.ZIndex = 7
     InputTextLabel.ClipsDescendants = true
     
-    -- Название инпута (смещено на 12px влево)
+    -- Название инпута
     local InputNameLabel = Instance.new("TextLabel")
     InputNameLabel.Name = "InputName"
     InputNameLabel.Parent = InputContainer
     InputNameLabel.BackgroundTransparency = 1
-    -- Абсолютное позиционирование с учетом смещения
-    InputNameLabel.Position = UDim2.new(0, 0.085 * 460 + 50 - 12, 0, 15)
+    InputNameLabel.Position = UDim2.new(0.085 + 165/460 + 0.02, 0, 0, 15) -- Позиция справа от InputFrame
     InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
     InputNameLabel.Font = Enum.Font.SourceSansBold
     InputNameLabel.Text = inputName
@@ -1483,15 +1483,6 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputNameLabel.TextSize = 15
     InputNameLabel.TextXAlignment = Enum.TextXAlignment.Left
     InputNameLabel.ZIndex = 6
-    
-    -- Фиксация позиции для анимации
-    local function lockPosition()
-        local currentPos = InputNameLabel.Position
-        InputNameLabel.Position = UDim2.new(0, currentPos.X.Offset, 0, currentPos.Y.Offset)
-    end
-    
-    -- Применяем фиксацию сразу после создания
-    lockPosition()
     
     local currentText = defaultText
     
@@ -1510,12 +1501,13 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         inputBox.Name = "InputBox"
         inputBox.Parent = InputFrame
         inputBox.BackgroundTransparency = 1
-        inputBox.Size = UDim2.new(1, 0, 1, 0)
+        inputBox.Size = UDim2.new(1, -10, 1, 0)
+        inputBox.Position = UDim2.new(0, 5, 0, 0)
         inputBox.Font = Enum.Font.SourceSans
         inputBox.Text = currentText
         inputBox.TextColor3 = Color3.fromRGB(147, 152, 156)
         inputBox.TextSize = 14
-        inputBox.TextXAlignment = Enum.TextXAlignment.Center
+        inputBox.TextXAlignment = Enum.TextXAlignment.Left
         inputBox.ZIndex = 8
         inputBox.ClearTextOnFocus = false
         inputBox.PlaceholderText = "Type..."
@@ -1537,9 +1529,36 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     
     table.insert(self._inputElements, InputContainer)
     
-    -- Обновление позиций с учетом фиксации
+    -- Обновление размеров секции
     local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
     local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+    
+    -- Пересчитываем высоту контента
+    local contentHeight = 0
+    local elements_updated = getSortedElements(ContentFrame)
+    local previous_type = nil
+    for j, element in ipairs(elements_updated) do
+        local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or "input"
+        local spacing
+        if previous_type == nil then
+            spacing = 5
+        elseif previous_type == "toggle" and elem_type == "dropdown" then
+            spacing = 3
+        elseif previous_type == "dropdown" and elem_type == "toggle" then
+            spacing = 5
+        else
+            spacing = 5 -- Увеличил расстояние между элементами
+        end
+        contentHeight = contentHeight + spacing + element.Size.Y.Offset
+        previous_type = elem_type
+    end
+    
+    if windowInstance._sectionStates[section] then
+        local bottom_padding = 15
+        section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
+        ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
+    end
+    
     updateSectionPositions(container, sectionsList)
     
     return {
