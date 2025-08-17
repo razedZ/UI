@@ -1,3 +1,4 @@
+-- Основной код библиотеки (PizdecWare.lua)
 local success, HttpService = pcall(game.GetService, game, "HttpService")
 local success2, TweenService = pcall(game.GetService, game, "TweenService")
 local success3, UserInputService = pcall(game.GetService, game, "UserInputService")
@@ -190,22 +191,11 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         elseif element:IsA("ImageLabel") or element:IsA("ImageButton") then
             local tween = TweenService:Create(element, tweenInfo, {ImageTransparency = 0})
             tween:Play()
-        elseif element:IsA("Frame") then
+        elseif element:IsA("Frame") and element.Name:find("Toggle_") then
+            return
+        else
             local tween = TweenService:Create(element, tweenInfo, {BackgroundTransparency = 0})
             tween:Play()
-            -- Применяем fadeIn к дочерним элементам
-            for _, child in ipairs(element:GetChildren()) do
-                if child:IsA("TextLabel") or child:IsA("TextButton") then
-                    local childTween = TweenService:Create(child, tweenInfo, {TextTransparency = 0})
-                    childTween:Play()
-                elseif child:IsA("ImageLabel") or child:IsA("ImageButton") then
-                    local childTween = TweenService:Create(child, tweenInfo, {ImageTransparency = 0})
-                    childTween:Play()
-                elseif child:IsA("Frame") then
-                    local childTween = TweenService:Create(child, tweenInfo, {BackgroundTransparency = 0})
-                    childTween:Play()
-                end
-            end
         end
     end
 
@@ -353,28 +343,14 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                             if previous_type == nil then
                                 spacing = 5
                             elseif previous_type == "toggle" and elem_type == "dropdown" then
-                                spacing = 3
+                                spacing = 3 -- Расстояние между toggle и dropdown
                             elseif previous_type == "dropdown" and elem_type == "toggle" then
-                                spacing = 5
-                            elseif previous_type == "input" or elem_type == "input" then
-                                spacing = 5
+                                spacing = 5 -- Расстояние между dropdown и toggle
                             else
-                                spacing = 5
+                                spacing = 5 -- Обычное расстояние для других комбинаций
                             end
                             contentHeight = contentHeight + spacing + element.Size.Y.Offset
                             previous_type = elem_type
-                            -- Устанавливаем видимость и прозрачность для элементов
-                            element.Visible = true
-                            element.BackgroundTransparency = 0
-                            for _, child in ipairs(element:GetChildren()) do
-                                if child:IsA("TextLabel") or child:IsA("TextButton") then
-                                    child.Visible = true
-                                    child.TextTransparency = 0
-                                elseif child:IsA("Frame") then
-                                    child.Visible = true
-                                    child.BackgroundTransparency = 0
-                                end
-                            end
                         end
                     end
                     local bottom_padding = 15
@@ -606,13 +582,11 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                             if previous_type == nil then
                                 spacing = 5
                             elseif previous_type == "toggle" and elem_type == "dropdown" then
-                                spacing = 3
+                                spacing = 3 -- Расстояние между toggle и dropdown
                             elseif previous_type == "dropdown" and elem_type == "toggle" then
-                                spacing = 5
-                            elseif previous_type == "input" or elem_type == "input" then
-                                spacing = 5
+                                spacing = 5 -- Расстояние между dropdown и toggle
                             else
-                                spacing = 5
+                                spacing = 2 -- Обычное расстояние для других комбинаций
                             end
                             contentHeight = contentHeight + spacing + element.Size.Y.Offset
                             previous_type = elem_type
@@ -705,39 +679,24 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
             
             if not isExpanded then
                 ShowSectionButton.Text = "▼"
-                ContentFrame.BackgroundTransparency = 0
+                ContentFrame.BackgroundTransparency = 1
                 
                 for _, element in pairs(self._toggleElements) do
                     if element.Parent == ContentFrame then
                         element.Visible = true
-                        element.BackgroundTransparency = 0
-                        for _, child in ipairs(element:GetChildren()) do
-                            if child:IsA("TextLabel") or child:IsA("TextButton") then
-                                child.TextTransparency = 0
-                            end
-                        end
+                        element.BackgroundTransparency = 1
                     end
                 end
                 for _, element in pairs(self._dropdownElements) do
                     if element.Parent == ContentFrame then
                         element.Visible = true
-                        element.BackgroundTransparency = 0
-                        for _, child in ipairs(element:GetChildren()) do
-                            if child:IsA("TextLabel") or child:IsA("TextButton") then
-                                child.TextTransparency = 0
-                            end
-                        end
+                        element.BackgroundTransparency = 1
                     end
                 end
                 for _, element in pairs(self._inputElements) do
                     if element.Parent == ContentFrame then
                         element.Visible = true
-                        element.BackgroundTransparency = 0
-                        for _, child in ipairs(element:GetChildren()) do
-                            if child:IsA("TextLabel") or child:IsA("TextButton") then
-                                child.TextTransparency = 0
-                            end
-                        end
+                        element.BackgroundTransparency = 1
                     end
                 end
                 
@@ -750,13 +709,11 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                     if previous_type == nil then
                         spacing = 5
                     elseif previous_type == "toggle" and elem_type == "dropdown" then
-                        spacing = 3
+                        spacing = 3 -- Расстояние между toggle и dropdown
                     elseif previous_type == "dropdown" and elem_type == "toggle" then
-                        spacing = 5
-                    elseif previous_type == "input" or elem_type == "input" then
-                        spacing = 5
+                        spacing = 5 -- Расстояние между dropdown и toggle
                     else
-                        spacing = 5
+                        spacing = 2 -- Обычное расстояние для других комбинаций
                     end
                     contentHeight = contentHeight + spacing + element.Size.Y.Offset
                     previous_type = elem_type
@@ -852,16 +809,14 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
             yOffset = 5
         else
             local last = elements[#elements]
-            local last_type = last.Name:match("^Toggle_") and "toggle" or last.Name:match("^Dropdown_") and "dropdown" or "input"
+            local last_type = last.Name:match("^Toggle_") and "toggle" or "dropdown"
             local spacing
             if last_type == "toggle" and new_type == "dropdown" then
-                spacing = 3
+                spacing = 3 -- Расстояние между toggle и dropdown
             elseif last_type == "dropdown" and new_type == "toggle" then
-                spacing = 5
-            elseif last_type == "input" or new_type == "input" then
-                spacing = 5
+                spacing = 8
             else
-                spacing = 5
+                spacing = 2 -- Обычное расстояние для других комбинаций
             end
             yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
         end
@@ -942,18 +897,16 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         local elements_updated = getSortedElements(ContentFrame)
         local previous_type = nil
         for j, element in ipairs(elements_updated) do
-            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or "input"
+            local elem_type = element.Name:match("^Toggle_") and "toggle" or "dropdown"
             local spacing
             if previous_type == nil then
                 spacing = 5
             elseif previous_type == "toggle" and elem_type == "dropdown" then
-                spacing = 3
+                spacing = 3 -- Расстояние между toggle и dropdown
             elseif previous_type == "dropdown" and elem_type == "toggle" then
-                spacing = 5
-            elseif previous_type == "input" or elem_type == "input" then
-                spacing = 5
+                spacing = 5 -- Расстояние между dropdown и toggle
             else
-                spacing = 5
+                spacing = 2 -- Обычное расстояние для других комбинаций
             end
             contentHeight = contentHeight + spacing + element.Size.Y.Offset
             previous_type = elem_type
@@ -1026,19 +979,16 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
             yOffset = 5
         else
             local last = elements[#elements]
-            local last_type = last.Name:match("^Toggle_") and "toggle" or last.Name:match("^Dropdown_") and "dropdown" or "input"
+            local last_type = last.Name:match("^Toggle_") and "toggle" or "dropdown"
             local spacing
             if last_type == "toggle" and new_type == "dropdown" then
-                spacing = 3
-                yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing - 4
+                spacing = 3 -- Расстояние между toggle и dropdown
+                yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing - 4 -- Поднимаем dropdown на 4 пикселя вверх
             elseif last_type == "dropdown" and new_type == "toggle" then
-                spacing = 5
-                yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
-            elseif last_type == "input" or new_type == "input" then
-                spacing = 5
+                spacing = 5 -- Расстояние между dropdown и toggle
                 yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
             else
-                spacing = 5
+                spacing = 2 -- Обычное расстояние для других комбинаций
                 yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
             end
         end
@@ -1325,18 +1275,16 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         local elements_updated = getSortedElements(ContentFrame)
         local previous_type = nil
         for j, element in ipairs(elements_updated) do
-            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or "input"
+            local elem_type = element.Name:match("^Toggle_") and "toggle" or "dropdown"
             local spacing
             if previous_type == nil then
                 spacing = 5
             elseif previous_type == "toggle" and elem_type == "dropdown" then
-                spacing = 3
+                spacing = 3 -- Расстояние между toggle и dropdown
             elseif previous_type == "dropdown" and elem_type == "toggle" then
-                spacing = 5
-            elseif previous_type == "input" or elem_type == "input" then
-                spacing = 5
+                spacing = 5 -- Расстояние между dropdown и toggle
             else
-                spacing = 5
+                spacing = 2 -- Обычное расстояние для других комбинаций
             end
             contentHeight = contentHeight + spacing + element.Size.Y.Offset
             previous_type = elem_type
@@ -1431,223 +1379,188 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
 
     -- New input creation function with original style
     function windowInstance:CreateInput(params)
-        if not params.section then return nil end
-        
-        local section = params.section
-        local inputName = params.name or "Input"
-        local defaultText = params.default or ""
-        local save = params.save or false
-        local callback = params.callback or function() end
-        
-        local ContentFrame = section:FindFirstChild("ContentFrame")
-        if not ContentFrame then return nil end
-        
-        -- Загружаем сохраненное значение если нужно
-        if save and self._saveConfig.enabled then
-            local savedState = loadInputState(self, inputName)
-            if savedState ~= nil then
-                defaultText = savedState
-            end
+    if not params.section then return nil end
+    
+    local section = params.section
+    local inputName = params.name or "Input"
+    local defaultText = params.default or ""
+    local save = params.save or false
+    local callback = params.callback or function() end
+    
+    local ContentFrame = section:FindFirstChild("ContentFrame")
+    if not ContentFrame then return nil end
+    
+    -- Загружаем сохраненное значение если нужно
+    if save and self._saveConfig.enabled then
+        local savedState = loadInputState(self, inputName)
+        if savedState ~= nil then
+            defaultText = savedState
         end
-        
-        -- Рассчитываем позицию для нового элемента
-        local elements = getSortedElements(ContentFrame)
-        local new_type = "input"
-        local yOffset = 5
-        if #elements > 0 then
-            local last = elements[#elements]
-            local last_type = last.Name:match("^Toggle_") and "toggle" or last.Name:match("^Dropdown_") and "dropdown" or "input"
-            local spacing
-            if last_type == "toggle" and new_type == "input" then
-                spacing = 3
-            elseif last_type == "dropdown" and new_type == "input" then
-                spacing = 3
-            elseif last_type == "input" or new_type == "input" then
-                spacing = 5
-            else
-                spacing = 5
-            end
-            yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
-        end
-
-        -- Создаем основной контейнер
-        local InputContainer = Instance.new("Frame")
-        InputContainer.Name = "Input_" .. inputName
-        InputContainer.Parent = ContentFrame
-        InputContainer.BackgroundTransparency = 1
-        InputContainer.Size = UDim2.new(1, 0, 0, 50)
-        InputContainer.Position = UDim2.new(0, 0, 0, yOffset)
-        InputContainer.ZIndex = 5
-        InputContainer.Visible = true
-        InputContainer.LayoutOrder = yOffset
-
-        -- Создаем элементы интерфейса
-        local InputTopLabel = Instance.new("TextLabel")
-        InputTopLabel.Name = "InputTopLabel"
-        InputTopLabel.Parent = InputContainer
-        InputTopLabel.BackgroundTransparency = 1
-        InputTopLabel.Position = UDim2.new(0.085, 0, 0, 0)
-        InputTopLabel.Size = UDim2.new(0, 50, 0, 15)
-        InputTopLabel.Font = Enum.Font.SourceSans
-        InputTopLabel.Text = "Input"
-        InputTopLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        InputTopLabel.TextSize = 12
-        InputTopLabel.TextXAlignment = Enum.TextXAlignment.Center
-        InputTopLabel.ZIndex = 6
-        InputTopLabel.Visible = true
-        InputTopLabel.TextTransparency = 1
-
-        local InputFrame = Instance.new("TextButton")
-        InputFrame.Name = "InputFrame"
-        InputFrame.Parent = InputContainer
-        InputFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-        InputFrame.BorderSizePixel = 0
-        InputFrame.Position = UDim2.new(0.085, 0, 0, 15)
-        InputFrame.Size = UDim2.new(0, 165, 0, 30)
-        InputFrame.AutoButtonColor = false
-        InputFrame.Text = ""
-        InputFrame.ZIndex = 6
-        InputFrame.Visible = true
-        InputFrame.BackgroundTransparency = 1
-
-        local UICornerInput = Instance.new("UICorner")
-        UICornerInput.CornerRadius = UDim.new(0, 4)
-        UICornerInput.Parent = InputFrame
-
-        local InputTextLabel = Instance.new("TextLabel")
-        InputTextLabel.Name = "InputText"
-        InputTextLabel.Parent = InputFrame
-        InputTextLabel.BackgroundTransparency = 1
-        InputTextLabel.Size = UDim2.new(1, -10, 1, 0)
-        InputTextLabel.Position = UDim2.new(0, 5, 0, 0)
-        InputTextLabel.Font = Enum.Font.SourceSans
-        InputTextLabel.Text = defaultText
-        InputTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        InputTextLabel.TextSize = 14
-        InputTextLabel.TextXAlignment = Enum.TextXAlignment.Left
-        InputTextLabel.ZIndex = 7
-        InputTextLabel.Visible = true
-        InputTextLabel.TextTransparency = 1
-
-        local InputNameLabel = Instance.new("TextLabel")
-        InputNameLabel.Name = "InputName"
-        InputNameLabel.Parent = InputContainer
-        InputNameLabel.BackgroundTransparency = 1
-        InputNameLabel.Position = UDim2.new(0.085 + 165/460 + 0.02, 0, 0, 15)
-        InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
-        InputNameLabel.Font = Enum.Font.SourceSansBold
-        InputNameLabel.Text = inputName
-        InputNameLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        InputNameLabel.TextSize = 15
-        InputNameLabel.TextXAlignment = Enum.TextXAlignment.Left
-        InputNameLabel.ZIndex = 6
-        InputNameLabel.Visible = true
-        InputNameLabel.TextTransparency = 1
-
-        -- Применяем анимацию fadeIn ко всем компонентам
-        task.spawn(function()
-            fadeIn(InputContainer)
-            fadeIn(InputTopLabel)
-            fadeIn(InputFrame)
-            fadeIn(InputTextLabel)
-            fadeIn(InputNameLabel)
-        end)
-
-        local currentText = defaultText
-        
-        local function updateText()
-            InputTextLabel.Text = currentText
-            if save and self._saveConfig.enabled then
-                saveInputState(self, inputName, currentText)
-            end
-            callback(currentText)
-        end
-        
-        InputFrame.MouseButton1Click:Connect(function()
-            local inputBox = Instance.new("TextBox")
-            inputBox.Name = "InputBox"
-            inputBox.Parent = InputFrame
-            inputBox.BackgroundTransparency = 1
-            inputBox.Size = UDim2.new(1, -10, 1, 0)
-            inputBox.Position = UDim2.new(0, 5, 0, 0)
-            inputBox.Font = Enum.Font.SourceSans
-            inputBox.Text = currentText
-            inputBox.TextColor3 = Color3.fromRGB(147, 152, 156)
-            inputBox.TextSize = 14
-            inputBox.TextXAlignment = Enum.TextXAlignment.Left
-            inputBox.ZIndex = 8
-            inputBox.ClearTextOnFocus = false
-            inputBox.PlaceholderText = "Type..."
-            inputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
-            
-            InputTextLabel.Visible = false
-            inputBox:CaptureFocus()
-            
-            inputBox.FocusLost:Connect(function()
-                currentText = inputBox.Text
-                inputBox:Destroy()
-                InputTextLabel.Visible = true
-                updateText()
-            end)
-        end)
-        
-        updateText()
-        
-        -- Добавляем в таблицу элементов
-        table.insert(self._inputElements, InputContainer)
-        
-        -- Немедленное обновление макета
-        local function forceLayoutUpdate()
-            local contentHeight = 0
-            local elements = getSortedElements(ContentFrame)
-            local previous_type = nil
-            for _, element in ipairs(elements) do
-                local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or "input"
-                local spacing
-                if previous_type == nil then
-                    spacing = 5
-                elseif previous_type == "toggle" and elem_type == "dropdown" then
-                    spacing = 3
-                elseif previous_type == "dropdown" and elem_type == "toggle" then
-                    spacing = 5
-                elseif previous_type == "input" or elem_type == "input" then
-                    spacing = 5
-                else
-                    spacing = 5
-                end
-                contentHeight = contentHeight + spacing + element.Size.Y.Offset
-                previous_type = elem_type
-            end
-            
-            ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
-            
-            local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-            local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-            
-            if windowInstance._sectionStates[section] then
-                local bottom_padding = 15
-                section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
-            end
-            
-            -- Асинхронное обновление позиций
-            task.spawn(function()
-                updateSectionPositions(container, sectionsList)
-            end)
-        end
-        
-        -- Вызываем обновление макета немедленно
-        task.spawn(forceLayoutUpdate)
-        
-        return {
-            Set = function(self, value)
-                currentText = tostring(value)
-                updateText()
-            end,
-            Get = function(self)
-                return currentText
-            end
-        }
     end
+    
+    -- Рассчитываем позицию для нового элемента
+    local yOffset = 5
+    local elements = getSortedElements(ContentFrame)
+    
+    if #elements > 0 then
+        local lastElement = elements[#elements]
+        local spacing = 5 -- Базовый отступ
+        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
+    end
+
+    -- Создаем основной контейнер
+    local InputContainer = Instance.new("Frame")
+    InputContainer.Name = "Input_" .. inputName
+    InputContainer.Parent = ContentFrame
+    InputContainer.BackgroundTransparency = 1
+    InputContainer.Size = UDim2.new(1, 0, 0, 50)
+    InputContainer.Position = UDim2.new(0, 0, 0, yOffset)
+    InputContainer.ZIndex = 5
+    
+    -- Принудительно активируем элемент
+    InputContainer.Visible = true
+    InputContainer.LayoutOrder = yOffset
+
+    -- Создаем элементы интерфейса
+    local InputTopLabel = Instance.new("TextLabel")
+    InputTopLabel.Name = "InputTopLabel"
+    InputTopLabel.Parent = InputContainer
+    InputTopLabel.BackgroundTransparency = 1
+    InputTopLabel.Position = UDim2.new(0.085, 0, 0, 0)
+    InputTopLabel.Size = UDim2.new(0, 50, 0, 15)
+    InputTopLabel.Font = Enum.Font.SourceSans
+    InputTopLabel.Text = "Input"
+    InputTopLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    InputTopLabel.TextSize = 12
+    InputTopLabel.TextXAlignment = Enum.TextXAlignment.Center
+    InputTopLabel.ZIndex = 6
+    InputTopLabel.Visible = true
+
+    local InputFrame = Instance.new("TextButton")
+    InputFrame.Name = "InputFrame"
+    InputFrame.Parent = InputContainer
+    InputFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+    InputFrame.BorderSizePixel = 0
+    InputFrame.Position = UDim2.new(0.085, 0, 0, 15)
+    InputFrame.Size = UDim2.new(0, 165, 0, 30)
+    InputFrame.AutoButtonColor = false
+    InputFrame.Text = ""
+    InputFrame.ZIndex = 6
+    InputFrame.Visible = true
+
+    local UICornerInput = Instance.new("UICorner")
+    UICornerInput.CornerRadius = UDim.new(0, 4)
+    UICornerInput.Parent = InputFrame
+
+    local InputTextLabel = Instance.new("TextLabel")
+    InputTextLabel.Name = "InputText"
+    InputTextLabel.Parent = InputFrame
+    InputTextLabel.BackgroundTransparency = 1
+    InputTextLabel.Size = UDim2.new(1, -10, 1, 0)
+    InputTextLabel.Position = UDim2.new(0, 5, 0, 0)
+    InputTextLabel.Font = Enum.Font.SourceSans
+    InputTextLabel.Text = defaultText
+    InputTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    InputTextLabel.TextSize = 14
+    InputTextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    InputTextLabel.ZIndex = 7
+    InputTextLabel.Visible = true
+
+    local InputNameLabel = Instance.new("TextLabel")
+    InputNameLabel.Name = "InputName"
+    InputNameLabel.Parent = InputContainer
+    InputNameLabel.BackgroundTransparency = 1
+    InputNameLabel.Position = UDim2.new(0.085 + 165/460 + 0.02, 0, 0, 15)
+    InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
+    InputNameLabel.Font = Enum.Font.SourceSansBold
+    InputNameLabel.Text = inputName
+    InputNameLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    InputNameLabel.TextSize = 15
+    InputNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    InputNameLabel.ZIndex = 6
+    InputNameLabel.Visible = true
+
+    local currentText = defaultText
+    
+    local function updateText()
+        InputTextLabel.Text = currentText
+        if save and self._saveConfig.enabled then
+            saveInputState(self, inputName, currentText)
+        end
+        callback(currentText)
+    end
+    
+    InputFrame.MouseButton1Click:Connect(function()
+        local inputBox = Instance.new("TextBox")
+        inputBox.Name = "InputBox"
+        inputBox.Parent = InputFrame
+        inputBox.BackgroundTransparency = 1
+        inputBox.Size = UDim2.new(1, -10, 1, 0)
+        inputBox.Position = UDim2.new(0, 5, 0, 0)
+        inputBox.Font = Enum.Font.SourceSans
+        inputBox.Text = currentText
+        inputBox.TextColor3 = Color3.fromRGB(147, 152, 156)
+        inputBox.TextSize = 14
+        inputBox.TextXAlignment = Enum.TextXAlignment.Left
+        inputBox.ZIndex = 8
+        inputBox.ClearTextOnFocus = false
+        inputBox.PlaceholderText = "Type..."
+        inputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+        
+        InputTextLabel.Visible = false
+        inputBox:CaptureFocus()
+        
+        inputBox.FocusLost:Connect(function()
+            currentText = inputBox.Text
+            inputBox:Destroy()
+            InputTextLabel.Visible = true
+            updateText()
+        end)
+    end)
+    
+    updateText()
+    
+    -- Добавляем в таблицу элементов
+    table.insert(self._inputElements, InputContainer)
+    
+    -- Немедленное обновление макета
+    local function forceLayoutUpdate()
+        local contentHeight = 0
+        local elements = getSortedElements(ContentFrame)
+        
+        for _, element in ipairs(elements) do
+            contentHeight = contentHeight + 5 + element.Size.Y.Offset
+        end
+        
+        ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
+        
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        
+        if windowInstance._sectionStates[section] then
+            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + 15)
+        end
+        
+        -- Двойное обновление для гарантии
+        task.wait(0.05)
+        updateSectionPositions(container, sectionsList)
+        task.wait(0.05)
+        updateSectionPositions(container, sectionsList)
+    end
+    
+    -- Вызываем обновление макета
+    forceLayoutUpdate()
+    
+    return {
+        Set = function(self, value)
+            currentText = tostring(value)
+            updateText()
+        end,
+        Get = function(self)
+            return currentText
+        end
+    }
+end
 
     local function updateAllDropdownPositions()
         for dropdownContainer, dropdownList in pairs(windowInstance._openDropdowns) do
