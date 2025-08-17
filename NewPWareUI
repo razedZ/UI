@@ -1390,6 +1390,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     local ContentFrame = section:FindFirstChild("ContentFrame")
     if not ContentFrame then return nil end
     
+    -- Загружаем сохраненное значение если нужно
     if save and self._saveConfig.enabled then
         local savedState = loadInputState(self, inputName)
         if savedState ~= nil then
@@ -1397,25 +1398,17 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         end
     end
     
+    -- Рассчитываем позицию для нового элемента
+    local yOffset = 5
     local elements = getSortedElements(ContentFrame)
-    local new_type = "input"
-    local yOffset
-    if #elements == 0 then
-        yOffset = 5
-    else
-        local last = elements[#elements]
-        local last_type = last.Name:match("^Toggle_") and "toggle" or last.Name:match("^Dropdown_") and "dropdown" or "input"
-        local spacing
-        if last_type == "toggle" and new_type == "dropdown" then
-            spacing = 3
-        elseif last_type == "dropdown" and new_type == "toggle" then
-            spacing = 5
-        else
-            spacing = 5 -- Увеличил расстояние между элементами
-        end
-        yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
+    
+    if #elements > 0 then
+        local lastElement = elements[#elements]
+        local spacing = 5 -- Базовый отступ
+        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
     end
 
+    -- Создаем основной контейнер
     local InputContainer = Instance.new("Frame")
     InputContainer.Name = "Input_" .. inputName
     InputContainer.Parent = ContentFrame
@@ -1423,9 +1416,12 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputContainer.Size = UDim2.new(1, 0, 0, 50)
     InputContainer.Position = UDim2.new(0, 0, 0, yOffset)
     InputContainer.ZIndex = 5
-    InputContainer.Visible = true
     
-    -- Текст "Input" сверху
+    -- Принудительно активируем элемент
+    InputContainer.Visible = true
+    InputContainer.LayoutOrder = yOffset
+
+    -- Создаем элементы интерфейса
     local InputTopLabel = Instance.new("TextLabel")
     InputTopLabel.Name = "InputTopLabel"
     InputTopLabel.Parent = InputContainer
@@ -1438,44 +1434,43 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputTopLabel.TextSize = 12
     InputTopLabel.TextXAlignment = Enum.TextXAlignment.Center
     InputTopLabel.ZIndex = 6
-    
-    -- Основное поле ввода
+    InputTopLabel.Visible = true
+
     local InputFrame = Instance.new("TextButton")
     InputFrame.Name = "InputFrame"
     InputFrame.Parent = InputContainer
     InputFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
     InputFrame.BorderSizePixel = 0
     InputFrame.Position = UDim2.new(0.085, 0, 0, 15)
-    InputFrame.Size = UDim2.new(0, 165, 0, 30) -- Увеличил ширину до 165 как у dropdown
+    InputFrame.Size = UDim2.new(0, 165, 0, 30)
     InputFrame.AutoButtonColor = false
     InputFrame.Text = ""
     InputFrame.ZIndex = 6
-    
+    InputFrame.Visible = true
+
     local UICornerInput = Instance.new("UICorner")
     UICornerInput.CornerRadius = UDim.new(0, 4)
     UICornerInput.Parent = InputFrame
-    
-    -- Текст внутри инпута
+
     local InputTextLabel = Instance.new("TextLabel")
     InputTextLabel.Name = "InputText"
     InputTextLabel.Parent = InputFrame
     InputTextLabel.BackgroundTransparency = 1
-    InputTextLabel.Size = UDim2.new(1, -10, 1, 0) -- Добавил отступ
-    InputTextLabel.Position = UDim2.new(0, 5, 0, 0) -- Добавил отступ
+    InputTextLabel.Size = UDim2.new(1, -10, 1, 0)
+    InputTextLabel.Position = UDim2.new(0, 5, 0, 0)
     InputTextLabel.Font = Enum.Font.SourceSans
     InputTextLabel.Text = defaultText
     InputTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
     InputTextLabel.TextSize = 14
-    InputTextLabel.TextXAlignment = Enum.TextXAlignment.Left -- Изменил на Left для лучшего отображения
+    InputTextLabel.TextXAlignment = Enum.TextXAlignment.Left
     InputTextLabel.ZIndex = 7
-    InputTextLabel.ClipsDescendants = true
-    
-    -- Название инпута
+    InputTextLabel.Visible = true
+
     local InputNameLabel = Instance.new("TextLabel")
     InputNameLabel.Name = "InputName"
     InputNameLabel.Parent = InputContainer
     InputNameLabel.BackgroundTransparency = 1
-    InputNameLabel.Position = UDim2.new(0.085 + 165/460 + 0.02, 0, 0, 15) -- Позиция справа от InputFrame
+    InputNameLabel.Position = UDim2.new(0.085 + 165/460 + 0.02, 0, 0, 15)
     InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
     InputNameLabel.Font = Enum.Font.SourceSansBold
     InputNameLabel.Text = inputName
@@ -1483,16 +1478,15 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputNameLabel.TextSize = 15
     InputNameLabel.TextXAlignment = Enum.TextXAlignment.Left
     InputNameLabel.ZIndex = 6
-    
+    InputNameLabel.Visible = true
+
     local currentText = defaultText
     
     local function updateText()
         InputTextLabel.Text = currentText
-        
         if save and self._saveConfig.enabled then
             saveInputState(self, inputName, currentText)
         end
-        
         callback(currentText)
     end
     
@@ -1514,52 +1508,48 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         inputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
         
         InputTextLabel.Visible = false
+        inputBox:CaptureFocus()
         
-        inputBox.FocusLost:Connect(function(enterPressed)
+        inputBox.FocusLost:Connect(function()
             currentText = inputBox.Text
             inputBox:Destroy()
             InputTextLabel.Visible = true
             updateText()
         end)
-        
-        inputBox:CaptureFocus()
     end)
     
     updateText()
     
+    -- Добавляем в таблицу элементов
     table.insert(self._inputElements, InputContainer)
     
-    -- Обновление размеров секции
-    local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-    local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-    
-    -- Пересчитываем высоту контента
-    local contentHeight = 0
-    local elements_updated = getSortedElements(ContentFrame)
-    local previous_type = nil
-    for j, element in ipairs(elements_updated) do
-        local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or "input"
-        local spacing
-        if previous_type == nil then
-            spacing = 5
-        elseif previous_type == "toggle" and elem_type == "dropdown" then
-            spacing = 3
-        elseif previous_type == "dropdown" and elem_type == "toggle" then
-            spacing = 5
-        else
-            spacing = 5 -- Увеличил расстояние между элементами
+    -- Немедленное обновление макета
+    local function forceLayoutUpdate()
+        local contentHeight = 0
+        local elements = getSortedElements(ContentFrame)
+        
+        for _, element in ipairs(elements) do
+            contentHeight = contentHeight + 5 + element.Size.Y.Offset
         end
-        contentHeight = contentHeight + spacing + element.Size.Y.Offset
-        previous_type = elem_type
-    end
-    
-    if windowInstance._sectionStates[section] then
-        local bottom_padding = 15
-        section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
+        
         ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
+        
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        
+        if windowInstance._sectionStates[section] then
+            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + 15)
+        end
+        
+        -- Двойное обновление для гарантии
+        task.wait(0.05)
+        updateSectionPositions(container, sectionsList)
+        task.wait(0.05)
+        updateSectionPositions(container, sectionsList)
     end
     
-    updateSectionPositions(container, sectionsList)
+    -- Вызываем обновление макета
+    forceLayoutUpdate()
     
     return {
         Set = function(self, value)
