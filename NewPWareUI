@@ -1390,7 +1390,6 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     local ContentFrame = section:FindFirstChild("ContentFrame")
     if not ContentFrame then return nil end
     
-    -- Загружаем сохраненное значение если нужно
     if save and self._saveConfig.enabled then
         local savedState = loadInputState(self, inputName)
         if savedState ~= nil then
@@ -1398,17 +1397,25 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         end
     end
     
-    -- Рассчитываем позицию для нового элемента
-    local yOffset = 5
     local elements = getSortedElements(ContentFrame)
-    
-    if #elements > 0 then
-        local lastElement = elements[#elements]
-        local spacing = 5 -- Базовый отступ
-        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
+    local new_type = "input"
+    local yOffset
+    if #elements == 0 then
+        yOffset = 5
+    else
+        local last = elements[#elements]
+        local last_type = last.Name:match("^Toggle_") and "toggle" or last.Name:match("^Dropdown_") and "dropdown" or "input"
+        local spacing
+        if last_type == "toggle" and new_type == "dropdown" then
+            spacing = 3
+        elseif last_type == "dropdown" and new_type == "toggle" then
+            spacing = 5
+        else
+            spacing = 2
+        end
+        yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
     end
 
-    -- Создаем основной контейнер
     local InputContainer = Instance.new("Frame")
     InputContainer.Name = "Input_" .. inputName
     InputContainer.Parent = ContentFrame
@@ -1416,12 +1423,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputContainer.Size = UDim2.new(1, 0, 0, 50)
     InputContainer.Position = UDim2.new(0, 0, 0, yOffset)
     InputContainer.ZIndex = 5
-    
-    -- Принудительно активируем элемент
     InputContainer.Visible = true
-    InputContainer.LayoutOrder = yOffset
-
-    -- Создаем элементы интерфейса
+    
+    -- Текст "Input" сверху
     local InputTopLabel = Instance.new("TextLabel")
     InputTopLabel.Name = "InputTopLabel"
     InputTopLabel.Parent = InputContainer
@@ -1434,43 +1438,44 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputTopLabel.TextSize = 12
     InputTopLabel.TextXAlignment = Enum.TextXAlignment.Center
     InputTopLabel.ZIndex = 6
-    InputTopLabel.Visible = true
-
+    
+    -- Основное поле ввода
     local InputFrame = Instance.new("TextButton")
     InputFrame.Name = "InputFrame"
     InputFrame.Parent = InputContainer
     InputFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
     InputFrame.BorderSizePixel = 0
     InputFrame.Position = UDim2.new(0.085, 0, 0, 15)
-    InputFrame.Size = UDim2.new(0, 165, 0, 30)
+    InputFrame.Size = UDim2.new(0, 50, 0, 30)
     InputFrame.AutoButtonColor = false
     InputFrame.Text = ""
     InputFrame.ZIndex = 6
-    InputFrame.Visible = true
-
+    
     local UICornerInput = Instance.new("UICorner")
     UICornerInput.CornerRadius = UDim.new(0, 4)
     UICornerInput.Parent = InputFrame
-
+    
+    -- Текст внутри инпута
     local InputTextLabel = Instance.new("TextLabel")
     InputTextLabel.Name = "InputText"
     InputTextLabel.Parent = InputFrame
     InputTextLabel.BackgroundTransparency = 1
-    InputTextLabel.Size = UDim2.new(1, -10, 1, 0)
-    InputTextLabel.Position = UDim2.new(0, 5, 0, 0)
+    InputTextLabel.Size = UDim2.new(1, 0, 1, 0)
     InputTextLabel.Font = Enum.Font.SourceSans
     InputTextLabel.Text = defaultText
     InputTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
     InputTextLabel.TextSize = 14
-    InputTextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    InputTextLabel.TextXAlignment = Enum.TextXAlignment.Center
     InputTextLabel.ZIndex = 7
-    InputTextLabel.Visible = true
-
+    InputTextLabel.ClipsDescendants = true
+    
+    -- Название инпута (смещено на 12px влево)
     local InputNameLabel = Instance.new("TextLabel")
     InputNameLabel.Name = "InputName"
     InputNameLabel.Parent = InputContainer
     InputNameLabel.BackgroundTransparency = 1
-    InputNameLabel.Position = UDim2.new(0.085 + 165/460 + 0.02, 0, 0, 15)
+    -- Абсолютное позиционирование с учетом смещения
+    InputNameLabel.Position = UDim2.new(0, 0.085 * 460 + 50 - 12, 0, 15)
     InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
     InputNameLabel.Font = Enum.Font.SourceSansBold
     InputNameLabel.Text = inputName
@@ -1478,15 +1483,25 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputNameLabel.TextSize = 15
     InputNameLabel.TextXAlignment = Enum.TextXAlignment.Left
     InputNameLabel.ZIndex = 6
-    InputNameLabel.Visible = true
-
+    
+    -- Фиксация позиции для анимации
+    local function lockPosition()
+        local currentPos = InputNameLabel.Position
+        InputNameLabel.Position = UDim2.new(0, currentPos.X.Offset, 0, currentPos.Y.Offset)
+    end
+    
+    -- Применяем фиксацию сразу после создания
+    lockPosition()
+    
     local currentText = defaultText
     
     local function updateText()
         InputTextLabel.Text = currentText
+        
         if save and self._saveConfig.enabled then
             saveInputState(self, inputName, currentText)
         end
+        
         callback(currentText)
     end
     
@@ -1495,61 +1510,37 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         inputBox.Name = "InputBox"
         inputBox.Parent = InputFrame
         inputBox.BackgroundTransparency = 1
-        inputBox.Size = UDim2.new(1, -10, 1, 0)
-        inputBox.Position = UDim2.new(0, 5, 0, 0)
+        inputBox.Size = UDim2.new(1, 0, 1, 0)
         inputBox.Font = Enum.Font.SourceSans
         inputBox.Text = currentText
         inputBox.TextColor3 = Color3.fromRGB(147, 152, 156)
         inputBox.TextSize = 14
-        inputBox.TextXAlignment = Enum.TextXAlignment.Left
+        inputBox.TextXAlignment = Enum.TextXAlignment.Center
         inputBox.ZIndex = 8
         inputBox.ClearTextOnFocus = false
         inputBox.PlaceholderText = "Type..."
         inputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
         
         InputTextLabel.Visible = false
-        inputBox:CaptureFocus()
         
-        inputBox.FocusLost:Connect(function()
+        inputBox.FocusLost:Connect(function(enterPressed)
             currentText = inputBox.Text
             inputBox:Destroy()
             InputTextLabel.Visible = true
             updateText()
         end)
+        
+        inputBox:CaptureFocus()
     end)
     
     updateText()
     
-    -- Добавляем в таблицу элементов
     table.insert(self._inputElements, InputContainer)
     
-    -- Немедленное обновление макета
-    local function forceLayoutUpdate()
-        local contentHeight = 0
-        local elements = getSortedElements(ContentFrame)
-        
-        for _, element in ipairs(elements) do
-            contentHeight = contentHeight + 5 + element.Size.Y.Offset
-        end
-        
-        ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
-        
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-        
-        if windowInstance._sectionStates[section] then
-            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + 15)
-        end
-        
-        -- Двойное обновление для гарантии
-        task.wait(0.05)
-        updateSectionPositions(container, sectionsList)
-        task.wait(0.05)
-        updateSectionPositions(container, sectionsList)
-    end
-    
-    -- Вызываем обновление макета
-    forceLayoutUpdate()
+    -- Обновление позиций с учетом фиксации
+    local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+    local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+    updateSectionPositions(container, sectionsList)
     
     return {
         Set = function(self, value)
