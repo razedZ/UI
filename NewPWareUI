@@ -154,9 +154,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
             })
             tween:Play()
             tween.Completed:Connect(function()
-                element.BackgroundTransparency = initialTransparency == 1 ? 1 : 0 -- Восстанавливаем прозрачность только если она изначально была 1
+                element.BackgroundTransparency = initialTransparency == 1 and 1 or 0
                 if element.TextTransparency == 0 then
-                    element.TextTransparency = 0 -- Убеждаемся, что текст остаётся видимым
+                    element.TextTransparency = 0
                 end
             end)
         elseif element:IsA("ImageLabel") or element:IsA("ImageButton") then
@@ -165,9 +165,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
             })
             tween:Play()
             tween.Completed:Connect(function()
-                element.BackgroundTransparency = initialTransparency == 1 ? 1 : 0 -- Восстанавливаем прозрачность только если она изначально была 1
+                element.BackgroundTransparency = initialTransparency == 1 and 1 or 0
                 if element.ImageTransparency == 0 then
-                    element.ImageTransparency = 0 -- Убеждаемся, что изображение остаётся видимым
+                    element.ImageTransparency = 0
                 end
             end)
         else
@@ -176,12 +176,12 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
             })
             tween:Play()
             tween.Completed:Connect(function()
-                element.BackgroundTransparency = initialTransparency == 1 ? 1 : 0 -- Восстанавливаем прозрачность только если она изначально была 1
+                element.BackgroundTransparency = initialTransparency == 1 and 1 or 0
             end)
         end
     end
 
-    wait(0)
+    task.wait(0)
     fadeIn(MainFrame)
     fadeIn(Logo)
     fadeIn(W)
@@ -190,7 +190,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     fadeIn(Info)
     fadeIn(ElementContainer)
     fadeIn(Line)
-    wait(1)
+    task.wait(1)
 
     local TabZone = Instance.new("Frame")
     TabZone.Name = "TabZone"
@@ -201,10 +201,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
     TabZone.Position = UDim2.new(0, 0, 0.116228454, 0)
     TabZone.Size = UDim2.new(0, 163, 0, 399)
     TabZone.ZIndex = 4
-    TabZone.BackgroundTransparency = 1 -- Прозрачность 1 изначально и всегда
+    TabZone.BackgroundTransparency = 1
     local UICorner_TabZone = Instance.new("UICorner")
     UICorner_TabZone.Parent = TabZone
-    -- Не вызываем fadeIn для TabZone, чтобы не менять его прозрачность
 
     local Tabs = Instance.new("TextLabel")
     Tabs.Name = "Tabs"
@@ -298,9 +297,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
 
     function PizdecWare:CreateTab(visualName, imageId)
         if not TweenService then return nil end
-        local tabCount = #TabZone:GetChildren() - 2 -- Exclude Tabs and SelectedTab
+        local tabCount = #TabZone:GetChildren() - 2
         local spacing = 0.0902255669
-        local initialOffset = 0.0501253121 + (Tabs.Size.Y.Scale * 2) - 0.0902255669 -- Поднимаем на 1 уровень вверх
+        local initialOffset = 0.0501253121 + (Tabs.Size.Y.Scale * 2) - 0.0902255669
         local newPosition = UDim2.new(0.30674848, 0, initialOffset + (tabCount * spacing), 0)
         
         local tab = Instance.new("TextLabel")
@@ -353,6 +352,55 @@ function PizdecWare:CreateWindow(guiName, infoText, saveFileName)
         end
 
         return tab
+    end
+
+    -- Исправленная функция для создания Input
+    function PizdecWare:CreateInput(parent, placeholder, callback)
+        local InputFrame = Instance.new("Frame")
+        InputFrame.Name = "InputFrame"
+        InputFrame.Parent = parent
+        InputFrame.BackgroundColor3 = Color3.fromRGB(30, 31, 36)
+        InputFrame.BorderSizePixel = 0
+        InputFrame.Size = UDim2.new(0, 200, 0, 30)
+        InputFrame.BackgroundTransparency = 0
+        InputFrame.ZIndex = 5
+        
+        local UICorner = Instance.new("UICorner")
+        UICorner.CornerRadius = UDim.new(0, 4)
+        UICorner.Parent = InputFrame
+        
+        local TextBox = Instance.new("TextBox")
+        TextBox.Parent = InputFrame
+        TextBox.BackgroundTransparency = 1
+        TextBox.Size = UDim2.new(1, -10, 1, 0)
+        TextBox.Position = UDim2.new(0, 5, 0, 0)
+        TextBox.Font = Enum.Font.SourceSans
+        TextBox.Text = ""
+        TextBox.PlaceholderText = placeholder or "Enter text..."
+        TextBox.TextColor3 = Color3.fromRGB(200, 200, 200)
+        TextBox.TextSize = 14
+        TextBox.TextXAlignment = Enum.TextXAlignment.Left
+        TextBox.ZIndex = 6
+        TextBox.ClearTextOnFocus = false
+        
+        TextBox.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                callback(TextBox.Text)
+            end
+        end)
+        
+        -- Добавляем анимацию появления
+        InputFrame.BackgroundTransparency = 1
+        TextBox.TextTransparency = 1
+        
+        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local tween1 = TweenService:Create(InputFrame, tweenInfo, {BackgroundTransparency = 0})
+        local tween2 = TweenService:Create(TextBox, tweenInfo, {TextTransparency = 0})
+        
+        tween1:Play()
+        tween2:Play()
+        
+        return InputFrame
     end
 
     return setmetatable({}, PizdecWare)
