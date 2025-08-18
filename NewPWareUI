@@ -1397,25 +1397,26 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         end
     end
     
+    -- Получаем все элементы и рассчитываем позицию нового элемента
     local elements = getSortedElements(ContentFrame)
-    local new_type = "input"
-    local yOffset
-    if #elements == 0 then
-        yOffset = 5
-    else
-        local last = elements[#elements]
-        local last_type = last.Name:match("^Toggle_") and "toggle" or last.Name:match("^Dropdown_") and "dropdown" or "input"
-        local spacing
-        if last_type == "toggle" and new_type == "dropdown" then
-            spacing = 3
-        elseif last_type == "dropdown" and new_type == "toggle" then
-            spacing = 5
-        else
-            spacing = 2
+    local yOffset = 5 -- Стандартный отступ для первого элемента
+    
+    if #elements > 0 then
+        local lastElement = elements[#elements]
+        local lastType = lastElement.Name:match("^Toggle_") and "toggle" or 
+                        lastElement.Name:match("^Dropdown_") and "dropdown" or 
+                        "input"
+        
+        -- Определяем отступ в зависимости от типа предыдущего элемента
+        local spacing = 5
+        if lastType == "toggle" then spacing = 5
+        elseif lastType == "dropdown" then spacing = 5
         end
-        yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
+        
+        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
     end
 
+    -- Создаем контейнер для Input
     local InputContainer = Instance.new("Frame")
     InputContainer.Name = "Input_" .. inputName
     InputContainer.Parent = ContentFrame
@@ -1469,13 +1470,12 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputTextLabel.ZIndex = 7
     InputTextLabel.ClipsDescendants = true
     
-    -- Название инпута (смещено на 12px влево)
+    -- Название инпута
     local InputNameLabel = Instance.new("TextLabel")
     InputNameLabel.Name = "InputName"
     InputNameLabel.Parent = InputContainer
     InputNameLabel.BackgroundTransparency = 1
-    -- Абсолютное позиционирование с учетом смещения
-    InputNameLabel.Position = UDim2.new(0, 0.085 * 460 + 50 - 12, 0, 15)
+    InputNameLabel.Position = UDim2.new(0.085, 50, 0, 15)
     InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
     InputNameLabel.Font = Enum.Font.SourceSansBold
     InputNameLabel.Text = inputName
@@ -1483,15 +1483,6 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputNameLabel.TextSize = 15
     InputNameLabel.TextXAlignment = Enum.TextXAlignment.Left
     InputNameLabel.ZIndex = 6
-    
-    -- Фиксация позиции для анимации
-    local function lockPosition()
-        local currentPos = InputNameLabel.Position
-        InputNameLabel.Position = UDim2.new(0, currentPos.X.Offset, 0, currentPos.Y.Offset)
-    end
-    
-    -- Применяем фиксацию сразу после создания
-    lockPosition()
     
     local currentText = defaultText
     
@@ -1536,11 +1527,31 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     updateText()
     
     table.insert(self._inputElements, InputContainer)
-    
-    -- Обновление позиций с учетом фиксации
+
+    -- Принудительное обновление размеров секции
     local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
     local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-    updateSectionPositions(container, sectionsList)
+    
+    -- Ждем один кадр, чтобы все элементы успели загрузиться
+    task.defer(function()
+        -- Получаем актуальный список элементов после создания
+        local currentElements = getSortedElements(ContentFrame)
+        local totalHeight = 0
+        
+        if #currentElements > 0 then
+            local lastElement = currentElements[#currentElements]
+            totalHeight = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset
+        end
+        
+        -- Обновляем размеры контента и секции
+        if windowInstance._sectionStates[section] then
+            ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 5) -- +5 для нижнего отступа
+            section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + 15) -- 30 - заголовок, 15 - нижний отступ
+        end
+        
+        -- Обновляем позиции всех секций
+        updateSectionPositions(container, sectionsList)
+    end)
     
     return {
         Set = function(self, value)
@@ -1573,6 +1584,7 @@ end
     end
 
     return windowInstance
+print(1)
 end
 
 return PizdecWare
