@@ -1692,13 +1692,22 @@ end
             return nil
         end
         
+        -- Convert string key to Enum if needed
+        if type(defaultKey) == "string" then
+            defaultKey = Enum.KeyCode[defaultKey:upper()] or nil
+        end
+        
         -- Load saved value
         if save and self._saveConfig.enabled then
             local success, savedState = pcall(function()
                 return loadBindState(self, bindName)
             end)
             if success and savedState ~= nil then
-                defaultKey = savedState
+                if type(savedState) == "string" then
+                    defaultKey = Enum.KeyCode[savedState:upper()] or defaultKey
+                else
+                    defaultKey = savedState
+                end
             end
         end
         
@@ -1723,13 +1732,13 @@ end
         BindContainer.ZIndex = 5
         BindContainer.Visible = true
         
-        -- "Bind" text on top
+        -- "Bind" text on top (centered exactly above the input box)
         local BindTopLabel = Instance.new("TextLabel")
         BindTopLabel.Name = "BindTopLabel"
         BindTopLabel.Parent = BindContainer
         BindTopLabel.BackgroundTransparency = 1
         BindTopLabel.Position = UDim2.new(0.085, 0, 0, 0)
-        BindTopLabel.Size = UDim2.new(0, 50, 0, 15)
+        BindTopLabel.Size = UDim2.new(0, 60, 0, 15) -- Width matches bind frame
         BindTopLabel.Font = Enum.Font.SourceSans
         BindTopLabel.Text = "Bind"
         BindTopLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
@@ -1760,7 +1769,7 @@ end
         BindTextLabel.BackgroundTransparency = 1
         BindTextLabel.Size = UDim2.new(1, 0, 1, 0)
         BindTextLabel.Font = Enum.Font.SourceSans
-        BindTextLabel.Text = defaultKey and tostring(defaultKey) or "..."
+        BindTextLabel.Text = defaultKey and tostring(defaultKey.Name) or "..."
         BindTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
         BindTextLabel.TextSize = 14
         BindTextLabel.TextXAlignment = Enum.TextXAlignment.Center
@@ -1784,24 +1793,35 @@ end
         
         local currentKey = defaultKey
         local listening = false
+        local keyConnection = nil
         
         local function updateBindText()
-            BindTextLabel.Text = currentKey and tostring(currentKey) or "..."
+            BindTextLabel.Text = currentKey and tostring(currentKey.Name) or "..."
             
             if save and self._saveConfig.enabled then
                 pcall(function()
-                    saveBindState(self, bindName, currentKey)
+                    saveBindState(self, bindName, currentKey and currentKey.Name or nil)
                 end)
             end
+        end
+        
+        local function onKeyPressed(input, gameProcessed)
+            if gameProcessed then return end
             
-            if callback then
-                pcall(callback, currentKey)
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                if input.KeyCode == currentKey then
+                    pcall(callback, currentKey.Name)
+                end
             end
         end
         
         local function startListening()
             listening = true
             BindTextLabel.Text = "..."
+            
+            if keyConnection then
+                keyConnection:Disconnect()
+            end
             
             local connection
             connection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
@@ -1814,18 +1834,24 @@ end
                     return
                 end
                 
-                -- Get the key name
-                local keyName
+                -- Get the key
+                local newKey
                 if input.UserInputType == Enum.UserInputType.Keyboard then
-                    keyName = input.KeyCode.Name
+                    newKey = input.KeyCode
                 else
-                    keyName = input.UserInputType.Name
+                    newKey = input.UserInputType
                 end
                 
-                currentKey = keyName
+                currentKey = newKey
                 listening = false
                 connection:Disconnect()
                 updateBindText()
+                
+                -- Reconnect key listener
+                if keyConnection then
+                    keyConnection:Disconnect()
+                end
+                keyConnection = UserInputService.InputBegan:Connect(onKeyPressed)
             end)
         end
         
@@ -1834,6 +1860,14 @@ end
                 startListening()
             end
         end)
+        
+        -- Initialize key listener if we have a default key
+        if currentKey then
+            if keyConnection then
+                keyConnection:Disconnect()
+            end
+            keyConnection = UserInputService.InputBegan:Connect(onKeyPressed)
+        end
         
         updateBindText()
         
@@ -1861,11 +1895,23 @@ end
         
         return {
             Set = function(self, value)
+                if type(value) == "string" then
+                    value = Enum.KeyCode[value:upper()] or nil
+                end
+                
                 currentKey = value
                 updateBindText()
+                
+                -- Update key listener
+                if keyConnection then
+                    keyConnection:Disconnect()
+                end
+                if currentKey then
+                    keyConnection = UserInputService.InputBegan:Connect(onKeyPressed)
+                end
             end,
             Get = function(self)
-                return currentKey
+                return currentKey and currentKey.Name or nil
             end
         }
     end
