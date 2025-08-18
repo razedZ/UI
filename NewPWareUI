@@ -1378,7 +1378,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     end
 
     -- New input creation function with original style
-    function windowInstance:CreateInput(params)
+   function windowInstance:CreateInput(params)
     -- Проверка параметров
     if not params or not params.section then 
         warn("CreateInput: Invalid parameters")
@@ -1482,12 +1482,12 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     InputNameLabel.Name = "InputName"
     InputNameLabel.Parent = InputContainer
     InputNameLabel.BackgroundTransparency = 1
-    -- Исправленная позиция: X = позиция InputFrame (0.085,0) + ширина InputFrame (50) + отступ (10)
     InputNameLabel.Position = UDim2.new(0.085, 60, 0, 15) -- 50 (ширина) + 10 (отступ)
     InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
     InputNameLabel.Font = Enum.Font.SourceSansBold
     InputNameLabel.Text = inputName
-    InputTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    InputNameLabel.TextColor3 = Color3.fromRGB(147, 152, 156) -- Явный цвет
+    InputNameLabel.TextTransparency = 0 -- Полная непрозрачность
     InputNameLabel.TextSize = 15
     InputNameLabel.TextXAlignment = Enum.TextXAlignment.Left
     InputNameLabel.ZIndex = 6
