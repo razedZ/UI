@@ -1379,261 +1379,193 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
 
     -- New input creation function with original style
     function windowInstance:CreateInput(params)
-    -- Проверка валидности windowInstance
-    if not self or typeof(self) ~= "table" or not self._inputElements then
-        warn("Invalid window instance or _inputElements not initialized")
-        return nil
-    end
-
     -- Проверка параметров
-    if typeof(params) ~= "table" then
-        warn("CreateInput: params must be a table")
-        return nil
+    if not params or not params.section then 
+        warn("CreateInput: Invalid parameters")
+        return nil 
     end
-
-    -- Проверка обязательных параметров
-    if not params.section or not params.section:IsA("Frame") then
-        warn("CreateInput: invalid or missing section parameter")
-        return nil
-    end
-
-    -- Извлечение параметров с значениями по умолчанию
+    
     local section = params.section
-    local inputName = params.name or "Input_"..tostring(math.random(1000,9999))
+    if not section or not section:IsA("Frame") then
+        warn("CreateInput: Invalid section")
+        return nil
+    end
+    
+    local inputName = params.name or "Input"
     local defaultText = params.default or ""
     local save = params.save or false
     local callback = params.callback or function() end
-
-    -- Поиск ContentFrame с проверкой
+    
     local ContentFrame = section:FindFirstChild("ContentFrame")
-    if not ContentFrame or not ContentFrame:IsA("Frame") then
-        warn("CreateInput: ContentFrame not found or invalid")
+    if not ContentFrame then
+        warn("CreateInput: ContentFrame not found in section")
         return nil
     end
-
-    -- Загрузка сохраненного значения (если включено)
-    if save and self._saveConfig and self._saveConfig.enabled then
+    
+    -- Загрузка сохраненного значения
+    if save and self._saveConfig.enabled then
         local success, savedState = pcall(function()
-            return self:loadInputState(inputName)
+            return loadInputState(self, inputName)
         end)
         if success and savedState ~= nil then
             defaultText = savedState
         end
     end
-
-    -- Функция для безопасного получения элементов
-    local function getSafeSortedElements()
-        local elements = {}
-        for _, child in ipairs(ContentFrame:GetChildren()) do
-            if child:IsA("Frame") and child.Name then
-                if child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or child.Name:match("^Input_") then
-                    table.insert(elements, child)
-                end
-            end
-        end
-        table.sort(elements, function(a, b)
-            return (a.Position.Y.Offset or 0) < (b.Position.Y.Offset or 0)
-        end)
-        return elements
-    end
-
+    
     -- Расчет позиции нового элемента
-    local elements = getSafeSortedElements()
+    local elements = getSortedElements(ContentFrame)
     local yOffset = 5 -- Стандартный отступ для первого элемента
     
     if #elements > 0 then
         local lastElement = elements[#elements]
         if lastElement and lastElement.Position then
-            local elementHeight = lastElement.Size.Y.Offset or 0
-            local elementPos = lastElement.Position.Y.Offset or 0
-            yOffset = elementPos + elementHeight + 5 -- Стандартный отступ
+            yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + 5
         end
     end
 
-    -- Создание UI элементов с защитой от ошибок
-    local success, InputContainer = pcall(function()
-        local container = Instance.new("Frame")
-        container.Name = "Input_"..inputName
-        container.Parent = ContentFrame
-        container.BackgroundTransparency = 1
-        container.Size = UDim2.new(1, 0, 0, 50)
-        container.Position = UDim2.new(0, 0, 0, yOffset)
-        container.ZIndex = 5
-        container.Visible = true
-        
-        -- Текст "Input" сверху
-        local topLabel = Instance.new("TextLabel")
-        topLabel.Name = "InputTopLabel"
-        topLabel.Parent = container
-        topLabel.BackgroundTransparency = 1
-        topLabel.Position = UDim2.new(0.085, 0, 0, 0)
-        topLabel.Size = UDim2.new(0, 50, 0, 15)
-        topLabel.Font = Enum.Font.SourceSans
-        topLabel.Text = "Input"
-        topLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        topLabel.TextSize = 12
-        topLabel.TextXAlignment = Enum.TextXAlignment.Center
-        topLabel.ZIndex = 6
-        
-        -- Основное поле ввода
-        local inputFrame = Instance.new("TextButton")
-        inputFrame.Name = "InputFrame"
-        inputFrame.Parent = container
-        inputFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-        inputFrame.BorderSizePixel = 0
-        inputFrame.Position = UDim2.new(0.085, 0, 0, 15)
-        inputFrame.Size = UDim2.new(0, 50, 0, 30)
-        inputFrame.AutoButtonColor = false
-        inputFrame.Text = ""
-        inputFrame.ZIndex = 6
-        
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 4)
-        corner.Parent = inputFrame
-        
-        -- Текст внутри инпута
-        local textLabel = Instance.new("TextLabel")
-        textLabel.Name = "InputText"
-        textLabel.Parent = inputFrame
-        textLabel.BackgroundTransparency = 1
-        textLabel.Size = UDim2.new(1, 0, 1, 0)
-        textLabel.Font = Enum.Font.SourceSans
-        textLabel.Text = defaultText
-        textLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        textLabel.TextSize = 14
-        textLabel.TextXAlignment = Enum.TextXAlignment.Center
-        textLabel.ZIndex = 7
-        textLabel.ClipsDescendants = true
-        
-        -- Название инпута
-        local nameLabel = Instance.new("TextLabel")
-        nameLabel.Name = "InputName"
-        nameLabel.Parent = container
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.Position = UDim2.new(0.085, 50, 0, 15)
-        nameLabel.Size = UDim2.new(0, 100, 0, 30)
-        nameLabel.Font = Enum.Font.SourceSansBold
-        nameLabel.Text = inputName
-        nameLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        nameLabel.TextSize = 15
-        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-        nameLabel.ZIndex = 6
-        
-        return container, inputFrame, textLabel
-    end)
-
-    if not success or not InputContainer then
-        warn("Failed to create input elements: "..tostring(InputContainer))
-        return nil
-    end
-
+    -- Создаем контейнер для Input
+    local InputContainer = Instance.new("Frame")
+    InputContainer.Name = "Input_" .. inputName
+    InputContainer.Parent = ContentFrame
+    InputContainer.BackgroundTransparency = 1
+    InputContainer.Size = UDim2.new(1, 0, 0, 50)
+    InputContainer.Position = UDim2.new(0, 0, 0, yOffset)
+    InputContainer.ZIndex = 5
+    InputContainer.Visible = true
+    
+    -- Текст "Input" сверху
+    local InputTopLabel = Instance.new("TextLabel")
+    InputTopLabel.Name = "InputTopLabel"
+    InputTopLabel.Parent = InputContainer
+    InputTopLabel.BackgroundTransparency = 1
+    InputTopLabel.Position = UDim2.new(0.085, 0, 0, 0)
+    InputTopLabel.Size = UDim2.new(0, 50, 0, 15)
+    InputTopLabel.Font = Enum.Font.SourceSans
+    InputTopLabel.Text = "Input"
+    InputTopLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    InputTopLabel.TextSize = 12
+    InputTopLabel.TextXAlignment = Enum.TextXAlignment.Center
+    InputTopLabel.ZIndex = 6
+    
+    -- Основное поле ввода (ширина 50px)
+    local InputFrame = Instance.new("TextButton")
+    InputFrame.Name = "InputFrame"
+    InputFrame.Parent = InputContainer
+    InputFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+    InputFrame.BorderSizePixel = 0
+    InputFrame.Position = UDim2.new(0.085, 0, 0, 15)
+    InputFrame.Size = UDim2.new(0, 50, 0, 30)
+    InputFrame.AutoButtonColor = false
+    InputFrame.Text = ""
+    InputFrame.ZIndex = 6
+    
+    local UICornerInput = Instance.new("UICorner")
+    UICornerInput.CornerRadius = UDim.new(0, 4)
+    UICornerInput.Parent = InputFrame
+    
+    -- Текст внутри инпута
+    local InputTextLabel = Instance.new("TextLabel")
+    InputTextLabel.Name = "InputText"
+    InputTextLabel.Parent = InputFrame
+    InputTextLabel.BackgroundTransparency = 1
+    InputTextLabel.Size = UDim2.new(1, 0, 1, 0)
+    InputTextLabel.Font = Enum.Font.SourceSans
+    InputTextLabel.Text = defaultText
+    InputTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    InputTextLabel.TextSize = 14
+    InputTextLabel.TextXAlignment = Enum.TextXAlignment.Center
+    InputTextLabel.ZIndex = 7
+    InputTextLabel.ClipsDescendants = true
+    
+    -- Название инпута (с отступом 10px от InputFrame)
+    local InputNameLabel = Instance.new("TextLabel")
+    InputNameLabel.Name = "InputName"
+    InputNameLabel.Parent = InputContainer
+    InputNameLabel.BackgroundTransparency = 1
+    -- Исправленная позиция: X = позиция InputFrame (0.085,0) + ширина InputFrame (50) + отступ (10)
+    InputNameLabel.Position = UDim2.new(0.085, 60, 0, 15) -- 50 (ширина) + 10 (отступ)
+    InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
+    InputNameLabel.Font = Enum.Font.SourceSansBold
+    InputNameLabel.Text = inputName
+    InputTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    InputNameLabel.TextSize = 15
+    InputNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    InputNameLabel.ZIndex = 6
+    
     local currentText = defaultText
     
-    -- Функция обновления текста с защитой
-    local function safeUpdateText()
-        pcall(function()
-            if InputContainer and InputContainer.Parent then
-                local textLabel = InputContainer:FindFirstChild("InputFrame"):FindFirstChild("InputText")
-                if textLabel then
-                    textLabel.Text = currentText
-                    
-                    if save and self._saveConfig and self._saveConfig.enabled then
-                        pcall(function()
-                            self:saveInputState(inputName, currentText)
-                        end)
-                    end
-                    
-                    pcall(callback, currentText)
-                end
-            end
-        end)
-    end
-
-    -- Обработчик клика с защитой
-    local inputFrame = InputContainer:FindFirstChild("InputFrame")
-    if inputFrame then
-        inputFrame.MouseButton1Click:Connect(function()
+    local function updateText()
+        InputTextLabel.Text = currentText
+        
+        if save and self._saveConfig.enabled then
             pcall(function()
-                if not inputFrame or not inputFrame.Parent then return end
-                
-                local textLabel = inputFrame:FindFirstChild("InputText")
-                if textLabel then
-                    textLabel.Visible = false
-                end
-                
-                local inputBox = Instance.new("TextBox")
-                inputBox.Name = "InputBox"
-                inputBox.Parent = inputFrame
-                inputBox.BackgroundTransparency = 1
-                inputBox.Size = UDim2.new(1, 0, 1, 0)
-                inputBox.Font = Enum.Font.SourceSans
-                inputBox.Text = currentText
-                inputBox.TextColor3 = Color3.fromRGB(200, 200, 200)
-                inputBox.TextSize = 14
-                inputBox.TextXAlignment = Enum.TextXAlignment.Center
-                inputBox.ZIndex = 8
-                inputBox.ClearTextOnFocus = false
-                inputBox.PlaceholderText = "Type..."
-                inputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
-                
-                inputBox.FocusLost:Connect(function()
-                    pcall(function()
-                        currentText = inputBox.Text
-                        inputBox:Destroy()
-                        if textLabel then
-                            textLabel.Visible = true
-                        end
-                        safeUpdateText()
-                    end)
-                end)
-                
-                inputBox:CaptureFocus()
+                saveInputState(self, inputName, currentText)
             end)
-        end)
+        end
+        
+        if callback then
+            pcall(callback, currentText)
+        end
     end
-
-    -- Добавляем в таблицу элементов
+    
+    InputFrame.MouseButton1Click:Connect(function()
+        local inputBox = Instance.new("TextBox")
+        inputBox.Name = "InputBox"
+        inputBox.Parent = InputFrame
+        inputBox.BackgroundTransparency = 1
+        inputBox.Size = UDim2.new(1, 0, 1, 0)
+        inputBox.Font = Enum.Font.SourceSans
+        inputBox.Text = currentText
+        inputBox.TextColor3 = Color3.fromRGB(147, 152, 156)
+        inputBox.TextSize = 14
+        inputBox.TextXAlignment = Enum.TextXAlignment.Center
+        inputBox.ZIndex = 8
+        inputBox.ClearTextOnFocus = false
+        inputBox.PlaceholderText = "Type..."
+        inputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+        
+        InputTextLabel.Visible = false
+        
+        inputBox.FocusLost:Connect(function(enterPressed)
+            currentText = inputBox.Text
+            inputBox:Destroy()
+            InputTextLabel.Visible = true
+            updateText()
+        end)
+        
+        inputBox:CaptureFocus()
+    end)
+    
+    updateText()
+    
     table.insert(self._inputElements, InputContainer)
 
-    -- Функция обновления размеров секции
-    local function safeUpdateSection()
-        pcall(function()
-            if not ContentFrame or not ContentFrame.Parent then return end
-            
-            local elements = getSafeSortedElements()
-            local totalHeight = 0
-            
-            if #elements > 0 then
-                local last = elements[#elements]
-                totalHeight = last.Position.Y.Offset + last.Size.Y.Offset
-            end
-            
-            if self._sectionStates and self._sectionStates[section] ~= false then
-                ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 5)
-                section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + 15)
-            end
-            
-            -- Обновляем позиции всех секций
-            local isLeft = table.find(self._leftSections or {}, section) ~= nil
-            local container = isLeft and LeftContainer or RightContainer
-            local sectionsList = isLeft and self._leftSections or self._rightSections
-            
-            if container and sectionsList then
-                updateSectionPositions(container, sectionsList)
-            end
-        end)
-    end
-
-    -- Отложенное обновление
-    task.defer(safeUpdateSection)
-
-    -- Возвращаем методы управления
+    -- Обновление размеров секции
+    task.defer(function()
+        local currentElements = getSortedElements(ContentFrame)
+        local totalHeight = 0
+        
+        if #currentElements > 0 then
+            local lastElement = currentElements[#currentElements]
+            totalHeight = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset
+        end
+        
+        if windowInstance._sectionStates[section] then
+            ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 5)
+            section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + 15)
+        end
+        
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        updateSectionPositions(container, sectionsList)
+    end)
+    
     return {
-        Set = function(_, value)
+        Set = function(self, value)
             currentText = tostring(value)
-            safeUpdateText()
+            updateText()
         end,
-        Get = function()
+        Get = function(self)
             return currentText
         end
     }
