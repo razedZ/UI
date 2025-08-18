@@ -1584,8 +1584,6 @@ end
     end
 
     return windowInstance
-
 end
 
 return PizdecWare
-
