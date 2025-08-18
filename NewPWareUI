@@ -946,437 +946,490 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
 
     -- New dropdown creation function with simplified syntax
     function windowInstance:CreateDropdown(params)
-        if not params.section then return nil end
-        
-        local section = params.section
-        local dropdownName = params.name or ""
-        local options = params.options or {}
-        local defaultOption = params.default or nil
-        local multi = params.multi or false
-        local save = params.save or false
-        local callback = params.callback or function() end
-        
-        local ContentFrame = section:FindFirstChild("ContentFrame")
-        if not ContentFrame then return nil end
-        
-        if save and self._saveConfig.enabled then
-            local savedState = loadDropdownState(self, dropdownName)
-            if savedState ~= nil then
-                if multi then
-                    defaultOption = savedState
-                else
-                    if table.find(options, savedState) then
-                        defaultOption = savedState
-                    end
-                end
-            end
-        end
-        
-        local elements = getSortedElements(ContentFrame)
-        local new_type = "dropdown"
-        local yOffset
-        if #elements == 0 then
-            yOffset = 5
-        else
-            local last = elements[#elements]
-            local last_type = last.Name:match("^Toggle_") and "toggle" or "dropdown"
-            local spacing
-            if last_type == "toggle" and new_type == "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
-                yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing - 4 -- Поднимаем dropdown на 4 пикселя вверх
-            elseif last_type == "dropdown" and new_type == "toggle" then
-                spacing = 5 -- Расстояние между dropdown и toggle
-                yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
-            else
-                spacing = 2 -- Обычное расстояние для других комбинаций
-                yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
-            end
-        end
-        
-        local DropdownContainer = Instance.new("Frame")
-        DropdownContainer.Name = "Dropdown_" .. dropdownName
-        DropdownContainer.Parent = ContentFrame
-        DropdownContainer.BackgroundTransparency = 1
-        DropdownContainer.Size = UDim2.new(1, 0, 0, 50)
-        DropdownContainer.Position = UDim2.new(0, 0, 0, yOffset)
-        DropdownContainer.ZIndex = 5
-        DropdownContainer.Visible = true
-        
-        local DropdownLabel = Instance.new("TextLabel")
-        DropdownLabel.Name = "Label"
-        DropdownLabel.Parent = DropdownContainer
-        DropdownLabel.BackgroundTransparency = 1
-        DropdownLabel.Position = UDim2.new(0.085, 0, 0, 0)
-        DropdownLabel.Size = UDim2.new(0, 165, 0, 20)
-        DropdownLabel.Font = Enum.Font.SourceSansBold
-        DropdownLabel.Text = dropdownName
-        DropdownLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        DropdownLabel.TextSize = 15
-        DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
-        DropdownLabel.ZIndex = 6
-        
-        local DropdownButton = Instance.new("TextButton")
-        DropdownButton.Name = "Button"
-        DropdownButton.Parent = DropdownContainer
-        DropdownButton.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-        DropdownButton.BorderSizePixel = 0
-        DropdownButton.Position = UDim2.new(0.085, 0, 0, 20)
-        DropdownButton.Size = UDim2.new(0, 165, 0, 30)
-        DropdownButton.Font = Enum.Font.SourceSans
-        DropdownButton.Text = ""
-        DropdownButton.TextColor3 = Color3.fromRGB(147, 152, 156)
-        DropdownButton.TextSize = 14
-        DropdownButton.ZIndex = 6
-        
-        local UICornerDropdown = Instance.new("UICorner")
-        UICornerDropdown.CornerRadius = UDim.new(0, 4)
-        UICornerDropdown.Parent = DropdownButton
-        
-        local SelectedText = Instance.new("TextLabel")
-        SelectedText.Name = "SelectedText"
-        SelectedText.Parent = DropdownButton
-        SelectedText.BackgroundTransparency = 1
-        SelectedText.Position = UDim2.new(0.05, 0, 0, 0)
-        SelectedText.Size = UDim2.new(0.9, 0, 1, 0)
-        SelectedText.Font = Enum.Font.SourceSans
-        SelectedText.Text = ""
-        SelectedText.TextColor3 = Color3.fromRGB(147, 152, 156)
-        SelectedText.TextSize = 14
-        SelectedText.TextXAlignment = Enum.TextXAlignment.Left
-        SelectedText.ZIndex = 7
-        
-        local DropdownList = Instance.new("Frame")
-        DropdownList.Name = "DropdownList_" .. dropdownName
-        DropdownList.Parent = ScreenGui
-        DropdownList.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-        DropdownList.BorderSizePixel = 0
-        DropdownList.Size = UDim2.new(0, 165, 0, 0)
-        DropdownList.Visible = false
-        DropdownList.ZIndex = 1000
-        DropdownList.ClipsDescendants = true
-        
-        local UICornerList = Instance.new("UICorner")
-        UICornerList.CornerRadius = UDim.new(0, 4)
-        UICornerList.Parent = DropdownList
-        
-        local ScrollingFrame = Instance.new("ScrollingFrame")
-        ScrollingFrame.Parent = DropdownList
-        ScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
-        ScrollingFrame.BackgroundTransparency = 1
-        ScrollingFrame.ScrollBarThickness = 5
-        ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
-        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-        
-        local UIListLayout = Instance.new("UIListLayout")
-        UIListLayout.Parent = ScrollingFrame
-        UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        
-        local selectedOptions = {}
-        if multi then
-            if type(defaultOption) == "table" then
-                for _, option in ipairs(defaultOption) do
-                    if table.find(options, option) then
-                        selectedOptions[option] = true
-                    end
-                end
-            end
-        else
-            if table.find(options, defaultOption) then
-                selectedOptions[defaultOption] = true
-            end
-        end
-        
-        local function updateSelectedText()
+    -- Проверка параметров
+    if not params or not params.section then 
+        warn("CreateDropdown: Invalid parameters")
+        return nil 
+    end
+    
+    local section = params.section
+    if not section or not section:IsA("Frame") then
+        warn("CreateDropdown: Invalid section")
+        return nil
+    end
+    
+    local dropdownName = params.name or "Dropdown_"..tostring(math.random(1000,9999))
+    local options = params.options or {}
+    local defaultOption = params.default or nil
+    local multi = params.multi or false
+    local save = params.save or false
+    local callback = params.callback or function() end
+    
+    local ContentFrame = section:FindFirstChild("ContentFrame")
+    if not ContentFrame then
+        warn("CreateDropdown: ContentFrame not found in section")
+        return nil
+    end
+    
+    -- Загрузка сохраненного значения
+    if save and self._saveConfig and self._saveConfig.enabled then
+        local success, savedState = pcall(function()
+            return self:loadDropdownState(dropdownName)
+        end)
+        if success and savedState ~= nil then
             if multi then
-                local count = 0
-                for _ in pairs(selectedOptions) do
-                    count = count + 1
-                end
-                
-                if count == 0 then
-                    SelectedText.Text = "None selected"
-                elseif count == 1 then
-                    for option in pairs(selectedOptions) do
-                        SelectedText.Text = option
-                        break
-                    end
-                else
-                    SelectedText.Text = count .. " selected"
-                end
+                defaultOption = savedState
             else
-                for option in pairs(selectedOptions) do
-                    SelectedText.Text = option
-                    return
+                if table.find(options, savedState) then
+                    defaultOption = savedState
                 end
-                SelectedText.Text = "Select option"
             end
         end
-        
-        updateSelectedText()
-        
-        local function createOptionButtons()
-            for _, child in ipairs(ScrollingFrame:GetChildren()) do
-                if child:IsA("TextButton") then
-                    child:Destroy()
+    end
+    
+    -- Функция для безопасного получения элементов
+    local function getSafeSortedElements()
+        local elements = {}
+        for _, child in ipairs(ContentFrame:GetChildren()) do
+            if child:IsA("Frame") and child.Name then
+                if child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or child.Name:match("^Input_") then
+                    table.insert(elements, child)
                 end
+            end
+        end
+        table.sort(elements, function(a, b)
+            return (a.Position.Y.Offset or 0) < (b.Position.Y.Offset or 0)
+        end)
+        return elements
+    end
+
+    -- Расчет позиции нового элемента с увеличенным отступом для дропдаунов
+    local elements = getSafeSortedElements()
+    local yOffset = 5 -- Стандартный отступ для первого элемента
+    
+    if #elements > 0 then
+        local lastElement = elements[#elements]
+        if lastElement and lastElement.Position then
+            local lastType = lastElement.Name:match("^Toggle_") and "toggle" or 
+                           lastElement.Name:match("^Dropdown_") and "dropdown" or 
+                           "input"
+            
+            -- Увеличенные отступы
+            local spacing = 5 -- Базовый отступ
+            if lastType == "toggle" and "dropdown" then
+                spacing = 3 -- Между toggle и dropdown
+            elseif lastType == "dropdown" and "dropdown" then
+                spacing = 5 -- Увеличенный отступ между дропдаунами
+            elseif lastType == "dropdown" and "toggle" then
+                spacing = 5 -- Между dropdown и toggle
             end
             
-            for _, option in ipairs(options) do
-                local OptionButton = Instance.new("TextButton")
-                OptionButton.Name = "Option_" .. option
-                OptionButton.Parent = ScrollingFrame
-                OptionButton.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-                OptionButton.BorderSizePixel = 0
-                OptionButton.Size = UDim2.new(1, 0, 0, 20)
-                OptionButton.Font = Enum.Font.SourceSans
-                OptionButton.Text = option
-                OptionButton.TextColor3 = selectedOptions[option] and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
-                OptionButton.TextSize = 14
-                OptionButton.ZIndex = 1001
-                
-                OptionButton.MouseButton1Click:Connect(function()
-                    if multi then
-                        if selectedOptions[option] then
-                            selectedOptions[option] = nil
-                        else
-                            selectedOptions[option] = true
+            yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
+        end
+    end
+
+    -- Создание контейнера дропдауна
+    local DropdownContainer = Instance.new("Frame")
+    DropdownContainer.Name = "Dropdown_"..dropdownName
+    DropdownContainer.Parent = ContentFrame
+    DropdownContainer.BackgroundTransparency = 1
+    DropdownContainer.Size = UDim2.new(1, 0, 0, 50)
+    DropdownContainer.Position = UDim2.new(0, 0, 0, yOffset)
+    DropdownContainer.ZIndex = 5
+    DropdownContainer.Visible = true
+    
+    -- Label дропдауна
+    local DropdownLabel = Instance.new("TextLabel")
+    DropdownLabel.Name = "Label"
+    DropdownLabel.Parent = DropdownContainer
+    DropdownLabel.BackgroundTransparency = 1
+    DropdownLabel.Position = UDim2.new(0.085, 0, 0, 0)
+    DropdownLabel.Size = UDim2.new(0, 165, 0, 20)
+    DropdownLabel.Font = Enum.Font.SourceSansBold
+    DropdownLabel.Text = dropdownName
+    DropdownLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    DropdownLabel.TextSize = 15
+    DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
+    DropdownLabel.ZIndex = 6
+    
+    -- Кнопка дропдауна
+    local DropdownButton = Instance.new("TextButton")
+    DropdownButton.Name = "Button"
+    DropdownButton.Parent = DropdownContainer
+    DropdownButton.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+    DropdownButton.BorderSizePixel = 0
+    DropdownButton.Position = UDim2.new(0.085, 0, 0, 20)
+    DropdownButton.Size = UDim2.new(0, 165, 0, 30)
+    DropdownButton.Font = Enum.Font.SourceSans
+    DropdownButton.Text = ""
+    DropdownButton.TextColor3 = Color3.fromRGB(147, 152, 156)
+    DropdownButton.TextSize = 14
+    DropdownButton.ZIndex = 6
+    
+    local UICornerDropdown = Instance.new("UICorner")
+    UICornerDropdown.CornerRadius = UDim.new(0, 4)
+    UICornerDropdown.Parent = DropdownButton
+    
+    -- Текст выбранного значения
+    local SelectedText = Instance.new("TextLabel")
+    SelectedText.Name = "SelectedText"
+    SelectedText.Parent = DropdownButton
+    SelectedText.BackgroundTransparency = 1
+    SelectedText.Position = UDim2.new(0.05, 0, 0, 0)
+    SelectedText.Size = UDim2.new(0.9, 0, 1, 0)
+    SelectedText.Font = Enum.Font.SourceSans
+    SelectedText.Text = ""
+    SelectedText.TextColor3 = Color3.fromRGB(147, 152, 156)
+    SelectedText.TextSize = 14
+    SelectedText.TextXAlignment = Enum.TextXAlignment.Left
+    SelectedText.ZIndex = 7
+    
+    -- Список дропдауна
+    local DropdownList = Instance.new("Frame")
+    DropdownList.Name = "DropdownList_"..dropdownName
+    DropdownList.Parent = self._elementContainer.Parent
+    DropdownList.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+    DropdownList.BorderSizePixel = 0
+    DropdownList.Size = UDim2.new(0, 165, 0, 0)
+    DropdownList.Visible = false
+    DropdownList.ZIndex = 1000
+    DropdownList.ClipsDescendants = true
+    
+    local UICornerList = Instance.new("UICorner")
+    UICornerList.CornerRadius = UDim.new(0, 4)
+    UICornerList.Parent = DropdownList
+    
+    local ScrollingFrame = Instance.new("ScrollingFrame")
+    ScrollingFrame.Parent = DropdownList
+    ScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+    ScrollingFrame.BackgroundTransparency = 1
+    ScrollingFrame.ScrollBarThickness = 5
+    ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.Parent = ScrollingFrame
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    
+    -- Логика выбора значений
+    local selectedOptions = {}
+    if multi then
+        if type(defaultOption) == "table" then
+            for _, option in ipairs(defaultOption) do
+                if table.find(options, option) then
+                    selectedOptions[option] = true
+                end
+            end
+        end
+    else
+        if table.find(options, defaultOption) then
+            selectedOptions[defaultOption] = true
+        end
+    end
+    
+    local function updateSelectedText()
+        if multi then
+            local count = 0
+            for _ in pairs(selectedOptions) do
+                count = count + 1
+            end
+            
+            if count == 0 then
+                SelectedText.Text = "None selected"
+            elseif count == 1 then
+                for option in pairs(selectedOptions) do
+                    SelectedText.Text = option
+                    break
+                end
+            else
+                SelectedText.Text = count .. " selected"
+            end
+        else
+            for option in pairs(selectedOptions) do
+                SelectedText.Text = option
+                return
+            end
+            SelectedText.Text = "Select option"
+        end
+    end
+    
+    local function createOptionButtons()
+        for _, child in ipairs(ScrollingFrame:GetChildren()) do
+            if child:IsA("TextButton") then
+                child:Destroy()
+            end
+        end
+        
+        for _, option in ipairs(options) do
+            local OptionButton = Instance.new("TextButton")
+            OptionButton.Name = "Option_"..option
+            OptionButton.Parent = ScrollingFrame
+            OptionButton.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+            OptionButton.BorderSizePixel = 0
+            OptionButton.Size = UDim2.new(1, 0, 0, 20)
+            OptionButton.Font = Enum.Font.SourceSans
+            OptionButton.Text = option
+            OptionButton.TextColor3 = selectedOptions[option] and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
+            OptionButton.TextSize = 14
+            OptionButton.ZIndex = 1001
+            
+            OptionButton.MouseButton1Click:Connect(function()
+                if multi then
+                    if selectedOptions[option] then
+                        selectedOptions[option] = nil
+                    else
+                        selectedOptions[option] = true
+                    end
+                    OptionButton.TextColor3 = selectedOptions[option] and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
+                else
+                    for opt in pairs(selectedOptions) do
+                        selectedOptions[opt] = nil
+                    end
+                    
+                    selectedOptions[option] = true
+                    
+                    for _, btn in ipairs(ScrollingFrame:GetChildren()) do
+                        if btn:IsA("TextButton") then
+                            btn.TextColor3 = btn == OptionButton and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
                         end
-                        OptionButton.TextColor3 = selectedOptions[option] and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
+                    end
+                    
+                    DropdownList.Visible = false
+                    DropdownList.Size = UDim2.new(0, 165, 0, 0)
+                    self._openDropdowns[DropdownContainer] = nil
+                end
+                
+                updateSelectedText()
+                
+                if save and self._saveConfig.enabled then
+                    if multi then
+                        local selected = {}
+                        for opt in pairs(selectedOptions) do
+                            table.insert(selected, opt)
+                        end
+                        self:saveDropdownState(dropdownName, selected)
                     else
                         for opt in pairs(selectedOptions) do
-                            selectedOptions[opt] = nil
-                        end
-                        
-                        selectedOptions[option] = true
-                        
-                        for _, btn in ipairs(ScrollingFrame:GetChildren()) do
-                            if btn:IsA("TextButton") then
-                                btn.TextColor3 = btn == OptionButton and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
-                            end
-                        end
-                        
-                        DropdownList.Visible = false
-                        DropdownList.Size = UDim2.new(0, 165, 0, 0)
-                        self._openDropdowns[DropdownContainer] = nil
-                    end
-                    
-                    updateSelectedText()
-                    
-                    if save and self._saveConfig.enabled then
-                        if multi then
-                            local selected = {}
-                            for opt in pairs(selectedOptions) do
-                                table.insert(selected, opt)
-                            end
-                            saveDropdownState(self, dropdownName, selected)
-                        else
-                            for opt in pairs(selectedOptions) do
-                                saveDropdownState(self, dropdownName, opt)
-                                break
-                            end
+                            self:saveDropdownState(dropdownName, opt)
+                            break
                         end
                     end
-                    
-                    callback(multi and (function()
+                end
+                
+                if callback then
+                    pcall(callback, multi and (function()
                         local selected = {}
                         for opt in pairs(selectedOptions) do
                             table.insert(selected, opt)
                         end
                         return selected
                     end)() or next(selectedOptions))
-                end)
-            end
-            
-            local optionCount = #options
-            local maxHeight = math.min(4, optionCount) * 20
-            ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, optionCount * 20)
+                end
+            end)
         end
         
-        createOptionButtons()
+        local optionCount = #options
+        local maxHeight = math.min(4, optionCount) * 20
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, optionCount * 20)
+    end
+    
+    createOptionButtons()
+    updateSelectedText()
+    
+    -- Управление открытием/закрытием дропдауна
+    local function toggleDropdown()
+        local isDropdownOpen = DropdownList.Visible
         
-        local isDropdownOpen = false
-        
-        local function updateDropdownPosition()
+        if isDropdownOpen then
+            DropdownList.Visible = false
+            DropdownList.Size = UDim2.new(0, 165, 0, 0)
+            self._openDropdowns[DropdownContainer] = nil
+        else
+            -- Закрываем другие открытые дропдауны
+            for container, list in pairs(self._openDropdowns) do
+                list.Visible = false
+                list.Size = UDim2.new(0, 165, 0, 0)
+                self._openDropdowns[container] = nil
+            end
+            
+            -- Открываем текущий
             local buttonPos = DropdownButton.AbsolutePosition
             local buttonSize = DropdownButton.AbsoluteSize
-            local screenSize = ScreenGui.AbsoluteSize
-            local maxHeight = math.min(4, #options) * 20
+            local screenSize = self._elementContainer.Parent.AbsoluteSize
             
             local yPos = buttonPos.Y + buttonSize.Y
+            local maxHeight = math.min(4, #options) * 20
+            
             if yPos + maxHeight > screenSize.Y then
                 yPos = buttonPos.Y - maxHeight
             end
             
             DropdownList.Position = UDim2.new(0, buttonPos.X, 0, yPos)
-        end
-        
-        local function toggleDropdown()
-            isDropdownOpen = not isDropdownOpen
-            DropdownList.Visible = isDropdownOpen and section.Visible
+            DropdownList.Size = UDim2.new(0, 165, 0, maxHeight)
+            DropdownList.Visible = true
+            self._openDropdowns[DropdownContainer] = DropdownList
             
-            if isDropdownOpen then
-                updateDropdownPosition()
-                DropdownList.ZIndex = 1000
-                for _, btn in ipairs(ScrollingFrame:GetChildren()) do
-                    if btn:IsA("TextButton") then
-                        btn.ZIndex = 1001
+            if not self._heartbeatConnection then
+                self._heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                    for _, list in pairs(self._openDropdowns) do
+                        local button = list:FindFirstAncestorOfClass("Frame"):FindFirstChild("Button")
+                        if button then
+                            local buttonPos = button.AbsolutePosition
+                            local buttonSize = button.AbsoluteSize
+                            local screenSize = self._elementContainer.Parent.AbsoluteSize
+                            
+                            local yPos = buttonPos.Y + buttonSize.Y
+                            local maxHeight = math.min(4, #options) * 20
+                            
+                            if yPos + maxHeight > screenSize.Y then
+                                yPos = buttonPos.Y - maxHeight
+                            end
+                            
+                            list.Position = UDim2.new(0, buttonPos.X, 0, yPos)
+                        end
                     end
-                end
-                local optionCount = #options
-                local maxHeight = math.min(4, optionCount) * 20
-                DropdownList.Size = UDim2.new(0, 165, 0, maxHeight)
-                self._openDropdowns[DropdownContainer] = DropdownList
-                if next(self._openDropdowns) and not self._heartbeatConnection then
-                    self._heartbeatConnection = RunService.Heartbeat:Connect(updateAllDropdownPositions)
-                end
-            else
-                DropdownList.Size = UDim2.new(0, 165, 0, 0)
-                self._openDropdowns[DropdownContainer] = nil
-                if not next(self._openDropdowns) and self._heartbeatConnection then
-                    self._heartbeatConnection:Disconnect()
-                    self._heartbeatConnection = nil
-                end
+                end)
             end
         end
+    end
+    
+    DropdownButton.MouseButton1Click:Connect(toggleDropdown)
+    
+    -- Закрытие при клике вне дропдауна
+    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
         
-        DropdownButton.MouseButton1Click:Connect(function()
-            for container, list in pairs(self._openDropdowns) do
-                if container ~= DropdownContainer then
-                    list.Visible = false
-                    list.Size = UDim2.new(0, 165, 0, 0)
-                    self._openDropdowns[container] = nil
-                end
-            end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and DropdownList.Visible then
+            local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+            local absPos = DropdownList.AbsolutePosition
+            local absSize = DropdownList.AbsoluteSize
             
-            toggleDropdown()
-        end)
-        
-        UserInputService.InputBegan:Connect(function(input, gameProcessed)
-            if gameProcessed then return end
-            
-            if input.UserInputType == Enum.UserInputType.MouseButton1 and isDropdownOpen then
-                local mousePos = UserInputService:GetMouseLocation()
-                local absPos = DropdownList.AbsolutePosition
-                local absSize = DropdownList.AbsoluteSize
-                
-                if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
-                       mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y) then
-                    toggleDropdown()
-                end
+            if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
+                   mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y) then
+                toggleDropdown()
             end
-        end)
-        
-        table.insert(self._dropdownElements, DropdownContainer)
-        
+        end
+    end)
+    
+    table.insert(self._dropdownElements, DropdownContainer)
+    
+    -- Обновление размеров секции
+    local function updateSectionSize()
         local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
         local container = sectionsList == self._leftSections and LeftContainer or RightContainer
         
         local contentHeight = 0
-        local elements_updated = getSortedElements(ContentFrame)
-        local previous_type = nil
-        for j, element in ipairs(elements_updated) do
-            local elem_type = element.Name:match("^Toggle_") and "toggle" or "dropdown"
-            local spacing
-            if previous_type == nil then
+        local elements = getSafeSortedElements()
+        local previousType = nil
+        
+        for _, element in ipairs(elements) do
+            local elemType = element.Name:match("^Toggle_") and "toggle" or 
+                           element.Name:match("^Dropdown_") and "dropdown" or 
+                           "input"
+            
+            local spacing = 5 -- Базовый отступ
+            if previousType == "toggle" and elemType == "dropdown" then
+                spacing = 3
+            elseif previousType == "dropdown" and elemType == "toggle" then
                 spacing = 5
-            elseif previous_type == "toggle" and elem_type == "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
-            elseif previous_type == "dropdown" and elem_type == "toggle" then
-                spacing = 5 -- Расстояние между dropdown и toggle
-            else
-                spacing = 2 -- Обычное расстояние для других комбинаций
+            elseif previousType == "dropdown" and elemType == "dropdown" then
+                spacing = 5 -- Увеличенный отступ между дропдаунами
             end
+            
             contentHeight = contentHeight + spacing + element.Size.Y.Offset
-            previous_type = elem_type
+            previousType = elemType
         end
         
-        if windowInstance._sectionStates[section] then
-            local bottom_padding = 15
-            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
+        if self._sectionStates[section] then
             ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
+            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + 15)
         end
         
         updateSectionPositions(container, sectionsList)
-        
-        return {
-            Set = function(self, value)
-                if multi then
-                    for opt in pairs(selectedOptions) do
-                        selectedOptions[opt] = nil
-                    end
-                    
-                    if type(value) == "table" then
-                        for _, option in ipairs(value) do
-                            if table.find(options, option) then
-                                selectedOptions[option] = true
-                            end
+    end
+    
+    task.defer(updateSectionSize)
+    
+    return {
+        Set = function(_, value)
+            if multi then
+                for opt in pairs(selectedOptions) do
+                    selectedOptions[opt] = nil
+                end
+                
+                if type(value) == "table" then
+                    for _, option in ipairs(value) do
+                        if table.find(options, option) then
+                            selectedOptions[option] = true
                         end
                     end
+                end
+            else
+                for opt in pairs(selectedOptions) do
+                    selectedOptions[opt] = nil
+                end
+                
+                if table.find(options, value) then
+                    selectedOptions[value] = true
+                end
+            end
+            
+            updateSelectedText()
+            createOptionButtons()
+            
+            if save and self._saveConfig.enabled then
+                if multi then
+                    local selected = {}
+                    for opt in pairs(selectedOptions) do
+                        table.insert(selected, opt)
+                    end
+                    self:saveDropdownState(dropdownName, selected)
                 else
                     for opt in pairs(selectedOptions) do
-                        selectedOptions[opt] = nil
-                    end
-                    
-                    if table.find(options, value) then
-                        selectedOptions[value] = true
+                        self:saveDropdownState(dropdownName, opt)
+                        break
                     end
                 end
-                
-                updateSelectedText()
-                createOptionButtons()
-                
-                if save and windowInstance._saveConfig.enabled then
-                    if multi then
-                        local selected = {}
-                        for opt in pairs(selectedOptions) do
-                            table.insert(selected, opt)
-                        end
-                        saveDropdownState(windowInstance, dropdownName, selected)
-                    else
-                        for opt in pairs(selectedOptions) do
-                            saveDropdownState(windowInstance, dropdownName, opt)
-                            break
-                        end
-                    end
-                end
-                
-                callback(multi and (function()
+            end
+            
+            if callback then
+                pcall(callback, multi and (function()
                     local selected = {}
                     for opt in pairs(selectedOptions) do
                         table.insert(selected, opt)
                     end
                     return selected
                 end)() or next(selectedOptions))
-            end,
-            Get = function(self)
-                if multi then
-                    local selected = {}
-                    for opt in pairs(selectedOptions) do
-                        table.insert(selected, opt)
-                    end
-                    return selected
-                else
-                    for opt in pairs(selectedOptions) do
-                        return opt
-                    end
-                    return nil
-                end
-            end,
-            UpdateOptions = function(self, newOptions)
-                options = newOptions
-                
-                for opt in pairs(selectedOptions) do
-                    if not table.find(options, opt) then
-                        selectedOptions[opt] = nil
-                    end
-                end
-                
-                updateSelectedText()
-                createOptionButtons()
             end
-        }
-    end
-
+        end,
+        Get = function()
+            if multi then
+                local selected = {}
+                for opt in pairs(selectedOptions) do
+                    table.insert(selected, opt)
+                end
+                return selected
+            else
+                for opt in pairs(selectedOptions) do
+                    return opt
+                end
+                return nil
+            end
+        end,
+        UpdateOptions = function(_, newOptions)
+            options = newOptions
+            
+            for opt in pairs(selectedOptions) do
+                if not table.find(options, opt) then
+                    selectedOptions[opt] = nil
+                end
+            end
+            
+            updateSelectedText()
+            createOptionButtons()
+        end
+    }
+end
     -- New input creation function with original style
    function windowInstance:CreateInput(params)
     -- Проверка параметров
