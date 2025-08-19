@@ -1518,276 +1518,276 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
 end
 
     -- New slider creation function
-    function windowInstance:CreateSlider(params)
-        -- Parameter validation
-        if not params or not params.section then 
-            warn("CreateSlider: Invalid parameters")
-            return nil 
-        end
-        
-        local section = params.section
-        if not section or not section:IsA("Frame") then
-            warn("CreateSlider: Invalid section")
-            return nil
-        end
-        
-        local sliderName = params.name or "Slider"
-        local minValue = params.min or 0
-        local maxValue = params.max or 100
-        local defaultValue = params.default or math.floor((minValue + maxValue) / 2)
-        local save = params.save or false
-        local callback = params.callback or function() end
-        local precise = params.precise or false -- Whether to allow decimal values
-        
-        -- Ensure min is less than max
-        if minValue > maxValue then
-            minValue, maxValue = maxValue, minValue
-        end
-        
-        -- Clamp default value
-        defaultValue = math.clamp(defaultValue, minValue, maxValue)
-        
-        local ContentFrame = section:FindFirstChild("ContentFrame")
-        if not ContentFrame then
-            warn("CreateSlider: ContentFrame not found in section")
-            return nil
-        end
-        
-        -- Load saved value
-        if save and self._saveConfig.enabled then
-            local success, savedState = pcall(function()
-                return loadSliderState(self, sliderName)
-            end)
-            if success and savedState ~= nil then
-                defaultValue = tonumber(savedState) or defaultValue
-                defaultValue = math.clamp(defaultValue, minValue, maxValue)
-            end
-        end
-        
-        -- Calculate position for new element
-        local elements = getSortedElements(ContentFrame)
-        local yOffset = 5 -- Default offset for first element
-        
-        if #elements > 0 then
-            local lastElement = elements[#elements]
-            if lastElement and lastElement.Position then
-                yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + 5
-            end
-        end
-
-        -- Create container for Slider
-        local SliderContainer = Instance.new("Frame")
-        SliderContainer.Name = "Slider_" .. sliderName
-        SliderContainer.Parent = ContentFrame
-        SliderContainer.BackgroundTransparency = 1
-        SliderContainer.Size = UDim2.new(1, 0, 0, 50)
-        SliderContainer.Position = UDim2.new(0, 0, 0, yOffset)
-        SliderContainer.ZIndex = 5
-        SliderContainer.Visible = true
-        
-        -- Slider name label
-        local SliderLabel = Instance.new("TextLabel")
-        SliderLabel.Name = "TextLabel"
-        SliderLabel.Parent = SliderContainer
-        SliderLabel.BackgroundTransparency = 1
-        SliderLabel.Position = UDim2.new(0.085, 0, 0, 0)
-        SliderLabel.Size = UDim2.new(0, 130, 0, 20)
-        SliderLabel.Font = Enum.Font.SourceSansBold
-        SliderLabel.Text = sliderName
-        SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        SliderLabel.TextSize = 15
-        SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-        SliderLabel.ZIndex = 6
-        
-        -- Slider value label
-        local ValueLabel = Instance.new("TextLabel")
-        ValueLabel.Name = "Value"
-        ValueLabel.Parent = SliderContainer
-        ValueLabel.BackgroundTransparency = 1
-        ValueLabel.Position = UDim2.new(0.6, 0, 0, 0)
-        ValueLabel.Size = UDim2.new(0, 72, 0, 20)
-        ValueLabel.Font = Enum.Font.SourceSansBold
-        ValueLabel.Text = tostring(defaultValue)
-        ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        ValueLabel.TextSize = 15
-        ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
-        ValueLabel.ZIndex = 6
-        
-        -- Slider track
-        local SliderTrack = Instance.new("Frame")
-        SliderTrack.Name = "Slider"
-        SliderTrack.Parent = SliderContainer
-        SliderTrack.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
-        SliderTrack.BorderSizePixel = 0
-        SliderTrack.Position = UDim2.new(0.085, 0, 0, 25)
-        SliderTrack.Size = UDim2.new(0, 180, 0, 6)
-        SliderTrack.ZIndex = 6
-        
-        local UICornerTrack = Instance.new("UICorner")
-        UICornerTrack.Parent = SliderTrack
-        
-        -- Slider fill
-        local SliderFill = Instance.new("Frame")
-        SliderFill.Name = "State"
-        SliderFill.Parent = SliderTrack
-        SliderFill.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-        SliderFill.BorderSizePixel = 0
-        SliderFill.Size = UDim2.new(0, 0, 1, 0)
-        SliderFill.ZIndex = 7
-        
-        local UICornerFill = Instance.new("UICorner")
-        UICornerFill.Parent = SliderFill
-        
-        -- Slider thumb
-        local SliderThumb = Instance.new("TextButton")
-        SliderThumb.Name = "TouchPoint"
-        SliderThumb.Parent = SliderTrack
-        SliderThumb.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-        SliderThumb.BorderSizePixel = 0
-        SliderThumb.Size = UDim2.new(0, 16, 0, 16)
-        SliderThumb.Position = UDim2.new(0, -8, 0.5, -8)
-        SliderThumb.Text = ""
-        SliderThumb.ZIndex = 8
-        
-        local UICornerThumb = Instance.new("UICorner")
-        UICornerThumb.CornerRadius = UDim.new(1, 0)
-        UICornerThumb.Parent = SliderThumb
-        
-        local ThumbInner = Instance.new("Frame")
-        ThumbInner.Name = "ThumbInner"
-        ThumbInner.Parent = SliderThumb
-        ThumbInner.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
-        ThumbInner.BorderSizePixel = 0
-        ThumbInner.Position = UDim2.new(0.125, 0, 0.125, 0)
-        ThumbInner.Size = UDim2.new(0.75, 0, 0.75, 0)
-        ThumbInner.ZIndex = 9
-        
-        local UICornerInner = Instance.new("UICorner")
-        UICornerInner.CornerRadius = UDim.new(1, 0)
-        UICornerInner.Parent = ThumbInner
-        
-        -- Calculate initial fill and thumb position
-        local function getValueFromPosition(x)
-            local trackWidth = SliderTrack.AbsoluteSize.X
-            local relativePos = math.clamp(x - SliderTrack.AbsolutePosition.X, 0, trackWidth)
-            local normalized = relativePos / trackWidth
-            local value = minValue + (maxValue - minValue) * normalized
-            return precise and value or math.floor(value + 0.5)
-        end
-        
-        local function getPositionFromValue(value)
-            local normalized = (value - minValue) / (maxValue - minValue)
-            return normalized * SliderTrack.AbsoluteSize.X
-        end
-        
-        local currentValue = defaultValue
-        local isDragging = false
-        
-        -- Update visual elements based on current value
-        local function updateSlider(value)
-            currentValue = math.clamp(value, minValue, maxValue)
-            local displayValue = precise and string.format("%.2f", currentValue) or tostring(math.floor(currentValue + 0.5))
-            ValueLabel.Text = displayValue
-            
-            local fillWidth = getPositionFromValue(currentValue)
-            SliderFill.Size = UDim2.new(0, fillWidth, 1, 0)
-            SliderThumb.Position = UDim2.new(0, fillWidth - 8, 0.5, -8)
-            
-            if save and self._saveConfig.enabled then
-                saveSliderState(self, sliderName, currentValue)
-            end
-            
-            callback(currentValue)
-        end
-        
-        -- Initialize slider
-        updateSlider(defaultValue)
-        
-        -- Mouse down on thumb
-        SliderThumb.MouseButton1Down:Connect(function()
-            isDragging = true
-        end)
-        
-        -- Mouse down on track (jump to position)
-        SliderTrack.MouseButton1Down:Connect(function(x, y)
-            local trackPos = SliderTrack.AbsolutePosition
-            local trackSize = SliderTrack.AbsoluteSize
-            local mousePos = UserInputService:GetMouseLocation()
-            
-            if mousePos.X >= trackPos.X and mousePos.X <= trackPos.X + trackSize.X and
-               mousePos.Y >= trackPos.Y and mousePos.Y <= trackPos.Y + trackSize.Y then
-                isDragging = true
-                local newValue = getValueFromPosition(mousePos.X)
-                updateSlider(newValue)
-            end
-        end)
-        
-        -- Mouse movement while dragging
-        local mouseMoveConnection
-        mouseMoveConnection = UserInputService.InputChanged:Connect(function(input)
-            if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                local newValue = getValueFromPosition(input.Position.X)
-                updateSlider(newValue)
-            end
-        end)
-        
-        -- Mouse up to stop dragging
-        local mouseUpConnection
-        mouseUpConnection = UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                isDragging = false
-            end
-        end)
-        
-        -- Clean up connections when slider is destroyed
-        SliderContainer.AncestryChanged:Connect(function(_, parent)
-            if not parent then
-                mouseMoveConnection:Disconnect()
-                mouseUpConnection:Disconnect()
-            end
-        end)
-        
-        table.insert(self._sliderElements, SliderContainer)
-
-        -- Update section sizes
-        task.defer(function()
-            local currentElements = getSortedElements(ContentFrame)
-            local totalHeight = 0
-            
-            if #currentElements > 0 then
-                local lastElement = currentElements[#currentElements]
-                totalHeight = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset
-            end
-            
-            if windowInstance._sectionStates[section] then
-                ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 5)
-                section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + 15)
-            end
-            
-            local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-            local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-            updateSectionPositions(container, sectionsList)
-        end)
-        
-        return {
-            Set = function(self, value)
-                updateSlider(value)
-            end,
-            Get = function(self)
-                return currentValue
-            end,
-            SetRange = function(self, newMin, newMax)
-                if newMin and newMax then
-                    if newMin > newMax then
-                        newMin, newMax = newMax, newMin
-                    end
-                    minValue = newMin
-                    maxValue = newMax
-                    updateSlider(math.clamp(currentValue, minValue, maxValue))
-                end
-            end
-        }
+function windowInstance:CreateSlider(params)
+    -- Parameter validation
+    if not params or not params.section then 
+        warn("CreateSlider: Invalid parameters")
+        return nil 
     end
+    
+    local section = params.section
+    if not section or not section:IsA("Frame") then
+        warn("CreateSlider: Invalid section")
+        return nil
+    end
+    
+    local sliderName = params.name or "Slider"
+    local minValue = params.min or 0
+    local maxValue = params.max or 100
+    local defaultValue = params.default or math.floor((minValue + maxValue) / 2)
+    local save = params.save or false
+    local callback = params.callback or function() end
+    local precise = params.precise or false
+    
+    -- Ensure min is less than max
+    if minValue > maxValue then
+        minValue, maxValue = maxValue, minValue
+    end
+    
+    -- Clamp default value
+    defaultValue = math.clamp(defaultValue, minValue, maxValue)
+    
+    local ContentFrame = section:FindFirstChild("ContentFrame")
+    if not ContentFrame then
+        warn("CreateSlider: ContentFrame not found in section")
+        return nil
+    end
+    
+    -- Load saved value
+    if save and self._saveConfig.enabled then
+        local success, savedState = pcall(function()
+            return loadSliderState(self, sliderName)
+        end)
+        if success and savedState ~= nil then
+            defaultValue = tonumber(savedState) or defaultValue
+            defaultValue = math.clamp(defaultValue, minValue, maxValue)
+        end
+    end
+    
+    -- Calculate position for new element
+    local elements = getSortedElements(ContentFrame)
+    local yOffset = 5 -- Default offset for first element
+    
+    if #elements > 0 then
+        local lastElement = elements[#elements]
+        if lastElement and lastElement.Position then
+            yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + 5
+        end
+    end
+
+    -- Create container for Slider
+    local SliderContainer = Instance.new("Frame")
+    SliderContainer.Name = "Slider_" .. sliderName
+    SliderContainer.Parent = ContentFrame
+    SliderContainer.BackgroundTransparency = 1
+    SliderContainer.Size = UDim2.new(1, 0, 0, 50)
+    SliderContainer.Position = UDim2.new(0, 0, 0, yOffset)
+    SliderContainer.ZIndex = 5
+    SliderContainer.Visible = true
+    
+    -- Slider name label
+    local SliderLabel = Instance.new("TextLabel")
+    SliderLabel.Name = "TextLabel"
+    SliderLabel.Parent = SliderContainer
+    SliderLabel.BackgroundTransparency = 1
+    SliderLabel.Position = UDim2.new(0.085, 0, 0, 0)
+    SliderLabel.Size = UDim2.new(0, 130, 0, 20)
+    SliderLabel.Font = Enum.Font.SourceSansBold
+    SliderLabel.Text = sliderName
+    SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    SliderLabel.TextSize = 15
+    SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SliderLabel.ZIndex = 6
+    
+    -- Slider value label
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Name = "Value"
+    ValueLabel.Parent = SliderContainer
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.Position = UDim2.new(0.6, 0, 0, 0)
+    ValueLabel.Size = UDim2.new(0, 72, 0, 20)
+    ValueLabel.Font = Enum.Font.SourceSansBold
+    ValueLabel.Text = tostring(defaultValue)
+    ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    ValueLabel.TextSize = 15
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    ValueLabel.ZIndex = 6
+    
+    -- Slider track
+    local SliderTrack = Instance.new("Frame")
+    SliderTrack.Name = "Slider"
+    SliderTrack.Parent = SliderContainer
+    SliderTrack.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
+    SliderTrack.BorderSizePixel = 0
+    SliderTrack.Position = UDim2.new(0.085, 0, 0, 25)
+    SliderTrack.Size = UDim2.new(0, 180, 0, 6)
+    SliderTrack.ZIndex = 6
+    
+    local UICornerTrack = Instance.new("UICorner")
+    UICornerTrack.Parent = SliderTrack
+    
+    -- Slider fill
+    local SliderFill = Instance.new("Frame")
+    SliderFill.Name = "State"
+    SliderFill.Parent = SliderTrack
+    SliderFill.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+    SliderFill.BorderSizePixel = 0
+    SliderFill.Size = UDim2.new(0, 0, 1, 0)
+    SliderFill.ZIndex = 7
+    
+    local UICornerFill = Instance.new("UICorner")
+    UICornerFill.Parent = SliderFill
+    
+    -- Slider thumb
+    local SliderThumb = Instance.new("TextButton")
+    SliderThumb.Name = "TouchPoint"
+    SliderThumb.Parent = SliderTrack
+    SliderThumb.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+    SliderThumb.BorderSizePixel = 0
+    SliderThumb.Size = UDim2.new(0, 16, 0, 16)
+    SliderThumb.Position = UDim2.new(0, -8, 0.5, -8)
+    SliderThumb.Text = ""
+    SliderThumb.ZIndex = 8
+    
+    local UICornerThumb = Instance.new("UICorner")
+    UICornerThumb.CornerRadius = UDim.new(1, 0)
+    UICornerThumb.Parent = SliderThumb
+    
+    local ThumbInner = Instance.new("Frame")
+    ThumbInner.Name = "ThumbInner"
+    ThumbInner.Parent = SliderThumb
+    ThumbInner.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
+    ThumbInner.BorderSizePixel = 0
+    ThumbInner.Position = UDim2.new(0.125, 0, 0.125, 0)
+    ThumbInner.Size = UDim2.new(0.75, 0, 0.75, 0)
+    ThumbInner.ZIndex = 9
+    
+    local UICornerInner = Instance.new("UICorner")
+    UICornerInner.CornerRadius = UDim.new(1, 0)
+    UICornerInner.Parent = ThumbInner
+    
+    -- Calculate initial fill and thumb position
+    local function getValueFromPosition(x)
+        local trackWidth = SliderTrack.AbsoluteSize.X
+        local relativePos = math.clamp(x - SliderTrack.AbsolutePosition.X, 0, trackWidth)
+        local normalized = relativePos / trackWidth
+        local value = minValue + (maxValue - minValue) * normalized
+        return precise and value or math.floor(value + 0.5)
+    end
+    
+    local function getPositionFromValue(value)
+        local normalized = (value - minValue) / (maxValue - minValue)
+        return normalized * SliderTrack.AbsoluteSize.X
+    end
+    
+    local currentValue = defaultValue
+    local isDragging = false
+    
+    -- Update visual elements based on current value
+    local function updateSlider(value)
+        currentValue = math.clamp(value, minValue, maxValue)
+        local displayValue = precise and string.format("%.2f", currentValue) or tostring(math.floor(currentValue + 0.5))
+        ValueLabel.Text = displayValue
+        
+        local fillWidth = getPositionFromValue(currentValue)
+        SliderFill.Size = UDim2.new(0, fillWidth, 1, 0)
+        SliderThumb.Position = UDim2.new(0, fillWidth - 8, 0.5, -8)
+        
+        if save and self._saveConfig.enabled then
+            saveSliderState(self, sliderName, currentValue)
+        end
+        
+        callback(currentValue)
+    end
+    
+    -- Initialize slider
+    updateSlider(defaultValue)
+    
+    -- Mouse down on thumb - исправлено MouseButtoniDown на MouseButton1Down
+    SliderThumb.MouseButton1Down:Connect(function()
+        isDragging = true
+    end)
+    
+    -- Mouse down on track (jump to position)
+    SliderTrack.MouseButton1Down:Connect(function(x, y)
+        local trackPos = SliderTrack.AbsolutePosition
+        local trackSize = SliderTrack.AbsoluteSize
+        local mousePos = UserInputService:GetMouseLocation()
+        
+        if mousePos.X >= trackPos.X and mousePos.X <= trackPos.X + trackSize.X and
+           mousePos.Y >= trackPos.Y and mousePos.Y <= trackPos.Y + trackSize.Y then
+            isDragging = true
+            local newValue = getValueFromPosition(mousePos.X)
+            updateSlider(newValue)
+        end
+    end)
+    
+    -- Mouse movement while dragging
+    local mouseMoveConnection
+    mouseMoveConnection = UserInputService.InputChanged:Connect(function(input)
+        if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local newValue = getValueFromPosition(input.Position.X)
+            updateSlider(newValue)
+        end
+    end)
+    
+    -- Mouse up to stop dragging
+    local mouseUpConnection
+    mouseUpConnection = UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = false
+        end
+    end)
+    
+    -- Clean up connections when slider is destroyed
+    SliderContainer.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            mouseMoveConnection:Disconnect()
+            mouseUpConnection:Disconnect()
+        end
+    end)
+    
+    table.insert(self._sliderElements, SliderContainer)
+
+    -- Update section sizes
+    task.defer(function()
+        local currentElements = getSortedElements(ContentFrame)
+        local totalHeight = 0
+        
+        if #currentElements > 0 then
+            local lastElement = currentElements[#currentElements]
+            totalHeight = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset
+        end
+        
+        if windowInstance._sectionStates[section] then
+            ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 5)
+            section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + 15)
+        end
+        
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        updateSectionPositions(container, sectionsList)
+    end)
+    
+    return {
+        Set = function(self, value)
+            updateSlider(value)
+        end,
+        Get = function(self)
+            return currentValue
+        end,
+        SetRange = function(self, newMin, newMax)
+            if newMin and newMax then
+                if newMin > newMax then
+                    newMin, newMax = newMax, newMin
+                end
+                minValue = newMin
+                maxValue = newMax
+                updateSlider(math.clamp(currentValue, minValue, maxValue))
+            end
+        end
+    }
+end
 
     -- New input creation function with original style
    function windowInstance:CreateInput(params)
