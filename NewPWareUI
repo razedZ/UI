@@ -1564,7 +1564,7 @@ function windowInstance:CreateSlider(params)
         end
     end
     
-    -- Get proper yOffset based on existing elements - ИСПРАВЛЕНО!
+    -- Get proper yOffset based on existing elements
     local elements = getSortedElements(ContentFrame)
     local yOffset = 5
     
@@ -1580,7 +1580,7 @@ function windowInstance:CreateSlider(params)
         
         -- Увеличиваем отступ после определенных элементов
         if lastType == "slider" then
-            spacing = 10 -- Больший отступ после слайдера
+            spacing = 0 -- Уменьшенный отступ после слайдера (было 10)
         elseif lastType == "toggle" and "dropdown" then
             spacing = 3
         elseif lastType == "dropdown" and "toggle" then
@@ -1600,12 +1600,12 @@ function windowInstance:CreateSlider(params)
     SliderContainer.ZIndex = 5
     SliderContainer.Visible = true
     
-    -- Slider name label (raised by 2px)
+    -- Slider name label (поднят на 2 пикселя выше)
     local SliderLabel = Instance.new("TextLabel")
     SliderLabel.Name = "TextLabel"
     SliderLabel.Parent = SliderContainer
     SliderLabel.BackgroundTransparency = 1
-    SliderLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Raised by 2px
+    SliderLabel.Position = UDim2.new(0.085, 0, 0, -4) -- Поднят на 4px вместо -2 (на 2px выше)
     SliderLabel.Size = UDim2.new(0, 165, 0, 20)
     SliderLabel.Font = Enum.Font.SourceSansBold
     SliderLabel.Text = sliderName
@@ -1614,12 +1614,12 @@ function windowInstance:CreateSlider(params)
     SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
     SliderLabel.ZIndex = 6
     
-    -- Slider value label (raised by 2px)
+    -- Slider value label (поднят на 2 пикселя выше)
     local ValueLabel = Instance.new("TextLabel")
     ValueLabel.Name = "Value"
     ValueLabel.Parent = SliderContainer
     ValueLabel.BackgroundTransparency = 1
-    ValueLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Raised by 2px
+    ValueLabel.Position = UDim2.new(0.085, 0, 0, -4) -- Поднят на 4px вместо -2 (на 2px выше)
     ValueLabel.Size = UDim2.new(0, 165, 0, 20)
     ValueLabel.Font = Enum.Font.SourceSansBold
     ValueLabel.Text = tostring(defaultValue)
@@ -1795,9 +1795,11 @@ function windowInstance:CreateSlider(params)
                                prevElement.Name:match("^Bind_") and "bind" or 
                                "slider"
                 
-                -- Увеличиваем отступ после слайдера
-                if prevType == "slider" then
-                    spacing = 10
+                -- Уменьшенный отступ после слайдера для дропдауна
+                if prevType == "slider" and element.Name:match("^Dropdown_") then
+                    spacing = 0 -- Уменьшено на 10px (было 10)
+                elseif prevType == "slider" then
+                    spacing = 5
                 elseif prevType == "toggle" and element.Name:match("^Dropdown_") then
                     spacing = 3
                 elseif prevType == "dropdown" and element.Name:match("^Toggle_") then
