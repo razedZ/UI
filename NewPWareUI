@@ -1,4 +1,4 @@
--- Основной код библиотеки (PizdecWare.lua)
+ -- Основной код библиотеки (PizdecWare.lua)
 local success, HttpService = pcall(game.GetService, game, "HttpService")
 local success2, TweenService = pcall(game.GetService, game, "TweenService")
 local success3, UserInputService = pcall(game.GetService, game, "UserInputService")
@@ -1564,13 +1564,30 @@ function windowInstance:CreateSlider(params)
         end
     end
     
-    -- Get proper yOffset based on existing elements
+    -- Get proper yOffset based on existing elements - ИСПРАВЛЕНО!
     local elements = getSortedElements(ContentFrame)
     local yOffset = 5
     
     if #elements > 0 then
         local lastElement = elements[#elements]
-        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + 5
+        local lastType = lastElement.Name:match("^Toggle_") and "toggle" or 
+                       lastElement.Name:match("^Dropdown_") and "dropdown" or 
+                       lastElement.Name:match("^Input_") and "input" or 
+                       lastElement.Name:match("^Bind_") and "bind" or 
+                       "slider"
+        
+        local spacing = 5 -- базовый отступ
+        
+        -- Увеличиваем отступ после определенных элементов
+        if lastType == "slider" then
+            spacing = 10 -- Больший отступ после слайдера
+        elseif lastType == "toggle" and "dropdown" then
+            spacing = 3
+        elseif lastType == "dropdown" and "toggle" then
+            spacing = 5
+        end
+        
+        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
     end
 
     -- Create container for Slider (30px height)
@@ -1747,12 +1764,12 @@ function windowInstance:CreateSlider(params)
     
     table.insert(self._sliderElements, SliderContainer)
 
-    -- Немедленное обновление всех позиций элементов в секции с правильными отступами
-    local function updateAllElementsPositions()
+    -- Функция для обновления позиций всех элементов в секции
+    local function updateSectionLayout()
         local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
         local container = sectionsList == self._leftSections and LeftContainer or RightContainer
         
-        -- Получаем ВСЕ элементы после создания слайдера
+        -- Получаем все элементы и сортируем по позиции Y
         local allElements = {}
         for _, child in ipairs(ContentFrame:GetChildren()) do
             if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or 
@@ -1761,38 +1778,30 @@ function windowInstance:CreateSlider(params)
             end
         end
         
-        -- Сортируем по текущей позиции Y
         table.sort(allElements, function(a, b)
             return a.Position.Y.Offset < b.Position.Y.Offset
         end)
         
-        -- Пересчитываем все позиции с нуля с правильными отступами
+        -- Пересчитываем позиции с правильными отступами
         local currentY = 5
         for i, element in ipairs(allElements) do
-            -- Определяем тип элемента для правильного отступа
-            local elementType = element.Name:match("^Toggle_") and "toggle" or 
-                              element.Name:match("^Dropdown_") and "dropdown" or 
-                              element.Name:match("^Input_") and "input" or 
-                              element.Name:match("^Bind_") and "bind" or 
-                              "slider"
-            
-            -- Определяем отступ в зависимости от типа предыдущего элемента
-            local spacing = 5 -- базовый отступ
+            local spacing = 5
             
             if i > 1 then
-                local prevElementType = allElements[i-1].Name:match("^Toggle_") and "toggle" or 
-                                      allElements[i-1].Name:match("^Dropdown_") and "dropdown" or 
-                                      allElements[i-1].Name:match("^Input_") and "input" or 
-                                      allElements[i-1].Name:match("^Bind_") and "bind" or 
-                                      "slider"
+                local prevElement = allElements[i-1]
+                local prevType = prevElement.Name:match("^Toggle_") and "toggle" or 
+                               prevElement.Name:match("^Dropdown_") and "dropdown" or 
+                               prevElement.Name:match("^Input_") and "input" or 
+                               prevElement.Name:match("^Bind_") and "bind" or 
+                               "slider"
                 
                 -- Увеличиваем отступ после слайдера
-                if prevElementType == "slider" then
-                    spacing = 10 -- Больший отступ после слайдера
-                elseif elementType == "dropdown" and prevElementType == "toggle" then
+                if prevType == "slider" then
+                    spacing = 10
+                elseif prevType == "toggle" and element.Name:match("^Dropdown_") then
                     spacing = 3
-                elseif elementType == "toggle" and prevElementType == "dropdown" then
-                    spacing = 8
+                elseif prevType == "dropdown" and element.Name:match("^Toggle_") then
+                    spacing = 5
                 end
             end
             
@@ -1801,26 +1810,17 @@ function windowInstance:CreateSlider(params)
         end
         
         -- Обновляем размеры контента и секции
-        if windowInstance._sectionStates[section] then
+        if self._sectionStates[section] then
             ContentFrame.Size = UDim2.new(1, 0, 0, currentY)
-            section.Size = UDim2.new(1, 0, 0, 30 + currentY + 10)
+            section.Size = UDim2.new(1, 0, 0, 30 + currentY + 15)
         end
         
-        -- Принудительное обновление позиций секций
+        -- Обновляем позиции всех секций
         updateSectionPositions(container, sectionsList)
-        
-        -- Немедленное обновление CanvasSize
-        local totalSectionHeight = 0
-        for _, sec in ipairs(sectionsList) do
-            if sec.Visible then
-                totalSectionHeight = totalSectionHeight + sec.Size.Y.Offset + 20
-            end
-        end
-        windowInstance._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionHeight + 40)
     end
     
-    -- Немедленное обновление после создания
-    updateAllElementsPositions()
+    -- Немедленное обновление после создания слайдера
+    task.defer(updateSectionLayout)
     
     return {
         Set = function(self, value)
