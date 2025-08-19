@@ -1,4 +1,3 @@
-Помоги устранить проблему в luau библиотеки для инжектиора роблокс. Ошибка на скрине. Код:
 -- Основной код библиотеки (PizdecWare.lua)
 local success, HttpService = pcall(game.GetService, game, "HttpService")
 local success2, TweenService = pcall(game.GetService, game, "TweenService")
@@ -1519,7 +1518,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
 end
 
     -- New slider creation function
-    function windowInstance:CreateSlider(params)
+function windowInstance:CreateSlider(params)
     -- Parameter validation
     if not params or not params.section then 
         warn("CreateSlider: Invalid parameters")
@@ -1842,7 +1841,6 @@ end
         end
     }
 end
-
     -- New input creation function with original style
    function windowInstance:CreateInput(params)
     -- Проверка параметров
