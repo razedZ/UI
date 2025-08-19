@@ -1573,23 +1573,23 @@ function windowInstance:CreateSlider(params)
         yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + 5
     end
 
-    -- Create container for Slider (same size as dropdown)
+    -- Create container for Slider (30px height)
     local SliderContainer = Instance.new("Frame")
     SliderContainer.Name = "Slider_" .. sliderName
     SliderContainer.Parent = ContentFrame
     SliderContainer.BackgroundTransparency = 1
-    SliderContainer.Size = UDim2.new(1, 0, 0, 50) -- Same height as dropdown
+    SliderContainer.Size = UDim2.new(1, 0, 0, 30) -- 30px height
     SliderContainer.Position = UDim2.new(0, 0, 0, yOffset)
     SliderContainer.ZIndex = 5
     SliderContainer.Visible = true
     
-    -- Slider name label (aligned to left edge of track)
+    -- Slider name label (raised by 2px)
     local SliderLabel = Instance.new("TextLabel")
     SliderLabel.Name = "TextLabel"
     SliderLabel.Parent = SliderContainer
     SliderLabel.BackgroundTransparency = 1
-    SliderLabel.Position = UDim2.new(0.085, 0, 0, 0)
-    SliderLabel.Size = UDim2.new(0, 165, 0, 20) -- Same width as dropdown button
+    SliderLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Raised by 2px
+    SliderLabel.Size = UDim2.new(0, 165, 0, 20)
     SliderLabel.Font = Enum.Font.SourceSansBold
     SliderLabel.Text = sliderName
     SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
@@ -1597,28 +1597,28 @@ function windowInstance:CreateSlider(params)
     SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
     SliderLabel.ZIndex = 6
     
-    -- Slider value label (aligned to right edge of track)
+    -- Slider value label (raised by 2px)
     local ValueLabel = Instance.new("TextLabel")
     ValueLabel.Name = "Value"
     ValueLabel.Parent = SliderContainer
     ValueLabel.BackgroundTransparency = 1
-    ValueLabel.Position = UDim2.new(0.085, 0, 0, 0) -- Same position as name
-    ValueLabel.Size = UDim2.new(0, 165, 0, 20) -- Same width as dropdown button
+    ValueLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Raised by 2px
+    ValueLabel.Size = UDim2.new(0, 165, 0, 20)
     ValueLabel.Font = Enum.Font.SourceSansBold
     ValueLabel.Text = tostring(defaultValue)
     ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
     ValueLabel.TextSize = 15
-    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right -- Right aligned
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
     ValueLabel.ZIndex = 6
     
-    -- Slider track (same width and position as dropdown button)
+    -- Slider track (positioned for 30px container)
     local SliderTrack = Instance.new("Frame")
     SliderTrack.Name = "Track"
     SliderTrack.Parent = SliderContainer
-    SliderTrack.BackgroundColor3 = Color3.fromRGB(25, 28, 34) -- Same as dropdown
+    SliderTrack.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
     SliderTrack.BorderSizePixel = 0
-    SliderTrack.Position = UDim2.new(0.085, 0, 0, 20) -- Below labels
-    SliderTrack.Size = UDim2.new(0, 165, 0, 6) -- Same width as dropdown button
+    SliderTrack.Position = UDim2.new(0.085, 0, 0, 15) -- Adjusted for 30px height
+    SliderTrack.Size = UDim2.new(0, 165, 0, 6)
     SliderTrack.ZIndex = 6
     
     local UICornerTrack = Instance.new("UICorner")
