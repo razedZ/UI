@@ -1564,9 +1564,9 @@ function windowInstance:CreateSlider(params)
         end
     end
     
-    -- Get proper yOffset based on existing elements
+    -- Get proper yOffset based on existing elements - УВЕЛИЧЕН на 3px
     local elements = getSortedElements(ContentFrame)
-    local yOffset = 5
+    local yOffset = 8 -- Увеличено с 5 до 8 (3px дополнительно)
     
     if #elements > 0 then
         local lastElement = elements[#elements]
@@ -1580,14 +1580,14 @@ function windowInstance:CreateSlider(params)
         
         -- Увеличиваем отступ после определенных элементов
         if lastType == "slider" then
-            spacing = 0 -- Уменьшенный отступ после слайдера (было 10)
+            spacing = 0 -- Уменьшенный отступ после слайдера
         elseif lastType == "toggle" and "dropdown" then
             spacing = 3
         elseif lastType == "dropdown" and "toggle" then
             spacing = 5
         end
         
-        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
+        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing + 3 -- +3px дополнительно
     end
 
     -- Create container for Slider (30px height)
@@ -1605,8 +1605,8 @@ function windowInstance:CreateSlider(params)
     SliderLabel.Name = "TextLabel"
     SliderLabel.Parent = SliderContainer
     SliderLabel.BackgroundTransparency = 1
-    SliderLabel.Position = UDim2.new(0.085, 0, 0, -4) -- Поднят на 4px вместо -2 (на 2px выше)
-    SliderLabel.Size = UDim2.new(0, 165, 0, 20)
+    SliderLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Поднят на 2px выше
+    SliderLabel.Size = UDim2.new(0, 165, 0, 22) -- Увеличена высота на 2px
     SliderLabel.Font = Enum.Font.SourceSansBold
     SliderLabel.Text = sliderName
     SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
@@ -1619,8 +1619,8 @@ function windowInstance:CreateSlider(params)
     ValueLabel.Name = "Value"
     ValueLabel.Parent = SliderContainer
     ValueLabel.BackgroundTransparency = 1
-    ValueLabel.Position = UDim2.new(0.085, 0, 0, -4) -- Поднят на 4px вместо -2 (на 2px выше)
-    ValueLabel.Size = UDim2.new(0, 165, 0, 20)
+    ValueLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Поднят на 2px выше
+    ValueLabel.Size = UDim2.new(0, 165, 0, 22) -- Увеличена высота на 2px
     ValueLabel.Font = Enum.Font.SourceSansBold
     ValueLabel.Text = tostring(defaultValue)
     ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
@@ -1764,7 +1764,7 @@ function windowInstance:CreateSlider(params)
     
     table.insert(self._sliderElements, SliderContainer)
 
-    -- Функция для обновления позиций всех элементов в секции
+    -- Функция для обновления позиций всех элементов в секции с учетом ВСЕХ элементов
     local function updateSectionLayout()
         local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
         local container = sectionsList == self._leftSections and LeftContainer or RightContainer
@@ -1795,14 +1795,20 @@ function windowInstance:CreateSlider(params)
                                prevElement.Name:match("^Bind_") and "bind" or 
                                "slider"
                 
+                local elementType = element.Name:match("^Toggle_") and "toggle" or 
+                                  element.Name:match("^Dropdown_") and "dropdown" or 
+                                  element.Name:match("^Input_") and "input" or 
+                                  element.Name:match("^Bind_") and "bind" or 
+                                  "slider"
+                
                 -- Уменьшенный отступ после слайдера для дропдауна
-                if prevType == "slider" and element.Name:match("^Dropdown_") then
-                    spacing = 0 -- Уменьшено на 10px (было 10)
+                if prevType == "slider" and elementType == "dropdown" then
+                    spacing = 0
                 elseif prevType == "slider" then
                     spacing = 5
-                elseif prevType == "toggle" and element.Name:match("^Dropdown_") then
+                elseif prevType == "toggle" and elementType == "dropdown" then
                     spacing = 3
-                elseif prevType == "dropdown" and element.Name:match("^Toggle_") then
+                elseif prevType == "dropdown" and elementType == "toggle" then
                     spacing = 5
                 end
             end
@@ -1811,14 +1817,54 @@ function windowInstance:CreateSlider(params)
             currentY = currentY + element.Size.Y.Offset + spacing
         end
         
+        -- ОБНОВЛЯЕМ РАЗМЕР КОНТЕЙНЕРА С УЧЕТОМ ВСЕХ ЭЛЕМЕНТОВ ВКЛЮЧАЯ ДРОПДАУНЫ
+        local totalContentHeight = 0
+        local previousElementType = nil
+        
+        for _, element in ipairs(allElements) do
+            local elementType = element.Name:match("^Toggle_") and "toggle" or 
+                              element.Name:match("^Dropdown_") and "dropdown" or 
+                              element.Name:match("^Input_") and "input" or 
+                              element.Name:match("^Bind_") and "bind" or 
+                              "slider"
+            
+            local elementSpacing = 5
+            
+            if previousElementType == "slider" and elementType == "dropdown" then
+                elementSpacing = 0
+            elseif previousElementType == "slider" then
+                elementSpacing = 5
+            elseif previousElementType == "toggle" and elementType == "dropdown" then
+                elementSpacing = 3
+            elseif previousElementType == "dropdown" and elementType == "toggle" then
+                elementSpacing = 5
+            end
+            
+            totalContentHeight = totalContentHeight + elementSpacing + element.Size.Y.Offset
+            previousElementType = elementType
+        end
+        
         -- Обновляем размеры контента и секции
         if self._sectionStates[section] then
-            ContentFrame.Size = UDim2.new(1, 0, 0, currentY)
-            section.Size = UDim2.new(1, 0, 0, 30 + currentY + 15)
+            ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
+            section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + 15)
         end
         
         -- Обновляем позиции всех секций
         updateSectionPositions(container, sectionsList)
+        
+        -- Обновляем CanvasSize контейнера
+        local totalSectionsHeight = 0
+        for _, sec in ipairs(sectionsList) do
+            if sec.Visible then
+                if self._sectionStates[sec] == false then
+                    totalSectionsHeight = totalSectionsHeight + 30 + 20
+                else
+                    totalSectionsHeight = totalSectionsHeight + sec.Size.Y.Offset + 20
+                end
+            end
+        end
+        self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
     end
     
     -- Немедленное обновление после создания слайдера
