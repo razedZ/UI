@@ -1747,7 +1747,7 @@ function windowInstance:CreateSlider(params)
     
     table.insert(self._sliderElements, SliderContainer)
 
-    -- Немедленное обновление всех позиций элементов в секции
+    -- Немедленное обновление всех позиций элементов в секции с правильными отступами
     local function updateAllElementsPositions()
         local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
         local container = sectionsList == self._leftSections and LeftContainer or RightContainer
@@ -1766,11 +1766,38 @@ function windowInstance:CreateSlider(params)
             return a.Position.Y.Offset < b.Position.Y.Offset
         end)
         
-        -- Пересчитываем все позиции с нуля
+        -- Пересчитываем все позиции с нуля с правильными отступами
         local currentY = 5
-        for _, element in ipairs(allElements) do
+        for i, element in ipairs(allElements) do
+            -- Определяем тип элемента для правильного отступа
+            local elementType = element.Name:match("^Toggle_") and "toggle" or 
+                              element.Name:match("^Dropdown_") and "dropdown" or 
+                              element.Name:match("^Input_") and "input" or 
+                              element.Name:match("^Bind_") and "bind" or 
+                              "slider"
+            
+            -- Определяем отступ в зависимости от типа предыдущего элемента
+            local spacing = 5 -- базовый отступ
+            
+            if i > 1 then
+                local prevElementType = allElements[i-1].Name:match("^Toggle_") and "toggle" or 
+                                      allElements[i-1].Name:match("^Dropdown_") and "dropdown" or 
+                                      allElements[i-1].Name:match("^Input_") and "input" or 
+                                      allElements[i-1].Name:match("^Bind_") and "bind" or 
+                                      "slider"
+                
+                -- Увеличиваем отступ после слайдера
+                if prevElementType == "slider" then
+                    spacing = 10 -- Больший отступ после слайдера
+                elseif elementType == "dropdown" and prevElementType == "toggle" then
+                    spacing = 3
+                elseif elementType == "toggle" and prevElementType == "dropdown" then
+                    spacing = 8
+                end
+            end
+            
             element.Position = UDim2.new(0, 0, 0, currentY)
-            currentY = currentY + element.Size.Y.Offset + 5
+            currentY = currentY + element.Size.Y.Offset + spacing
         end
         
         -- Обновляем размеры контента и секции
