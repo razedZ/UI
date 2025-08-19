@@ -1747,35 +1747,53 @@ function windowInstance:CreateSlider(params)
     
     table.insert(self._sliderElements, SliderContainer)
 
-    -- Update section sizes immediately
-    local function updateSectionLayout()
+    -- Немедленное обновление всех позиций элементов в секции
+    local function updateAllElementsPositions()
         local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
         local container = sectionsList == self._leftSections and LeftContainer or RightContainer
         
-        -- Recalculate all element positions
-        local elements = getSortedElements(ContentFrame)
-        local totalHeight = 0
-        
-        for i, element in ipairs(elements) do
-            local newYOffset = (i == 1) and 5 or (elements[i-1].Position.Y.Offset + elements[i-1].Size.Y.Offset + 5)
-            
-            if element.Position.Y.Offset ~= newYOffset then
-                element.Position = UDim2.new(0, 0, 0, newYOffset)
+        -- Получаем ВСЕ элементы после создания слайдера
+        local allElements = {}
+        for _, child in ipairs(ContentFrame:GetChildren()) do
+            if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or 
+               child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_")) then
+                table.insert(allElements, child)
             end
-            
-            totalHeight = newYOffset + element.Size.Y.Offset
         end
         
+        -- Сортируем по текущей позиции Y
+        table.sort(allElements, function(a, b)
+            return a.Position.Y.Offset < b.Position.Y.Offset
+        end)
+        
+        -- Пересчитываем все позиции с нуля
+        local currentY = 5
+        for _, element in ipairs(allElements) do
+            element.Position = UDim2.new(0, 0, 0, currentY)
+            currentY = currentY + element.Size.Y.Offset + 5
+        end
+        
+        -- Обновляем размеры контента и секции
         if windowInstance._sectionStates[section] then
-            ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 10)
-            section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + 15)
+            ContentFrame.Size = UDim2.new(1, 0, 0, currentY)
+            section.Size = UDim2.new(1, 0, 0, 30 + currentY + 10)
         end
         
+        -- Принудительное обновление позиций секций
         updateSectionPositions(container, sectionsList)
+        
+        -- Немедленное обновление CanvasSize
+        local totalSectionHeight = 0
+        for _, sec in ipairs(sectionsList) do
+            if sec.Visible then
+                totalSectionHeight = totalSectionHeight + sec.Size.Y.Offset + 20
+            end
+        end
+        windowInstance._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionHeight + 40)
     end
     
-    -- Force update layout after creation
-    task.defer(updateSectionLayout)
+    -- Немедленное обновление после создания
+    updateAllElementsPositions()
     
     return {
         Set = function(self, value)
