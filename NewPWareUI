@@ -2071,8 +2071,12 @@ function windowInstance:CreateSlider(params)
     
     table.insert(self._sliderElements, SliderContainer)
 
-    -- Функция для получения ВСЕХ элементов с актуальными данными
-    local function getAllElements()
+    -- Немедленное обновление всех позиций элементов в секции с правильными отступами
+    local function updateAllElementsPositions()
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        
+        -- Получаем ВСЕ элементы после создания слайдера
         local allElements = {}
         for _, child in ipairs(ContentFrame:GetChildren()) do
             if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or 
@@ -2080,22 +2084,13 @@ function windowInstance:CreateSlider(params)
                 table.insert(allElements, child)
             end
         end
-        -- Сортируем по позиции Y
+        
+        -- Сортируем по текущей позиции Y
         table.sort(allElements, function(a, b)
             return a.Position.Y.Offset < b.Position.Y.Offset
         end)
-        return allElements
-    end
-
-    -- Немедленное обновление всех позиций элементов в секции
-    local function updateAllElementsPositions()
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
         
-        -- Получаем ВСЕ элементы с актуальными данными
-        local allElements = getAllElements()
-        
-        -- Пересчитываем все позиции с нуля
+        -- Пересчитываем все позиции с нуля с правильными отступами
         local currentY = 5
         for i, element in ipairs(allElements) do
             -- Определяем тип элемента для правильного отступа
@@ -2115,17 +2110,16 @@ function windowInstance:CreateSlider(params)
                                       allElements[i-1].Name:match("^Bind_") and "bind" or 
                                       "slider"
                 
-                -- Специальные отступы для разных комбинаций элементов
-                if prevElementType == "toggle" and elementType == "dropdown" then
-                    spacing = 3
-                elseif prevElementType == "dropdown" and elementType == "toggle" then
-                    spacing = 8
-                elseif prevElementType == "slider" then
+                -- Увеличиваем отступ после слайдера
+                if prevElementType == "slider" then
                     spacing = 10 -- Больший отступ после слайдера
+                elseif elementType == "dropdown" and prevElementType == "toggle" then
+                    spacing = 3
+                elseif elementType == "toggle" and prevElementType == "dropdown" then
+                    spacing = 8
                 end
             end
             
-            -- Устанавливаем новую позицию
             element.Position = UDim2.new(0, 0, 0, currentY)
             currentY = currentY + element.Size.Y.Offset + spacing
         end
@@ -2151,14 +2145,6 @@ function windowInstance:CreateSlider(params)
     
     -- Немедленное обновление после создания
     updateAllElementsPositions()
-
-    -- Также обновляем позиции при изменении содержимого
-    ContentFrame.ChildAdded:Connect(function(child)
-        if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or 
-           child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_")) then
-            updateAllElementsPositions()
-        end
-    end)
     
     return {
         Set = function(self, value)
