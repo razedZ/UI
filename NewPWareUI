@@ -1796,7 +1796,6 @@ function windowInstance:CreateSlider(params)
         end
     }
 end
-
     -- New input creation function with original style
    function windowInstance:CreateInput(params)
     -- Проверка параметров
