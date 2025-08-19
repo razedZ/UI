@@ -1615,7 +1615,7 @@ function windowInstance:CreateSlider(params)
     
     -- Slider track
     local SliderTrack = Instance.new("Frame")
-    SliderTrack.Name = "Slider"
+    SliderTrack.Name = "Track"
     SliderTrack.Parent = SliderContainer
     SliderTrack.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
     SliderTrack.BorderSizePixel = 0
@@ -1628,7 +1628,7 @@ function windowInstance:CreateSlider(params)
     
     -- Slider fill
     local SliderFill = Instance.new("Frame")
-    SliderFill.Name = "State"
+    SliderFill.Name = "Fill"
     SliderFill.Parent = SliderTrack
     SliderFill.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
     SliderFill.BorderSizePixel = 0
@@ -1638,9 +1638,9 @@ function windowInstance:CreateSlider(params)
     local UICornerFill = Instance.new("UICorner")
     UICornerFill.Parent = SliderFill
     
-    -- Slider thumb
+    -- Slider thumb (исправлено: теперь это TextButton)
     local SliderThumb = Instance.new("TextButton")
-    SliderThumb.Name = "TouchPoint"
+    SliderThumb.Name = "Thumb"
     SliderThumb.Parent = SliderTrack
     SliderThumb.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
     SliderThumb.BorderSizePixel = 0
@@ -1648,13 +1648,14 @@ function windowInstance:CreateSlider(params)
     SliderThumb.Position = UDim2.new(0, -8, 0.5, -8)
     SliderThumb.Text = ""
     SliderThumb.ZIndex = 8
+    SliderThumb.AutoButtonColor = false
     
     local UICornerThumb = Instance.new("UICorner")
     UICornerThumb.CornerRadius = UDim.new(1, 0)
     UICornerThumb.Parent = SliderThumb
     
     local ThumbInner = Instance.new("Frame")
-    ThumbInner.Name = "ThumbInner"
+    ThumbInner.Name = "Inner"
     ThumbInner.Parent = SliderThumb
     ThumbInner.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
     ThumbInner.BorderSizePixel = 0
@@ -1703,20 +1704,16 @@ function windowInstance:CreateSlider(params)
     -- Initialize slider
     updateSlider(defaultValue)
     
-    -- Mouse down on thumb - исправлено MouseButtoniDown на MouseButton1Down
+    -- Mouse down on thumb
     SliderThumb.MouseButton1Down:Connect(function()
         isDragging = true
     end)
     
     -- Mouse down on track (jump to position)
-    SliderTrack.MouseButton1Down:Connect(function(x, y)
-        local trackPos = SliderTrack.AbsolutePosition
-        local trackSize = SliderTrack.AbsoluteSize
-        local mousePos = UserInputService:GetMouseLocation()
-        
-        if mousePos.X >= trackPos.X and mousePos.X <= trackPos.X + trackSize.X and
-           mousePos.Y >= trackPos.Y and mousePos.Y <= trackPos.Y + trackSize.Y then
+    SliderTrack.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
             isDragging = true
+            local mousePos = input.Position
             local newValue = getValueFromPosition(mousePos.X)
             updateSlider(newValue)
         end
@@ -1740,9 +1737,11 @@ function windowInstance:CreateSlider(params)
     end)
     
     -- Clean up connections when slider is destroyed
-    SliderContainer.AncestryChanged:Connect(function(_, parent)
-        if not parent then
+    SliderContainer.Destroying:Connect(function()
+        if mouseMoveConnection then
             mouseMoveConnection:Disconnect()
+        end
+        if mouseUpConnection then
             mouseUpConnection:Disconnect()
         end
     end)
