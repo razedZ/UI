@@ -1564,19 +1564,16 @@ function windowInstance:CreateSlider(params)
         end
     end
     
-    -- Calculate position for new element with exact dropdown-like spacing
+    -- Get proper yOffset based on existing elements
     local elements = getSortedElements(ContentFrame)
-    local yOffset = 5 -- Default offset for first element
+    local yOffset = 5
     
     if #elements > 0 then
         local lastElement = elements[#elements]
-        if lastElement and lastElement.Position then
-            -- Use same spacing as dropdown (8 pixels)
-            yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + 8
-        end
+        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + 5
     end
 
-    -- Create container for Slider with exact dropdown-like dimensions
+    -- Create container for Slider (same size as dropdown)
     local SliderContainer = Instance.new("Frame")
     SliderContainer.Name = "Slider_" .. sliderName
     SliderContainer.Parent = ContentFrame
@@ -1586,32 +1583,46 @@ function windowInstance:CreateSlider(params)
     SliderContainer.ZIndex = 5
     SliderContainer.Visible = true
     
-    -- Slider name label with exact dropdown alignment
+    -- Slider name label (aligned to left edge of track)
     local SliderLabel = Instance.new("TextLabel")
-    SliderLabel.Name = "Label"
+    SliderLabel.Name = "TextLabel"
     SliderLabel.Parent = SliderContainer
     SliderLabel.BackgroundTransparency = 1
-    SliderLabel.Position = UDim2.new(0.085, 0, 0, 0) -- 8.5% from left
-    SliderLabel.Size = UDim2.new(0, 100, 0, 15) -- Same as dropdown
-    SliderLabel.Font = Enum.Font.SourceSans
+    SliderLabel.Position = UDim2.new(0.085, 0, 0, 0)
+    SliderLabel.Size = UDim2.new(0, 165, 0, 20) -- Same width as dropdown button
+    SliderLabel.Font = Enum.Font.SourceSansBold
     SliderLabel.Text = sliderName
     SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-    SliderLabel.TextSize = 12
+    SliderLabel.TextSize = 15
     SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
     SliderLabel.ZIndex = 6
     
-    -- Slider track with exact dropdown button dimensions and position
+    -- Slider value label (aligned to right edge of track)
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Name = "Value"
+    ValueLabel.Parent = SliderContainer
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.Position = UDim2.new(0.085, 0, 0, 0) -- Same position as name
+    ValueLabel.Size = UDim2.new(0, 165, 0, 20) -- Same width as dropdown button
+    ValueLabel.Font = Enum.Font.SourceSansBold
+    ValueLabel.Text = tostring(defaultValue)
+    ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    ValueLabel.TextSize = 15
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right -- Right aligned
+    ValueLabel.ZIndex = 6
+    
+    -- Slider track (same width and position as dropdown button)
     local SliderTrack = Instance.new("Frame")
     SliderTrack.Name = "Track"
     SliderTrack.Parent = SliderContainer
     SliderTrack.BackgroundColor3 = Color3.fromRGB(25, 28, 34) -- Same as dropdown
     SliderTrack.BorderSizePixel = 0
-    SliderTrack.Position = UDim2.new(0.085, 0, 0, 15) -- Same as dropdown
-    SliderTrack.Size = UDim2.new(0, 165, 0, 30) -- Exact dropdown width
+    SliderTrack.Position = UDim2.new(0.085, 0, 0, 20) -- Below labels
+    SliderTrack.Size = UDim2.new(0, 165, 0, 6) -- Same width as dropdown button
     SliderTrack.ZIndex = 6
     
     local UICornerTrack = Instance.new("UICorner")
-    UICornerTrack.CornerRadius = UDim.new(0, 4) -- Same as dropdown
+    UICornerTrack.CornerRadius = UDim.new(0, 4)
     UICornerTrack.Parent = SliderTrack
     
     -- Slider fill
@@ -1624,10 +1635,9 @@ function windowInstance:CreateSlider(params)
     SliderFill.ZIndex = 7
     
     local UICornerFill = Instance.new("UICorner")
-    UICornerFill.CornerRadius = UDim.new(0, 4)
     UICornerFill.Parent = SliderFill
     
-    -- Slider thumb (positioned inside track)
+    -- Slider thumb
     local SliderThumb = Instance.new("TextButton")
     SliderThumb.Name = "Thumb"
     SliderThumb.Parent = SliderTrack
@@ -1643,21 +1653,20 @@ function windowInstance:CreateSlider(params)
     UICornerThumb.CornerRadius = UDim.new(1, 0)
     UICornerThumb.Parent = SliderThumb
     
-    -- Value label with exact dropdown text alignment
-    local ValueLabel = Instance.new("TextLabel")
-    ValueLabel.Name = "Value"
-    ValueLabel.Parent = SliderTrack -- Parent to track for perfect alignment
-    ValueLabel.BackgroundTransparency = 1
-    ValueLabel.Position = UDim2.new(0.05, 0, 0, 0) -- 5% from left of track
-    ValueLabel.Size = UDim2.new(0.9, 0, 1, 0) -- 90% width of track
-    ValueLabel.Font = Enum.Font.SourceSans
-    ValueLabel.Text = tostring(defaultValue)
-    ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-    ValueLabel.TextSize = 14
-    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right -- Right aligned in track
-    ValueLabel.ZIndex = 7
+    local ThumbInner = Instance.new("Frame")
+    ThumbInner.Name = "Inner"
+    ThumbInner.Parent = SliderThumb
+    ThumbInner.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
+    ThumbInner.BorderSizePixel = 0
+    ThumbInner.Position = UDim2.new(0.125, 0, 0.125, 0)
+    ThumbInner.Size = UDim2.new(0.75, 0, 0.75, 0)
+    ThumbInner.ZIndex = 9
     
-    -- Calculate positions based on track dimensions
+    local UICornerInner = Instance.new("UICorner")
+    UICornerInner.CornerRadius = UDim.new(1, 0)
+    UICornerInner.Parent = ThumbInner
+    
+    -- Calculate initial fill and thumb position
     local function getValueFromPosition(x)
         local trackWidth = SliderTrack.AbsoluteSize.X
         local relativePos = math.clamp(x - SliderTrack.AbsolutePosition.X, 0, trackWidth)
@@ -1694,69 +1703,78 @@ function windowInstance:CreateSlider(params)
     -- Initialize slider
     updateSlider(defaultValue)
     
-    -- Input handling with proper event connections
-    local function onInputBegan(input)
+    -- Mouse down on thumb
+    SliderThumb.MouseButton1Down:Connect(function()
+        isDragging = true
+    end)
+    
+    -- Mouse down on track (jump to position)
+    SliderTrack.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             isDragging = true
             local mousePos = input.Position
             local newValue = getValueFromPosition(mousePos.X)
             updateSlider(newValue)
         end
-    end
+    end)
     
-    local function onInputChanged(input)
+    -- Mouse movement while dragging
+    local mouseMoveConnection
+    mouseMoveConnection = UserInputService.InputChanged:Connect(function(input)
         if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             local newValue = getValueFromPosition(input.Position.X)
             updateSlider(newValue)
         end
-    end
+    end)
     
-    local function onInputEnded(input)
+    -- Mouse up to stop dragging
+    local mouseUpConnection
+    mouseUpConnection = UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             isDragging = false
         end
-    end
+    end)
     
-    -- Connect events to track instead of thumb for better usability
-    SliderTrack.InputBegan:Connect(onInputBegan)
-    local moveConn = UserInputService.InputChanged:Connect(onInputChanged)
-    local endConn = UserInputService.InputEnded:Connect(onInputEnded)
-    
-    -- Cleanup
+    -- Clean up connections when slider is destroyed
     SliderContainer.Destroying:Connect(function()
-        moveConn:Disconnect()
-        endConn:Disconnect()
+        if mouseMoveConnection then
+            mouseMoveConnection:Disconnect()
+        end
+        if mouseUpConnection then
+            mouseUpConnection:Disconnect()
+        end
     end)
     
     table.insert(self._sliderElements, SliderContainer)
 
-    -- Function to properly update section layout
+    -- Update section sizes immediately
     local function updateSectionLayout()
         local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
         local container = sectionsList == self._leftSections and LeftContainer or RightContainer
         
-        -- Calculate total content height with proper spacing
-        local contentHeight = 0
+        -- Recalculate all element positions
         local elements = getSortedElements(ContentFrame)
+        local totalHeight = 0
         
         for i, element in ipairs(elements) do
-            if i > 1 then
-                -- Add 8px spacing between elements (same as dropdown)
-                contentHeight = contentHeight + 8
+            local newYOffset = (i == 1) and 5 or (elements[i-1].Position.Y.Offset + elements[i-1].Size.Y.Offset + 5)
+            
+            if element.Position.Y.Offset ~= newYOffset then
+                element.Position = UDim2.new(0, 0, 0, newYOffset)
             end
-            contentHeight = contentHeight + element.Size.Y.Offset
+            
+            totalHeight = newYOffset + element.Size.Y.Offset
         end
         
-        -- Update sizes
         if windowInstance._sectionStates[section] then
-            ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
-            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + 15) -- Header + content + padding
+            ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 10)
+            section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + 15)
         end
         
         updateSectionPositions(container, sectionsList)
     end
     
-    -- Defer layout update to next frame
+    -- Force update layout after creation
     task.defer(updateSectionLayout)
     
     return {
