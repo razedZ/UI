@@ -1,3 +1,4 @@
+
  -- Основной код библиотеки (PizdecWare.lua)
 local success, HttpService = pcall(game.GetService, game, "HttpService")
 local success2, TweenService = pcall(game.GetService, game, "TweenService")
@@ -1600,13 +1601,13 @@ function windowInstance:CreateSlider(params)
     SliderContainer.ZIndex = 5
     SliderContainer.Visible = true
     
-    -- Slider name label (обычная позиция)
+    -- Slider name label (поднят на 2 пикселя выше)
     local SliderLabel = Instance.new("TextLabel")
     SliderLabel.Name = "TextLabel"
     SliderLabel.Parent = SliderContainer
     SliderLabel.BackgroundTransparency = 1
-    SliderLabel.Position = UDim2.new(0.085, 0, 0, 0) -- Обычная позиция
-    SliderLabel.Size = UDim2.new(0, 165, 0, 20) -- Обычная высота
+    SliderLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Поднят на 2px выше
+    SliderLabel.Size = UDim2.new(0, 165, 0, 22) -- Увеличена высота на 2px
     SliderLabel.Font = Enum.Font.SourceSansBold
     SliderLabel.Text = sliderName
     SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
@@ -1614,13 +1615,13 @@ function windowInstance:CreateSlider(params)
     SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
     SliderLabel.ZIndex = 6
     
-    -- Slider value label (обычная позиция)
+    -- Slider value label (поднят на 2 пикселя выше)
     local ValueLabel = Instance.new("TextLabel")
     ValueLabel.Name = "Value"
     ValueLabel.Parent = SliderContainer
     ValueLabel.BackgroundTransparency = 1
-    ValueLabel.Position = UDim2.new(0.085, 0, 0, 0) -- Обычная позиция
-    ValueLabel.Size = UDim2.new(0, 165, 0, 20) -- Обычная высота
+    ValueLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Поднят на 2px выше
+    ValueLabel.Size = UDim2.new(0, 165, 0, 22) -- Увеличена высота на 2px
     ValueLabel.Font = Enum.Font.SourceSansBold
     ValueLabel.Text = tostring(defaultValue)
     ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
@@ -1628,13 +1629,13 @@ function windowInstance:CreateSlider(params)
     ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
     ValueLabel.ZIndex = 6
     
-    -- Slider track (смещен на 3px ниже)
+    -- Slider track (positioned for 30px container)
     local SliderTrack = Instance.new("Frame")
     SliderTrack.Name = "Track"
     SliderTrack.Parent = SliderContainer
     SliderTrack.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
     SliderTrack.BorderSizePixel = 0
-    SliderTrack.Position = UDim2.new(0.085, 0, 0, 18) -- Смещен на 3px ниже (15 + 3)
+    SliderTrack.Position = UDim2.new(0.085, 0, 0, 15) -- Adjusted for 30px height
     SliderTrack.Size = UDim2.new(0, 165, 0, 6)
     SliderTrack.ZIndex = 6
     
@@ -1886,6 +1887,199 @@ function windowInstance:CreateSlider(params)
                 maxValue = newMax
                 updateSlider(math.clamp(currentValue, minValue, maxValue))
             end
+        end
+    }
+end
+    -- New input creation function with original style
+   function windowInstance:CreateInput(params)
+    -- Проверка параметров
+    if not params or not params.section then 
+        warn("CreateInput: Invalid parameters")
+        return nil 
+    end
+    
+    local section = params.section
+    if not section or not section:IsA("Frame") then
+        warn("CreateInput: Invalid section")
+        return nil
+    end
+    
+    local inputName = params.name or "Input"
+    local defaultText = params.default or ""
+    local save = params.save or false
+    local callback = params.callback or function() end
+    
+    local ContentFrame = section:FindFirstChild("ContentFrame")
+    if not ContentFrame then
+        warn("CreateInput: ContentFrame not found in section")
+        return nil
+    end
+    
+    -- Загрузка сохраненного значения
+    if save and self._saveConfig.enabled then
+        local success, savedState = pcall(function()
+            return loadInputState(self, inputName)
+        end)
+        if success and savedState ~= nil then
+            defaultText = savedState
+        end
+    end
+    
+    -- Расчет позиции нового элемента
+    local elements = getSortedElements(ContentFrame)
+    local yOffset = 5 -- Стандартный отступ для первого элемента
+    
+    if #elements > 0 then
+        local lastElement = elements[#elements]
+        if lastElement and lastElement.Position then
+            yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + 5
+        end
+    end
+
+    -- Создаем контейнер для Input
+    local InputContainer = Instance.new("Frame")
+    InputContainer.Name = "Input_" .. inputName
+    InputContainer.Parent = ContentFrame
+    InputContainer.BackgroundTransparency = 1
+    InputContainer.Size = UDim2.new(1, 0, 0, 50)
+    InputContainer.Position = UDim2.new(0, 0, 0, yOffset)
+    InputContainer.ZIndex = 5
+    InputContainer.Visible = true
+    
+    -- Текст "Input" сверху
+    local InputTopLabel = Instance.new("TextLabel")
+    InputTopLabel.Name = "InputTopLabel"
+    InputTopLabel.Parent = InputContainer
+    InputTopLabel.BackgroundTransparency = 1
+    InputTopLabel.Position = UDim2.new(0.085, 0, 0, 0)
+    InputTopLabel.Size = UDim2.new(0, 50, 0, 15)
+    InputTopLabel.Font = Enum.Font.SourceSans
+    InputTopLabel.Text = "Input"
+    InputTopLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    InputTopLabel.TextSize = 12
+    InputTopLabel.TextXAlignment = Enum.TextXAlignment.Center
+    InputTopLabel.ZIndex = 6
+    
+    -- Основное поле ввода (ширина 50px)
+    local InputFrame = Instance.new("TextButton")
+    InputFrame.Name = "InputFrame"
+    InputFrame.Parent = InputContainer
+    InputFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+    InputFrame.BorderSizePixel = 0
+    InputFrame.Position = UDim2.new(0.085, 0, 0, 15)
+    InputFrame.Size = UDim2.new(0, 50, 0, 30)
+    InputFrame.AutoButtonColor = false
+    InputFrame.Text = ""
+    InputFrame.ZIndex = 6
+    
+    local UICornerInput = Instance.new("UICorner")
+    UICornerInput.CornerRadius = UDim.new(0, 4)
+    UICornerInput.Parent = InputFrame
+    
+    -- Текст внутри инпута
+    local InputTextLabel = Instance.new("TextLabel")
+    InputTextLabel.Name = "InputText"
+    InputTextLabel.Parent = InputFrame
+    InputTextLabel.BackgroundTransparency = 1
+    InputTextLabel.Size = UDim2.new(1, 0, 1, 0)
+    InputTextLabel.Font = Enum.Font.SourceSans
+    InputTextLabel.Text = defaultText
+    InputTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    InputTextLabel.TextSize = 14
+    InputTextLabel.TextXAlignment = Enum.TextXAlignment.Center
+    InputTextLabel.ZIndex = 7
+    InputTextLabel.ClipsDescendants = true
+    
+    -- Название инпута (с отступом 10px от InputFrame)
+    local InputNameLabel = Instance.new("TextLabel")
+    InputNameLabel.Name = "InputName"
+    InputNameLabel.Parent = InputContainer
+    InputNameLabel.BackgroundTransparency = 1
+    InputNameLabel.Position = UDim2.new(0.085, 60, 0, 15) -- 50 (ширина) + 10 (отступ)
+    InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
+    InputNameLabel.Font = Enum.Font.SourceSansBold
+    InputNameLabel.Text = inputName
+    InputNameLabel.TextColor3 = Color3.fromRGB(147, 152, 156) -- Явный цвет
+    InputNameLabel.TextTransparency = 0 -- Полная непрозрачность
+    InputNameLabel.TextSize = 15
+    InputNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    InputNameLabel.ZIndex = 6
+    
+    local currentText = defaultText
+    
+    local function updateText()
+        InputTextLabel.Text = currentText
+        
+        if save and self._saveConfig.enabled then
+            pcall(function()
+                saveInputState(self, inputName, currentText)
+            end)
+        end
+        
+        if callback then
+            pcall(callback, currentText)
+        end
+    end
+    
+    InputFrame.MouseButton1Click:Connect(function()
+        local inputBox = Instance.new("TextBox")
+        inputBox.Name = "InputBox"
+        inputBox.Parent = InputFrame
+        inputBox.BackgroundTransparency = 1
+        inputBox.Size = UDim2.new(1, 0, 1, 0)
+        inputBox.Font = Enum.Font.SourceSans
+        inputBox.Text = currentText
+        inputBox.TextColor3 = Color3.fromRGB(147, 152, 156)
+        inputBox.TextSize = 14
+        inputBox.TextXAlignment = Enum.TextXAlignment.Center
+        inputBox.ZIndex = 8
+        inputBox.ClearTextOnFocus = false
+        inputBox.PlaceholderText = "Type..."
+        inputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+        
+        InputTextLabel.Visible = false
+        
+        inputBox.FocusLost:Connect(function(enterPressed)
+            currentText = inputBox.Text
+            inputBox:Destroy()
+            InputTextLabel.Visible = true
+            updateText()
+        end)
+        
+        inputBox:CaptureFocus()
+    end)
+    
+    updateText()
+    
+    table.insert(self._inputElements, InputContainer)
+
+    -- Обновление размеров секции
+    task.defer(function()
+        local currentElements = getSortedElements(ContentFrame)
+        local totalHeight = 0
+        
+        if #currentElements > 0 then
+            local lastElement = currentElements[#currentElements]
+            totalHeight = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset
+        end
+        
+        if windowInstance._sectionStates[section] then
+            ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 5)
+            section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + 15)
+        end
+        
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        updateSectionPositions(container, sectionsList)
+    end)
+    
+    return {
+        Set = function(self, value)
+            currentText = tostring(value)
+            updateText()
+        end,
+        Get = function(self)
+            return currentText
         end
     }
 end
