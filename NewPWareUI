@@ -1,5 +1,4 @@
-
- -- Основной код библиотеки (PizdecWare.lua)
+-- Основной код библиотеки (PizdecWare.lua)
 local success, HttpService = pcall(game.GetService, game, "HttpService")
 local success2, TweenService = pcall(game.GetService, game, "TweenService")
 local success3, UserInputService = pcall(game.GetService, game, "UserInputService")
@@ -408,7 +407,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                             elseif previous_type == "dropdown" and elem_type == "toggle" then
                                 spacing = 5 -- Расстояние между dropdown и toggle
                             else
-                                spacing = 5 -- Обычное расстояние для других комбинаций
+                                spacing = 2 -- Обычное расстояние для других комбинаций
                             end
                             contentHeight = contentHeight + spacing + element.Size.Y.Offset
                             previous_type = elem_type
@@ -894,14 +893,24 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
             yOffset = 5
         else
             local last = elements[#elements]
-            local last_type = last.Name:match("^Toggle_") and "toggle" or "dropdown"
-            local spacing
-            if last_type == "toggle" and new_type == "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
-            elseif last_type == "dropdown" and new_type == "toggle" then
-                spacing = 8
-            else
-                spacing = 2 -- Обычное расстояние для других комбинаций
+            local last_type = last.Name:match("^Toggle_") and "toggle" or
+                              last.Name:match("^Dropdown_") and "dropdown" or
+                              last.Name:match("^Input_") and "input" or
+                              last.Name:match("^Bind_") and "bind" or
+                              last.Name:match("^Slider_") and "slider" or nil
+            local spacing = 2
+            if last_type then
+                if last_type == "slider" and new_type == "dropdown" then
+                    spacing = 0
+                elseif last_type == "slider" then
+                    spacing = 5
+                elseif last_type == "toggle" and new_type == "dropdown" then
+                    spacing = 3
+                elseif last_type == "dropdown" and new_type == "toggle" then
+                    spacing = 5
+                elseif last_type == "dropdown" and new_type == "dropdown" then
+                    spacing = 5
+                end
             end
             yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
         end
@@ -982,7 +991,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         local elements_updated = getSortedElements(ContentFrame)
         local previous_type = nil
         for j, element in ipairs(elements_updated) do
-            local elem_type = element.Name:match("^Toggle_") and "toggle" or "dropdown"
+            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
             local spacing
             if previous_type == nil then
                 spacing = 5
@@ -1077,7 +1086,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         local elements = {}
         for _, child in ipairs(ContentFrame:GetChildren()) do
             if child:IsA("Frame") and child.Name then
-                if child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or child.Name:match("^Input_") or child.Name:match("^Bind_") then
+                if child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_") then
                     table.insert(elements, child)
                 end
             end
@@ -1090,24 +1099,32 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
 
     -- Расчет позиции нового элемента с увеличенным отступом для дропдаунов
     local elements = getSafeSortedElements()
+    local new_type = "dropdown"
     local yOffset = 5 -- Стандартный отступ для первого элемента
     
     if #elements > 0 then
         local lastElement = elements[#elements]
         if lastElement and lastElement.Position then
             local lastType = lastElement.Name:match("^Toggle_") and "toggle" or 
-                           lastElement.Name:match("^Dropdown_") and "dropdown" or 
-                           lastElement.Name:match("^Input_") and "input" or 
-                           "bind"
+                             lastElement.Name:match("^Dropdown_") and "dropdown" or 
+                             lastElement.Name:match("^Input_") and "input" or 
+                             lastElement.Name:match("^Bind_") and "bind" or 
+                             lastElement.Name:match("^Slider_") and "slider" or nil
             
             -- Увеличенные отступы
-            local spacing = 5 -- Базовый отступ
-            if lastType == "toggle" and "dropdown" then
-                spacing = 3
-            elseif lastType == "dropdown" and "dropdown" then
-                spacing = 5 -- Увеличенный отступ между дропдаунами
-            elseif lastType == "dropdown" and "toggle" then
-                spacing = 5
+            local spacing = 2 -- Базовый отступ (согласован с другими функциями)
+            if lastType then
+                if lastType == "slider" and new_type == "dropdown" then
+                    spacing = 0
+                elseif lastType == "slider" then
+                    spacing = 5
+                elseif lastType == "toggle" and new_type == "dropdown" then
+                    spacing = 3
+                elseif lastType == "dropdown" and new_type == "toggle" then
+                    spacing = 5
+                elseif lastType == "dropdown" and new_type == "dropdown" then
+                    spacing = 5 -- Увеличенный отступ между дропдаунами
+                end
             end
             
             yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
@@ -1412,7 +1429,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
             local elemType = element.Name:match("^Toggle_") and "toggle" or 
                            element.Name:match("^Dropdown_") and "dropdown" or 
                            element.Name:match("^Input_") and "input" or 
-                           "bind"
+                           element.Name:match("^Bind_") and "bind" or 
+                           "slider"
             
             local spacing = 5 -- Базовый отступ
             if previousType == "toggle" and elemType == "dropdown" then
@@ -1421,6 +1439,12 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                 spacing = 5
             elseif previousType == "dropdown" and elemType == "dropdown" then
                 spacing = 5 -- Увеличенный отступ между дропдаунами
+            elseif previousType == "slider" and elemType == "dropdown" then
+                spacing = 0
+            elseif previousType == "slider" then
+                spacing = 5
+            else
+                spacing = 2
             end
             
             contentHeight = contentHeight + spacing + element.Size.Y.Offset
@@ -1435,7 +1459,116 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         updateSectionPositions(container, sectionsList)
     end
     
-    task.defer(updateSectionSize)
+    -- Функция для обновления позиций всех элементов в секции с учетом ВСЕХ элементов
+    local function updateSectionLayout()
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        
+        -- Получаем все элементы и сортируем по позиции Y
+        local allElements = {}
+        for _, child in ipairs(ContentFrame:GetChildren()) do
+            if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or 
+               child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_")) then
+                table.insert(allElements, child)
+            end
+        end
+        
+        table.sort(allElements, function(a, b)
+            return a.Position.Y.Offset < b.Position.Y.Offset
+        end)
+        
+        -- Пересчитываем позиции с правильными отступами
+        local currentY = 5
+        for i, element in ipairs(allElements) do
+            local spacing = 5
+            
+            if i > 1 then
+                local prevElement = allElements[i-1]
+                local prevType = prevElement.Name:match("^Toggle_") and "toggle" or 
+                               prevElement.Name:match("^Dropdown_") and "dropdown" or 
+                               prevElement.Name:match("^Input_") and "input" or 
+                               prevElement.Name:match("^Bind_") and "bind" or 
+                               "slider"
+                
+                local elementType = element.Name:match("^Toggle_") and "toggle" or 
+                                  element.Name:match("^Dropdown_") and "dropdown" or 
+                                  element.Name:match("^Input_") and "input" or 
+                                  element.Name:match("^Bind_") and "bind" or 
+                                  "slider"
+                
+                spacing = 2 -- Базовый
+                if prevType == "slider" and elementType == "dropdown" then
+                    spacing = 0
+                elseif prevType == "slider" then
+                    spacing = 5
+                elseif prevType == "toggle" and elementType == "dropdown" then
+                    spacing = 3
+                elseif prevType == "dropdown" and elementType == "toggle" then
+                    spacing = 5
+                elseif prevType == "dropdown" and elementType == "dropdown" then
+                    spacing = 5
+                end
+            end
+            
+            element.Position = UDim2.new(0, 0, 0, currentY)
+            currentY = currentY + element.Size.Y.Offset + spacing
+        end
+        
+        -- ОБНОВЛЯЕМ РАЗМЕР КОНТЕЙНЕРА С УЧЕТОМ ВСЕХ ЭЛЕМЕНТОВ ВКЛЮЧАЯ ДРОПДАУНЫ
+        local totalContentHeight = 0
+        local previousElementType = nil
+        
+        for _, element in ipairs(allElements) do
+            local elementType = element.Name:match("^Toggle_") and "toggle" or 
+                              element.Name:match("^Dropdown_") and "dropdown" or 
+                              element.Name:match("^Input_") and "input" or 
+                              element.Name:match("^Bind_") and "bind" or 
+                              "slider"
+            
+            local elementSpacing = 5
+            
+            if previousElementType == "slider" and elementType == "dropdown" then
+                elementSpacing = 0
+            elseif previousElementType == "slider" then
+                elementSpacing = 5
+            elseif previousElementType == "toggle" and elementType == "dropdown" then
+                elementSpacing = 3
+            elseif previousElementType == "dropdown" and elementType == "toggle" then
+                elementSpacing = 5
+            elseif previousElementType == "dropdown" and elementType == "dropdown" then
+                elementSpacing = 5
+            else
+                elementSpacing = 2
+            end
+            
+            totalContentHeight = totalContentHeight + elementSpacing + element.Size.Y.Offset
+            previousElementType = elementType
+        end
+        
+        -- Обновляем размеры контента и секции
+        if self._sectionStates[section] then
+            ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
+            section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + 15)
+        end
+        
+        -- Обновляем позиции всех секций
+        updateSectionPositions(container, sectionsList)
+        
+        -- Обновляем CanvasSize контейнера
+        local totalSectionsHeight = 0
+        for _, sec in ipairs(sectionsList) do
+            if sec.Visible then
+                if self._sectionStates[sec] == false then
+                    totalSectionsHeight = totalSectionsHeight + 30 + 20
+                else
+                    totalSectionsHeight = totalSectionsHeight + sec.Size.Y.Offset + 20
+                end
+            end
+        end
+        self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
+    end
+    
+    task.defer(updateSectionLayout)
     
     return {
         Set = function(_, value)
@@ -1567,28 +1700,33 @@ function windowInstance:CreateSlider(params)
     
     -- Get proper yOffset based on existing elements - УВЕЛИЧЕН на 3px
     local elements = getSortedElements(ContentFrame)
-    local yOffset = 8 -- Увеличено с 5 до 8 (3px дополнительно)
+    local new_type = "slider"
+    local yOffset = 5
     
     if #elements > 0 then
         local lastElement = elements[#elements]
         local lastType = lastElement.Name:match("^Toggle_") and "toggle" or 
-                       lastElement.Name:match("^Dropdown_") and "dropdown" or 
-                       lastElement.Name:match("^Input_") and "input" or 
-                       lastElement.Name:match("^Bind_") and "bind" or 
-                       "slider"
+                         lastElement.Name:match("^Dropdown_") and "dropdown" or 
+                         lastElement.Name:match("^Input_") and "input" or 
+                         lastElement.Name:match("^Bind_") and "bind" or 
+                         lastElement.Name:match("^Slider_") and "slider" or nil
+        local spacing = 2
         
-        local spacing = 5 -- базовый отступ
-        
-        -- Увеличиваем отступ после определенных элементов
-        if lastType == "slider" then
-            spacing = 0 -- Уменьшенный отступ после слайдера
-        elseif lastType == "toggle" and "dropdown" then
-            spacing = 3
-        elseif lastType == "dropdown" and "toggle" then
-            spacing = 5
+        if lastType then
+            if lastType == "slider" and new_type == "dropdown" then
+                spacing = 0
+            elseif lastType == "slider" then
+                spacing = 5
+            elseif lastType == "toggle" and new_type == "dropdown" then
+                spacing = 3
+            elseif lastType == "dropdown" and new_type == "toggle" then
+                spacing = 5
+            elseif lastType == "dropdown" and new_type == "dropdown" then
+                spacing = 5
+            end
         end
         
-        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing + 3 -- +3px дополнительно
+        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
     end
 
     -- Create container for Slider (30px height)
@@ -1811,6 +1949,8 @@ function windowInstance:CreateSlider(params)
                     spacing = 3
                 elseif prevType == "dropdown" and elementType == "toggle" then
                     spacing = 5
+                else
+                    spacing = 2
                 end
             end
             
@@ -1839,6 +1979,8 @@ function windowInstance:CreateSlider(params)
                 elementSpacing = 3
             elseif previousElementType == "dropdown" and elementType == "toggle" then
                 elementSpacing = 5
+            else
+                elementSpacing = 2
             end
             
             totalContentHeight = totalContentHeight + elementSpacing + element.Size.Y.Offset
@@ -1927,13 +2069,33 @@ end
     
     -- Расчет позиции нового элемента
     local elements = getSortedElements(ContentFrame)
-    local yOffset = 5 -- Стандартный отступ для первого элемента
+    local new_type = "input"
+    local yOffset = 5
     
     if #elements > 0 then
-        local lastElement = elements[#elements]
-        if lastElement and lastElement.Position then
-            yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + 5
+        local last = elements[#elements]
+        local last_type = last.Name:match("^Toggle_") and "toggle" or
+                          last.Name:match("^Dropdown_") and "dropdown" or
+                          last.Name:match("^Input_") and "input" or
+                          last.Name:match("^Bind_") and "bind" or
+                          last.Name:match("^Slider_") and "slider" or nil
+        local spacing = 2
+        
+        if last_type then
+            if last_type == "slider" and new_type == "dropdown" then
+                spacing = 0
+            elseif last_type == "slider" then
+                spacing = 5
+            elseif last_type == "toggle" and new_type == "dropdown" then
+                spacing = 3
+            elseif last_type == "dropdown" and new_type == "toggle" then
+                spacing = 5
+            elseif last_type == "dropdown" and new_type == "dropdown" then
+                spacing = 5
+            end
         end
+        
+        yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
     end
 
     -- Создаем контейнер для Input
@@ -2130,13 +2292,33 @@ end
         
         -- Calculate position for new element
         local elements = getSortedElements(ContentFrame)
-        local yOffset = 5 -- Default offset for first element
+        local new_type = "bind"
+        local yOffset = 5
         
         if #elements > 0 then
-            local lastElement = elements[#elements]
-            if lastElement and lastElement.Position then
-                yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + 5
+            local last = elements[#elements]
+            local last_type = last.Name:match("^Toggle_") and "toggle" or
+                              last.Name:match("^Dropdown_") and "dropdown" or
+                              last.Name:match("^Input_") and "input" or
+                              last.Name:match("^Bind_") and "bind" or
+                              last.Name:match("^Slider_") and "slider" or nil
+            local spacing = 2
+            
+            if last_type then
+                if last_type == "slider" and new_type == "dropdown" then
+                    spacing = 0
+                elseif last_type == "slider" then
+                    spacing = 5
+                elseif last_type == "toggle" and new_type == "dropdown" then
+                    spacing = 3
+                elseif last_type == "dropdown" and new_type == "toggle" then
+                    spacing = 5
+                elseif last_type == "dropdown" and new_type == "dropdown" then
+                    spacing = 5
+                end
             end
+            
+            yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
         end
 
         -- Create container for Bind
