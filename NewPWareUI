@@ -1635,7 +1635,7 @@ function windowInstance:CreateSlider(params)
     SliderTrack.Parent = SliderContainer
     SliderTrack.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
     SliderTrack.BorderSizePixel = 0
-    SliderTrack.Position = UDim2.new(0.085, 0, 0, 15) -- Adjusted for 30px height
+    SliderTrack.Position = UDim2.new(0.085, 0, 0, 19) -- Adjusted for 30px height
     SliderTrack.Size = UDim2.new(0, 165, 0, 6)
     SliderTrack.ZIndex = 6
     
