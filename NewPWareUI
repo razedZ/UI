@@ -1,4 +1,3 @@
--- Основной код библиотеки (PizdecWare.lua)
 local success, HttpService = pcall(game.GetService, game, "HttpService")
 local success2, TweenService = pcall(game.GetService, game, "TweenService")
 local success3, UserInputService = pcall(game.GetService, game, "UserInputService")
@@ -222,7 +221,8 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         _savedBinds = {},
         _savedSliders = {},
         _openDropdowns = {},
-        _heartbeatConnection = nil
+        _heartbeatConnection = nil,
+        _screenGui = ScreenGui
     }, PizdecWare)
 
     -- Load saved toggles and dropdowns
@@ -394,6 +394,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                 else
                     local contentFrame = section:FindFirstChild("ContentFrame")
                     local contentHeight = 0
+                    local last_type = nil
                     if contentFrame then
                         local elements = getSortedElements(contentFrame)
                         local previous_type = nil
@@ -412,8 +413,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                             contentHeight = contentHeight + spacing + element.Size.Y.Offset
                             previous_type = elem_type
                         end
+                        last_type = previous_type
                     end
-                    local bottom_padding = 15
+                    local bottom_padding = (last_type == "dropdown") and 20 or 15
                     local sectionHeight = 30 + contentHeight + bottom_padding
                     yOffset = yOffset + sectionHeight + 20
                 end
@@ -633,6 +635,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                 else
                     local contentFrame = section:FindFirstChild("ContentFrame")
                     local contentHeight = 0
+                    local last_type = nil
                     if contentFrame then
                         local elements = getSortedElements(contentFrame)
                         local previous_type = nil
@@ -651,8 +654,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                             contentHeight = contentHeight + spacing + element.Size.Y.Offset
                             previous_type = elem_type
                         end
+                        last_type = previous_type
                     end
-                    local bottom_padding = 15
+                    local bottom_padding = (last_type == "dropdown") and 20 or 15
                     local sectionHeight = 30 + contentHeight + bottom_padding
                     yOffset = yOffset + sectionHeight + 20
                 end
@@ -773,6 +777,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                 end
                 
                 local contentHeight = 0
+                local last_type = nil
                 local elements = getSortedElements(ContentFrame)
                 local previous_type = nil
                 for j, element in ipairs(elements) do
@@ -790,9 +795,10 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                     contentHeight = contentHeight + spacing + element.Size.Y.Offset
                     previous_type = elem_type
                 end
+                last_type = previous_type
                 ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
                 
-                local bottom_padding = 15
+                local bottom_padding = (last_type == "dropdown") and 20 or 15
                 local sizeTween = TweenService:Create(
                     section,
                     TweenInfo.new(0.3, Enum.EasingStyle.Quad),
@@ -893,24 +899,16 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
             yOffset = 5
         else
             local last = elements[#elements]
-            local last_type = last.Name:match("^Toggle_") and "toggle" or
-                              last.Name:match("^Dropdown_") and "dropdown" or
-                              last.Name:match("^Input_") and "input" or
-                              last.Name:match("^Bind_") and "bind" or
-                              last.Name:match("^Slider_") and "slider" or nil
-            local spacing = 2
-            if last_type then
-                if last_type == "slider" and new_type == "dropdown" then
-                    spacing = 0
-                elseif last_type == "slider" then
-                    spacing = 5
-                elseif last_type == "toggle" and new_type == "dropdown" then
-                    spacing = 3
-                elseif last_type == "dropdown" and new_type == "toggle" then
-                    spacing = 5
-                elseif last_type == "dropdown" and new_type == "dropdown" then
-                    spacing = 5
-                end
+            local last_type = last.Name:match("^Toggle_") and "toggle" or last.Name:match("^Dropdown_") and "dropdown" or last.Name:match("^Input_") and "input" or last.Name:match("^Bind_") and "bind" or "slider"
+            local spacing
+            if last_type == nil then
+                spacing = 5
+            elseif last_type == "toggle" and new_type == "dropdown" then
+                spacing = 3 -- Расстояние между toggle и dropdown
+            elseif last_type == "dropdown" and new_type == "toggle" then
+                spacing = 5 -- Расстояние между dropdown и toggle
+            else
+                spacing = 2 -- Обычное расстояние для других комбинаций
             end
             yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
         end
@@ -988,6 +986,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         local container = sectionsList == self._leftSections and LeftContainer or RightContainer
         
         local contentHeight = 0
+        local last_type = nil
         local elements_updated = getSortedElements(ContentFrame)
         local previous_type = nil
         for j, element in ipairs(elements_updated) do
@@ -1005,9 +1004,10 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
             contentHeight = contentHeight + spacing + element.Size.Y.Offset
             previous_type = elem_type
         end
+        last_type = previous_type
         
         if windowInstance._sectionStates[section] then
-            local bottom_padding = 15
+            local bottom_padding = (last_type == "dropdown") and 20 or 15
             section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
             ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
         end
@@ -1358,7 +1358,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
             -- Открываем текущий
             local buttonPos = DropdownButton.AbsolutePosition
             local buttonSize = DropdownButton.AbsoluteSize
-            local screenSize = self._elementContainer.Parent.AbsoluteSize
+            local screenSize = self._screenGui.AbsoluteSize
             
             local yPos = buttonPos.Y + buttonSize.Y
             local maxHeight = math.min(4, #options) * 20
@@ -1374,15 +1374,15 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
             
             if not self._heartbeatConnection then
                 self._heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function()
-                    for _, list in pairs(self._openDropdowns) do
-                        local button = list:FindFirstAncestorOfClass("Frame"):FindFirstChild("Button")
+                    for container, list in pairs(self._openDropdowns) do
+                        local button = container:FindFirstChild("Button")
                         if button then
                             local buttonPos = button.AbsolutePosition
                             local buttonSize = button.AbsoluteSize
-                            local screenSize = ScreenGui.AbsoluteSize
+                            local screenSize = self._screenGui.AbsoluteSize
                             
                             local yPos = buttonPos.Y + buttonSize.Y
-                            local maxHeight = math.min(4, #dropdownContainer.options or 4) * 20
+                            local maxHeight = list.Size.Y.Offset
                             
                             if yPos + maxHeight > screenSize.Y then
                                 yPos = buttonPos.Y - maxHeight
@@ -1415,49 +1415,6 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     end)
     
     table.insert(self._dropdownElements, DropdownContainer)
-    
-    -- Обновление размеров секции
-    local function updateSectionSize()
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-        
-        local contentHeight = 0
-        local elements = getSafeSortedElements()
-        local previousType = nil
-        
-        for _, element in ipairs(elements) do
-            local elemType = element.Name:match("^Toggle_") and "toggle" or 
-                           element.Name:match("^Dropdown_") and "dropdown" or 
-                           element.Name:match("^Input_") and "input" or 
-                           element.Name:match("^Bind_") and "bind" or 
-                           "slider"
-            
-            local spacing = 5 -- Базовый отступ
-            if previousType == "toggle" and elemType == "dropdown" then
-                spacing = 3
-            elseif previousType == "dropdown" and elemType == "toggle" then
-                spacing = 5
-            elseif previousType == "dropdown" and elemType == "dropdown" then
-                spacing = 5 -- Увеличенный отступ между дропдаунами
-            elseif previousType == "slider" and elemType == "dropdown" then
-                spacing = 0
-            elseif previousType == "slider" then
-                spacing = 5
-            else
-                spacing = 2
-            end
-            
-            contentHeight = contentHeight + spacing + element.Size.Y.Offset
-            previousType = elemType
-        end
-        
-        if self._sectionStates[section] then
-            ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
-            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + 15)
-        end
-        
-        updateSectionPositions(container, sectionsList)
-    end
     
     -- Функция для обновления позиций всех элементов в секции с учетом ВСЕХ элементов
     local function updateSectionLayout()
@@ -1547,8 +1504,9 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         
         -- Обновляем размеры контента и секции
         if self._sectionStates[section] then
+            local bottom_padding = (previousElementType == "dropdown") and 20 or 15
             ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
-            section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + 15)
+            section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + bottom_padding)
         end
         
         -- Обновляем позиции всех секций
@@ -1989,8 +1947,9 @@ function windowInstance:CreateSlider(params)
         
         -- Обновляем размеры контента и секции
         if self._sectionStates[section] then
+            local bottom_padding = (previousElementType == "dropdown") and 20 or 15
             ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
-            section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + 15)
+            section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + bottom_padding)
         end
         
         -- Обновляем позиции всех секций
