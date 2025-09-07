@@ -1542,7 +1542,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
             local elementSpacing = 5
             
             if previousElementType == "slider" and elementType == "dropdown" then
-                elementSpacing = 0
+                elementSpacing = 5
             elseif previousElementType == "slider" then
                 elementSpacing = 5
             elseif previousElementType == "toggle" and elementType == "dropdown" then
@@ -1552,7 +1552,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
             elseif previousElementType == "dropdown" and elementType == "dropdown" then
                 elementSpacing = 5
             else
-                elementSpacing = 2
+                elementSpacing = 5
             end
             
             totalContentHeight = totalContentHeight + elementSpacing + element.Size.Y.Offset
