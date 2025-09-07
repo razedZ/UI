@@ -403,18 +403,17 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                             if previous_type == nil then
                                 spacing = 5
                             elseif previous_type == "toggle" and elem_type == "dropdown" then
-                                spacing = 3
+                                spacing = 3 -- Расстояние между toggle и dropdown
                             elseif previous_type == "dropdown" and elem_type == "toggle" then
-                                spacing = 5
+                                spacing = 5 -- Расстояние между dropdown и toggle
                             else
-                                spacing = 2
+                                spacing = 2 -- Обычное расстояние для других комбинаций
                             end
                             contentHeight = contentHeight + spacing + element.Size.Y.Offset
                             previous_type = elem_type
                         end
-                        local last_type = #elements > 0 and elements[#elements].Name:match("^Dropdown_") and "dropdown" or nil
-                        local bottom_padding = (last_type == "dropdown") and 10 or 15
                     end
+                    local bottom_padding = 15
                     local sectionHeight = 30 + contentHeight + bottom_padding
                     yOffset = yOffset + sectionHeight + 20
                 end
@@ -507,80 +506,6 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         windowInstance._initialized = true
     end)()
 
-    local function updateSectionLayout(section)
-        local sectionsList = table.find(windowInstance._leftSections, section) and windowInstance._leftSections or windowInstance._rightSections
-        local container = sectionsList == windowInstance._leftSections and LeftContainer or RightContainer
-        
-        local ContentFrame = section:FindFirstChild("ContentFrame")
-        if not ContentFrame then return end
-        
-        -- Получаем все элементы и сортируем по позиции Y
-        local allElements = getSortedElements(ContentFrame)
-        
-        -- Пересчитываем позиции с правильными отступами
-        local currentY = 5
-        local previous_type = nil
-        for _, element in ipairs(allElements) do
-            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
-            local spacing = 5
-            if previous_type then
-                if previous_type == "slider" and elem_type == "dropdown" then
-                    spacing = 0
-                elseif previous_type == "slider" then
-                    spacing = 5
-                elseif previous_type == "toggle" and elem_type == "dropdown" then
-                    spacing = 3
-                elseif previous_type == "dropdown" and elem_type == "toggle" then
-                    spacing = 5
-                elseif previous_type == "dropdown" and elem_type == "dropdown" then
-                    spacing = 5
-                else
-                    spacing = 2
-                end
-            end
-            element.Position = UDim2.new(0, 0, 0, currentY)
-            currentY = currentY + element.Size.Y.Offset + spacing
-            previous_type = elem_type
-        end
-        
-        -- Рассчитываем totalContentHeight
-        local totalContentHeight = 0
-        previous_type = nil
-        for _, element in ipairs(allElements) do
-            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
-            local spacing = 5
-            if previous_type then
-                if previous_type == "slider" and elem_type == "dropdown" then
-                    spacing = 0
-                elseif previous_type == "slider" then
-                    spacing = 5
-                elseif previous_type == "toggle" and elem_type == "dropdown" then
-                    spacing = 3
-                elseif previous_type == "dropdown" and elem_type == "toggle" then
-                    spacing = 5
-                elseif previous_type == "dropdown" and elem_type == "dropdown" then
-                    spacing = 5
-                else
-                    spacing = 2
-                end
-            end
-            totalContentHeight = totalContentHeight + spacing + element.Size.Y.Offset
-            previous_type = elem_type
-        end
-        
-        local last_type = #allElements > 0 and allElements[#allElements].Name:match("^Dropdown_") and "dropdown" or nil
-        local bottom_padding = (last_type == "dropdown") and 10 or 15
-        
-        -- Обновляем размеры контента и секции
-        if windowInstance._sectionStates[section] then
-            ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
-            section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + bottom_padding)
-        end
-        
-        -- Обновляем позиции всех секций
-        updateSectionPositions(container, sectionsList)
-    end
-
     function windowInstance:CreateTab(visualName, imageId)
         while not self._initialized do wait() end
         
@@ -616,7 +541,6 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         image.ZIndex = 3
         image.Image = "rbxassetid://" .. imageId
         image.ImageColor3 = Color3.fromRGB(147, 152, 156)
-        image.ImageTransparency = 1  -- Added initial transparency
         fadeIn(image)
 
         local function selectTab()
@@ -718,18 +642,17 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                             if previous_type == nil then
                                 spacing = 5
                             elseif previous_type == "toggle" and elem_type == "dropdown" then
-                                spacing = 3
+                                spacing = 3 -- Расстояние между toggle и dropdown
                             elseif previous_type == "dropdown" and elem_type == "toggle" then
-                                spacing = 5
+                                spacing = 5 -- Расстояние между dropdown и toggle
                             else
-                                spacing = 2
+                                spacing = 2 -- Обычное расстояние для других комбинаций
                             end
                             contentHeight = contentHeight + spacing + element.Size.Y.Offset
                             previous_type = elem_type
                         end
                     end
-                    local last_type = #elements > 0 and elements[#elements].Name:match("^Dropdown_") and "dropdown" or nil
-                    local bottom_padding = (last_type == "dropdown") and 10 or 15
+                    local bottom_padding = 15
                     local sectionHeight = 30 + contentHeight + bottom_padding
                     yOffset = yOffset + sectionHeight + 20
                 end
@@ -858,19 +781,18 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                     if previous_type == nil then
                         spacing = 5
                     elseif previous_type == "toggle" and elem_type == "dropdown" then
-                        spacing = 3
+                        spacing = 3 -- Расстояние между toggle и dropdown
                     elseif previous_type == "dropdown" and elem_type == "toggle" then
-                        spacing = 5
+                        spacing = 5 -- Расстояние между dropdown и toggle
                     else
-                        spacing = 2
+                        spacing = 2 -- Обычное расстояние для других комбинаций
                     end
                     contentHeight = contentHeight + spacing + element.Size.Y.Offset
                     previous_type = elem_type
                 end
                 ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
                 
-                local last_type = #elements > 0 and elements[#elements].Name:match("^Dropdown_") and "dropdown" or nil
-                local bottom_padding = (last_type == "dropdown") and 10 or 15
+                local bottom_padding = 15
                 local sizeTween = TweenService:Create(
                     section,
                     TweenInfo.new(0.3, Enum.EasingStyle.Quad),
@@ -966,8 +888,10 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         
         local elements = getSortedElements(ContentFrame)
         local new_type = "toggle"
-        local yOffset = 5
-        if #elements > 0 then
+        local yOffset
+        if #elements == 0 then
+            yOffset = 5
+        else
             local last = elements[#elements]
             local last_type = last.Name:match("^Toggle_") and "toggle" or
                               last.Name:match("^Dropdown_") and "dropdown" or
@@ -1060,7 +984,35 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         
         table.insert(self._toggleElements, ToggleContainer)
         
-        task.defer(updateSectionLayout, section)
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        
+        local contentHeight = 0
+        local elements_updated = getSortedElements(ContentFrame)
+        local previous_type = nil
+        for j, element in ipairs(elements_updated) do
+            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
+            local spacing
+            if previous_type == nil then
+                spacing = 5
+            elseif previous_type == "toggle" and elem_type == "dropdown" then
+                spacing = 3 -- Расстояние между toggle и dropdown
+            elseif previous_type == "dropdown" and elem_type == "toggle" then
+                spacing = 5 -- Расстояние между dropdown и toggle
+            else
+                spacing = 2 -- Обычное расстояние для других комбинаций
+            end
+            contentHeight = contentHeight + spacing + element.Size.Y.Offset
+            previous_type = elem_type
+        end
+        
+        if windowInstance._sectionStates[section] then
+            local bottom_padding = 15
+            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
+            ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
+        end
+        
+        updateSectionPositions(container, sectionsList)
         
         return {
             Set = function(self, value)
@@ -1188,7 +1140,6 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     DropdownContainer.Position = UDim2.new(0, 0, 0, yOffset)
     DropdownContainer.ZIndex = 5
     DropdownContainer.Visible = true
-    DropdownContainer.options = options -- Stored for maxHeight
     
     -- Label дропдауна
     local DropdownLabel = Instance.new("TextLabel")
@@ -1239,7 +1190,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     -- Список дропдауна
     local DropdownList = Instance.new("Frame")
     DropdownList.Name = "DropdownList_"..dropdownName
-    DropdownList.Parent = MainFrame
+    DropdownList.Parent = self._elementContainer.Parent
     DropdownList.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
     DropdownList.BorderSizePixel = 0
     DropdownList.Size = UDim2.new(0, 165, 0, 0)
@@ -1348,21 +1299,21 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                     
                     DropdownList.Visible = false
                     DropdownList.Size = UDim2.new(0, 165, 0, 0)
-                    windowInstance._openDropdowns[DropdownContainer] = nil
+                    self._openDropdowns[DropdownContainer] = nil
                 end
                 
                 updateSelectedText()
                 
-                if save and windowInstance._saveConfig.enabled then
+                if save and self._saveConfig.enabled then
                     if multi then
                         local selected = {}
                         for opt in pairs(selectedOptions) do
                             table.insert(selected, opt)
                         end
-                        saveDropdownState(windowInstance, dropdownName, selected)
+                        self:saveDropdownState(dropdownName, selected)
                     else
                         for opt in pairs(selectedOptions) do
-                            saveDropdownState(windowInstance, dropdownName, opt)
+                            self:saveDropdownState(dropdownName, opt)
                             break
                         end
                     end
@@ -1395,55 +1346,49 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         if isDropdownOpen then
             DropdownList.Visible = false
             DropdownList.Size = UDim2.new(0, 165, 0, 0)
-            windowInstance._openDropdowns[DropdownContainer] = nil
+            self._openDropdowns[DropdownContainer] = nil
         else
             -- Закрываем другие открытые дропдауны
-            for cont, lst in pairs(windowInstance._openDropdowns) do
-                lst.Visible = false
-                lst.Size = UDim2.new(0, 165, 0, 0)
-                windowInstance._openDropdowns[cont] = nil
+            for container, list in pairs(self._openDropdowns) do
+                list.Visible = false
+                list.Size = UDim2.new(0, 165, 0, 0)
+                self._openDropdowns[container] = nil
             end
             
             -- Открываем текущий
             local buttonPos = DropdownButton.AbsolutePosition
             local buttonSize = DropdownButton.AbsoluteSize
-            local mainPos = MainFrame.AbsolutePosition
-            local camera = workspace.CurrentCamera
-            local screenHeight = camera.ViewportSize.Y
+            local screenSize = self._elementContainer.Parent.AbsoluteSize
             
-            local maxHeight = math.min(4, #options) * 20
             local yPos = buttonPos.Y + buttonSize.Y
-            if yPos + maxHeight > screenHeight then
+            local maxHeight = math.min(4, #options) * 20
+            
+            if yPos + maxHeight > screenSize.Y then
                 yPos = buttonPos.Y - maxHeight
             end
             
-            local relativeX = buttonPos.X - mainPos.X
-            local relativeY = yPos - mainPos.Y
-            DropdownList.Position = UDim2.new(0, relativeX, 0, relativeY)
+            DropdownList.Position = UDim2.new(0, buttonPos.X, 0, yPos)
             DropdownList.Size = UDim2.new(0, 165, 0, maxHeight)
             DropdownList.Visible = true
-            windowInstance._openDropdowns[DropdownContainer] = DropdownList
+            self._openDropdowns[DropdownContainer] = DropdownList
             
-            if not windowInstance._heartbeatConnection then
-                windowInstance._heartbeatConnection = RunService.Heartbeat:Connect(function()
-                    for cont, lst in pairs(windowInstance._openDropdowns) do
-                        local btn = cont:FindFirstChild("Button")
-                        if btn then
-                            local btnPos = btn.AbsolutePosition
-                            local btnSize = btn.AbsoluteSize
-                            local mPos = MainFrame.AbsolutePosition
-                            local cam = workspace.CurrentCamera
-                            local scrHeight = cam.ViewportSize.Y
+            if not self._heartbeatConnection then
+                self._heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                    for _, list in pairs(self._openDropdowns) do
+                        local button = list:FindFirstAncestorOfClass("Frame"):FindFirstChild("Button")
+                        if button then
+                            local buttonPos = button.AbsolutePosition
+                            local buttonSize = button.AbsoluteSize
+                            local screenSize = ScreenGui.AbsoluteSize
                             
-                            local mxHeight = math.min(4, #cont.options or 4) * 20
-                            local yp = btnPos.Y + btnSize.Y
-                            if yp + mxHeight > scrHeight then
-                                yp = btnPos.Y - mxHeight
+                            local yPos = buttonPos.Y + buttonSize.Y
+                            local maxHeight = math.min(4, #dropdownContainer.options or 4) * 20
+                            
+                            if yPos + maxHeight > screenSize.Y then
+                                yPos = buttonPos.Y - maxHeight
                             end
                             
-                            local relX = btnPos.X - mPos.X
-                            local relY = yp - mPos.Y
-                            lst.Position = UDim2.new(0, relX, 0, relY)
+                            list.Position = UDim2.new(0, buttonPos.X, 0, yPos)
                         end
                     end
                 end)
@@ -1454,11 +1399,11 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     DropdownButton.MouseButton1Click:Connect(toggleDropdown)
     
     -- Закрытие при клике вне дропдауна
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed then return end
         
         if input.UserInputType == Enum.UserInputType.MouseButton1 and DropdownList.Visible then
-            local mousePos = UserInputService:GetMouseLocation()
+            local mousePos = game:GetService("UserInputService"):GetMouseLocation()
             local absPos = DropdownList.AbsolutePosition
             local absSize = DropdownList.AbsoluteSize
             
@@ -1471,12 +1416,167 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     
     table.insert(self._dropdownElements, DropdownContainer)
     
-    task.defer(updateSectionLayout, section)
+    -- Обновление размеров секции
+    local function updateSectionSize()
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        
+        local contentHeight = 0
+        local elements = getSafeSortedElements()
+        local previousType = nil
+        
+        for _, element in ipairs(elements) do
+            local elemType = element.Name:match("^Toggle_") and "toggle" or 
+                           element.Name:match("^Dropdown_") and "dropdown" or 
+                           element.Name:match("^Input_") and "input" or 
+                           element.Name:match("^Bind_") and "bind" or 
+                           "slider"
+            
+            local spacing = 5 -- Базовый отступ
+            if previousType == "toggle" and elemType == "dropdown" then
+                spacing = 3
+            elseif previousType == "dropdown" and elemType == "toggle" then
+                spacing = 5
+            elseif previousType == "dropdown" and elemType == "dropdown" then
+                spacing = 5 -- Увеличенный отступ между дропдаунами
+            elseif previousType == "slider" and elemType == "dropdown" then
+                spacing = 0
+            elseif previousType == "slider" then
+                spacing = 5
+            else
+                spacing = 2
+            end
+            
+            contentHeight = contentHeight + spacing + element.Size.Y.Offset
+            previousType = elemType
+        end
+        
+        if self._sectionStates[section] then
+            ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
+            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + 15)
+        end
+        
+        updateSectionPositions(container, sectionsList)
+    end
+    
+    -- Функция для обновления позиций всех элементов в секции с учетом ВСЕХ элементов
+    local function updateSectionLayout()
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        
+        -- Получаем все элементы и сортируем по позиции Y
+        local allElements = {}
+        for _, child in ipairs(ContentFrame:GetChildren()) do
+            if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or 
+               child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_")) then
+                table.insert(allElements, child)
+            end
+        end
+        
+        table.sort(allElements, function(a, b)
+            return a.Position.Y.Offset < b.Position.Y.Offset
+        end)
+        
+        -- Пересчитываем позиции с правильными отступами
+        local currentY = 5
+        for i, element in ipairs(allElements) do
+            local spacing = 5
+            
+            if i > 1 then
+                local prevElement = allElements[i-1]
+                local prevType = prevElement.Name:match("^Toggle_") and "toggle" or 
+                               prevElement.Name:match("^Dropdown_") and "dropdown" or 
+                               prevElement.Name:match("^Input_") and "input" or 
+                               prevElement.Name:match("^Bind_") and "bind" or 
+                               "slider"
+                
+                local elementType = element.Name:match("^Toggle_") and "toggle" or 
+                                  element.Name:match("^Dropdown_") and "dropdown" or 
+                                  element.Name:match("^Input_") and "input" or 
+                                  element.Name:match("^Bind_") and "bind" or 
+                                  "slider"
+                
+                spacing = 2 -- Базовый
+                if prevType == "slider" and elementType == "dropdown" then
+                    spacing = 0
+                elseif prevType == "slider" then
+                    spacing = 5
+                elseif prevType == "toggle" and elementType == "dropdown" then
+                    spacing = 3
+                elseif prevType == "dropdown" and elementType == "toggle" then
+                    spacing = 5
+                elseif prevType == "dropdown" and elementType == "dropdown" then
+                    spacing = 5
+                end
+            end
+            
+            element.Position = UDim2.new(0, 0, 0, currentY)
+            currentY = currentY + element.Size.Y.Offset + spacing
+        end
+        
+        -- ОБНОВЛЯЕМ РАЗМЕР КОНТЕЙНЕРА С УЧЕТОМ ВСЕХ ЭЛЕМЕНТОВ ВКЛЮЧАЯ ДРОПДАУНЫ
+        local totalContentHeight = 0
+        local previousElementType = nil
+        
+        for _, element in ipairs(allElements) do
+            local elementType = element.Name:match("^Toggle_") and "toggle" or 
+                              element.Name:match("^Dropdown_") and "dropdown" or 
+                              element.Name:match("^Input_") and "input" or 
+                              element.Name:match("^Bind_") and "bind" or 
+                              "slider"
+            
+            local elementSpacing = 5
+            
+            if previousElementType == "slider" and elementType == "dropdown" then
+                elementSpacing = 0
+            elseif previousElementType == "slider" then
+                elementSpacing = 5
+            elseif previousElementType == "toggle" and elementType == "dropdown" then
+                elementSpacing = 3
+            elseif previousElementType == "dropdown" and elementType == "toggle" then
+                elementSpacing = 5
+            elseif previousElementType == "dropdown" and elementType == "dropdown" then
+                elementSpacing = 5
+            else
+                elementSpacing = 2
+            end
+            
+            totalContentHeight = totalContentHeight + elementSpacing + element.Size.Y.Offset
+            previousElementType = elementType
+        end
+        
+        -- Обновляем размеры контента и секции
+        if self._sectionStates[section] then
+            ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
+            section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + 15)
+        end
+        
+        -- Обновляем позиции всех секций
+        updateSectionPositions(container, sectionsList)
+        
+        -- Обновляем CanvasSize контейнера
+        local totalSectionsHeight = 0
+        for _, sec in ipairs(sectionsList) do
+            if sec.Visible then
+                if self._sectionStates[sec] == false then
+                    totalSectionsHeight = totalSectionsHeight + 30 + 20
+                else
+                    totalSectionsHeight = totalSectionsHeight + sec.Size.Y.Offset + 20
+                end
+            end
+        end
+        self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
+    end
+    
+    task.defer(updateSectionLayout)
     
     return {
         Set = function(_, value)
             if multi then
-                selectedOptions = {}
+                for opt in pairs(selectedOptions) do
+                    selectedOptions[opt] = nil
+                end
+                
                 if type(value) == "table" then
                     for _, option in ipairs(value) do
                         if table.find(options, option) then
@@ -1485,7 +1585,10 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
                     end
                 end
             else
-                selectedOptions = {}
+                for opt in pairs(selectedOptions) do
+                    selectedOptions[opt] = nil
+                end
+                
                 if table.find(options, value) then
                     selectedOptions[value] = true
                 end
@@ -1535,7 +1638,7 @@ function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
         end,
         UpdateOptions = function(_, newOptions)
             options = newOptions
-            DropdownContainer.options = newOptions
+            
             for opt in pairs(selectedOptions) do
                 if not table.find(options, opt) then
                     selectedOptions[opt] = nil
@@ -1595,35 +1698,35 @@ function windowInstance:CreateSlider(params)
         end
     end
     
-    -- Get proper yOffset based on existing elements
+    -- Get proper yOffset based on existing elements - УВЕЛИЧЕН на 3px
     local elements = getSortedElements(ContentFrame)
     local new_type = "slider"
     local yOffset = 5
     
     if #elements > 0 then
-        local last = elements[#elements]
-        local last_type = last.Name:match("^Toggle_") and "toggle" or
-                          last.Name:match("^Dropdown_") and "dropdown" or
-                          last.Name:match("^Input_") and "input" or
-                          last.Name:match("^Bind_") and "bind" or
-                          last.Name:match("^Slider_") and "slider" or nil
+        local lastElement = elements[#elements]
+        local lastType = lastElement.Name:match("^Toggle_") and "toggle" or 
+                         lastElement.Name:match("^Dropdown_") and "dropdown" or 
+                         lastElement.Name:match("^Input_") and "input" or 
+                         lastElement.Name:match("^Bind_") and "bind" or 
+                         lastElement.Name:match("^Slider_") and "slider" or nil
         local spacing = 2
         
-        if last_type then
-            if last_type == "slider" and new_type == "dropdown" then
+        if lastType then
+            if lastType == "slider" and new_type == "dropdown" then
                 spacing = 0
-            elseif last_type == "slider" then
+            elseif lastType == "slider" then
                 spacing = 5
-            elseif last_type == "toggle" and new_type == "dropdown" then
+            elseif lastType == "toggle" and new_type == "dropdown" then
                 spacing = 3
-            elseif last_type == "dropdown" and new_type == "toggle" then
+            elseif lastType == "dropdown" and new_type == "toggle" then
                 spacing = 5
-            elseif last_type == "dropdown" and new_type == "dropdown" then
+            elseif lastType == "dropdown" and new_type == "dropdown" then
                 spacing = 5
             end
         end
         
-        yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
+        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
     end
 
     -- Create container for Slider (30px height)
@@ -1631,7 +1734,7 @@ function windowInstance:CreateSlider(params)
     SliderContainer.Name = "Slider_" .. sliderName
     SliderContainer.Parent = ContentFrame
     SliderContainer.BackgroundTransparency = 1
-    SliderContainer.Size = UDim2.new(1, 0, 0, 30)
+    SliderContainer.Size = UDim2.new(1, 0, 0, 30) -- 30px height
     SliderContainer.Position = UDim2.new(0, 0, 0, yOffset)
     SliderContainer.ZIndex = 5
     SliderContainer.Visible = true
@@ -1641,8 +1744,8 @@ function windowInstance:CreateSlider(params)
     SliderLabel.Name = "TextLabel"
     SliderLabel.Parent = SliderContainer
     SliderLabel.BackgroundTransparency = 1
-    SliderLabel.Position = UDim2.new(0.085, 0, 0, -2)
-    SliderLabel.Size = UDim2.new(0, 165, 0, 22)
+    SliderLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Поднят на 2px выше
+    SliderLabel.Size = UDim2.new(0, 165, 0, 22) -- Увеличена высота на 2px
     SliderLabel.Font = Enum.Font.SourceSansBold
     SliderLabel.Text = sliderName
     SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
@@ -1655,8 +1758,8 @@ function windowInstance:CreateSlider(params)
     ValueLabel.Name = "Value"
     ValueLabel.Parent = SliderContainer
     ValueLabel.BackgroundTransparency = 1
-    ValueLabel.Position = UDim2.new(0.085, 0, 0, -2)
-    ValueLabel.Size = UDim2.new(0, 165, 0, 22)
+    ValueLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Поднят на 2px выше
+    ValueLabel.Size = UDim2.new(0, 165, 0, 22) -- Увеличена высота на 2px
     ValueLabel.Font = Enum.Font.SourceSansBold
     ValueLabel.Text = tostring(defaultValue)
     ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
@@ -1670,7 +1773,7 @@ function windowInstance:CreateSlider(params)
     SliderTrack.Parent = SliderContainer
     SliderTrack.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
     SliderTrack.BorderSizePixel = 0
-    SliderTrack.Position = UDim2.new(0.085, 0, 0, 23)
+    SliderTrack.Position = UDim2.new(0.085, 0, 0, 23) -- Adjusted for 30px height
     SliderTrack.Size = UDim2.new(0, 165, 0, 6)
     SliderTrack.ZIndex = 6
     
@@ -1800,7 +1903,115 @@ function windowInstance:CreateSlider(params)
     
     table.insert(self._sliderElements, SliderContainer)
 
-    task.defer(updateSectionLayout, section)
+    -- Функция для обновления позиций всех элементов в секции с учетом ВСЕХ элементов
+    local function updateSectionLayout()
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        
+        -- Получаем все элементы и сортируем по позиции Y
+        local allElements = {}
+        for _, child in ipairs(ContentFrame:GetChildren()) do
+            if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or 
+               child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_")) then
+                table.insert(allElements, child)
+            end
+        end
+        
+        table.sort(allElements, function(a, b)
+            return a.Position.Y.Offset < b.Position.Y.Offset
+        end)
+        
+        -- Пересчитываем позиции с правильными отступами
+        local currentY = 5
+        for i, element in ipairs(allElements) do
+            local spacing = 5
+            
+            if i > 1 then
+                local prevElement = allElements[i-1]
+                local prevType = prevElement.Name:match("^Toggle_") and "toggle" or 
+                               prevElement.Name:match("^Dropdown_") and "dropdown" or 
+                               prevElement.Name:match("^Input_") and "input" or 
+                               prevElement.Name:match("^Bind_") and "bind" or 
+                               "slider"
+                
+                local elementType = element.Name:match("^Toggle_") and "toggle" or 
+                                  element.Name:match("^Dropdown_") and "dropdown" or 
+                                  element.Name:match("^Input_") and "input" or 
+                                  element.Name:match("^Bind_") and "bind" or 
+                                  "slider"
+                
+                -- Уменьшенный отступ после слайдера для дропдауна
+                if prevType == "slider" and elementType == "dropdown" then
+                    spacing = 0
+                elseif prevType == "slider" then
+                    spacing = 5
+                elseif prevType == "toggle" and elementType == "dropdown" then
+                    spacing = 3
+                elseif prevType == "dropdown" and elementType == "toggle" then
+                    spacing = 5
+                else
+                    spacing = 2
+                end
+            end
+            
+            element.Position = UDim2.new(0, 0, 0, currentY)
+            currentY = currentY + element.Size.Y.Offset + spacing
+        end
+        
+        -- ОБНОВЛЯЕМ РАЗМЕР КОНТЕЙНЕРА С УЧЕТОМ ВСЕХ ЭЛЕМЕНТОВ ВКЛЮЧАЯ ДРОПДАУНЫ
+        local totalContentHeight = 0
+        local previousElementType = nil
+        
+        for _, element in ipairs(allElements) do
+            local elementType = element.Name:match("^Toggle_") and "toggle" or 
+                              element.Name:match("^Dropdown_") and "dropdown" or 
+                              element.Name:match("^Input_") and "input" or 
+                              element.Name:match("^Bind_") and "bind" or 
+                              "slider"
+            
+            local elementSpacing = 5
+            
+            if previousElementType == "slider" and elementType == "dropdown" then
+                elementSpacing = 0
+            elseif previousElementType == "slider" then
+                elementSpacing = 5
+            elseif previousElementType == "toggle" and elementType == "dropdown" then
+                elementSpacing = 3
+            elseif previousElementType == "dropdown" and elementType == "toggle" then
+                elementSpacing = 5
+            else
+                elementSpacing = 2
+            end
+            
+            totalContentHeight = totalContentHeight + elementSpacing + element.Size.Y.Offset
+            previousElementType = elementType
+        end
+        
+        -- Обновляем размеры контента и секции
+        if self._sectionStates[section] then
+            ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
+            section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + 15)
+        end
+        
+        -- Обновляем позиции всех секций
+        updateSectionPositions(container, sectionsList)
+        
+        -- Обновляем CanvasSize контейнера
+        local totalSectionsHeight = 0
+        for _, sec in ipairs(sectionsList) do
+            if sec.Visible then
+                if self._sectionStates[sec] == false then
+                    totalSectionsHeight = totalSectionsHeight + 30 + 20
+                else
+                    totalSectionsHeight = totalSectionsHeight + sec.Size.Y.Offset + 20
+                end
+            end
+        end
+        self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
+    end
+    
+    -- Немедленное обновление после создания слайдера
+    task.defer(updateSectionLayout)
     
     return {
         Set = function(self, value)
@@ -2004,7 +2215,25 @@ end
     
     table.insert(self._inputElements, InputContainer)
 
-    task.defer(updateSectionLayout, section)
+    -- Обновление размеров секции
+    task.defer(function()
+        local currentElements = getSortedElements(ContentFrame)
+        local totalHeight = 0
+        
+        if #currentElements > 0 then
+            local lastElement = currentElements[#currentElements]
+            totalHeight = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset
+        end
+        
+        if windowInstance._sectionStates[section] then
+            ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 5)
+            section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + 15)
+        end
+        
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        updateSectionPositions(container, sectionsList)
+    end)
     
     return {
         Set = function(self, value)
@@ -2243,7 +2472,25 @@ end
         
         table.insert(self._bindElements, BindContainer)
 
-        task.defer(updateSectionLayout, section)
+        -- Update section sizes
+        task.defer(function()
+            local currentElements = getSortedElements(ContentFrame)
+            local totalHeight = 0
+            
+            if #currentElements > 0 then
+                local lastElement = currentElements[#currentElements]
+                totalHeight = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset
+            end
+            
+            if windowInstance._sectionStates[section] then
+                ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 5)
+                section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + 15)
+            end
+            
+            local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+            local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+            updateSectionPositions(container, sectionsList)
+        end)
         
         return {
             Set = function(self, value)
@@ -2285,2093 +2532,6 @@ end
                 dropdownList.Position = UDim2.new(0, buttonPos.X, 0, yPos)
             end
         end
-    end
-
-    return windowInstance
-end
-
-return PizdecWare-- Основной код библиотеки (PizdecWare.lua)
-local success, HttpService = pcall(game.GetService, game, "HttpService")
-local success2, TweenService = pcall(game.GetService, game, "TweenService")
-local success3, UserInputService = pcall(game.GetService, game, "UserInputService")
-
-if not (success and success2 and success3) or not HttpService or not TweenService or not UserInputService then
-    warn("Required services are not available. Script may not function fully.")
-    return
-end
-
-local RunService = game:GetService("RunService")
-
--- Check for file I/O functions availability
-local isFileAvailable = pcall(function() return isfile end)
-local writeFileAvailable = pcall(function() return writefile end)
-
-local PizdecWare = {}
-PizdecWare.__index = PizdecWare
-
-function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Parent = game:GetService("CoreGui")
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ScreenGui.Name = guiName
-
-    -- Main window frame (Layer 1) - initially transparent
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Name = "MainFrame"
-    MainFrame.Parent = ScreenGui
-    MainFrame.BackgroundColor3 = Color3.fromRGB(19, 21, 25)
-    MainFrame.BorderSizePixel = 0
-    MainFrame.Position = UDim2.new(0.032, 0, 0.195, 0)
-    MainFrame.Size = UDim2.new(0, 630, 0, 460)
-    MainFrame.BackgroundTransparency = 1
-    MainFrame.Active = true
-    MainFrame.ZIndex = 1
-
-    local UICorner = Instance.new("UICorner")
-    UICorner.Parent = MainFrame
-
-    -- Improved dragging functionality
-    local dragging = false
-    local dragInput
-    local dragStart
-    local startPos
-
-    local function update(input)
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-
-    MainFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = MainFrame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    MainFrame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            update(input)
-        end
-    end)
-
-    -- Logo with P and W letters
-    local Logo = Instance.new("Frame")
-    Logo.Name = "Logo"
-    Logo.Parent = MainFrame
-    Logo.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-    Logo.Size = UDim2.new(0, 25, 0, 25)
-    Logo.Position = UDim2.new(0.022, 0, 0.031, 0)
-    Logo.ZIndex = 3
-    Logo.BackgroundTransparency = 1
-
-    local UICorner_17 = Instance.new("UICorner")
-    UICorner_17.Parent = Logo
-
-    -- W letter
-    local W = Instance.new("TextLabel")
-    W.Name = "W"
-    W.Parent = Logo
-    W.BackgroundTransparency = 1
-    W.Position = UDim2.new(0.282, 0, 0.76, 0)
-    W.Size = UDim2.new(0, 23, 0, -14)
-    W.ZIndex = 4
-    W.Font = Enum.Font.SourceSansBold
-    W.Text = "W"
-    W.TextColor3 = Color3.fromRGB(0, 0, 0)
-    W.TextSize = 20
-    W.TextTransparency = 1
-
-    -- P letter
-    local P = Instance.new("TextLabel")
-    P.Name = "P"
-    P.Parent = Logo
-    P.BackgroundTransparency = 1
-    P.Position = UDim2.new(-0.304, 0, 0.76, 0)
-    P.Size = UDim2.new(0, 27, 0, -14)
-    P.ZIndex = 4
-    P.Font = Enum.Font.SourceSansBold
-    P.Text = "P"
-    P.TextColor3 = Color3.fromRGB(255, 255, 255)
-    P.TextSize = 20
-    P.TextTransparency = 1
-
-    -- PizdecWare label
-    local PizdecWareLabel = Instance.new("TextLabel")
-    PizdecWareLabel.Name = "PizdecWare"
-    PizdecWareLabel.Parent = Logo
-    PizdecWareLabel.BackgroundTransparency = 1
-    PizdecWareLabel.Position = UDim2.new(2.2, 0, 1.3, 0)
-    PizdecWareLabel.Size = UDim2.new(0, 60, 0, -41)
-    PizdecWareLabel.Font = Enum.Font.SourceSansBold
-    PizdecWareLabel.Text = "PizdecWare"
-    PizdecWareLabel.TextColor3 = Color3.fromRGB(150, 17, 255)
-    PizdecWareLabel.TextSize = 25
-    PizdecWareLabel.TextTransparency = 1
-
-    local Info = Instance.new("TextLabel")
-    Info.Name = "Info"
-    Info.Parent = MainFrame
-    Info.BackgroundTransparency = 1
-    Info.Position = UDim2.new(0.054, 0, 0.083, 0)
-    Info.Size = UDim2.new(0, 116, 0, 10)
-    Info.Font = Enum.Font.SourceSansBold
-    Info.Text = infoText or ""
-    Info.TextColor3 = Color3.fromRGB(170, 176, 183)
-    Info.TextSize = 10
-    Info.TextXAlignment = Enum.TextXAlignment.Right
-    Info.TextTransparency = 1
-
-    -- Main container - initially transparent
-    local ElementContainer = Instance.new("ScrollingFrame")
-    ElementContainer.Name = "ElementContainer"
-    ElementContainer.Parent = MainFrame
-    ElementContainer.BackgroundColor3 = Color3.fromRGB(23, 24, 28)
-    ElementContainer.Position = UDim2.new(0.259, 0, 0.116, 0)
-    ElementContainer.Size = UDim2.new(0, 460, 0, 400)
-    ElementContainer.ZIndex = 1
-    ElementContainer.BackgroundTransparency = 1
-    ElementContainer.ScrollBarThickness = 8
-    ElementContainer.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
-    ElementContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-    ElementContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
-
-    local UICorner_2 = Instance.new("UICorner")
-    UICorner_2.Parent = ElementContainer
-
-    local UIStroke = Instance.new("UIStroke")
-    UIStroke.Parent = ElementContainer
-    UIStroke.Color = Color3.fromRGB(0, 0, 0)
-    UIStroke.Thickness = 1
-    UIStroke.Transparency = 0.8
-
-    -- Section containers
-    local LeftContainer = Instance.new("Frame")
-    LeftContainer.Name = "LeftContainer"
-    LeftContainer.Parent = ElementContainer
-    LeftContainer.BackgroundTransparency = 1
-    LeftContainer.Position = UDim2.new(0, 20, 0, 20)
-    LeftContainer.Size = UDim2.new(0.5, -30, 1, -40)
-
-    local RightContainer = Instance.new("Frame")
-    RightContainer.Name = "RightContainer"
-    RightContainer.Parent = ElementContainer
-    RightContainer.BackgroundTransparency = 1
-    RightContainer.Position = UDim2.new(0.5, 10, 0, 20)
-    RightContainer.Size = UDim2.new(0.5, -30, 1, -40)
-
-    -- Fade in animation function
-    local function fadeIn(element)
-        if not TweenService then return end
-        local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-        
-        if element:IsA("TextLabel") or element:IsA("TextButton") then
-            local tween = TweenService:Create(element, tweenInfo, {TextTransparency = 0})
-            tween:Play()
-        elseif element:IsA("ImageLabel") or element:IsA("ImageButton") then
-            local tween = TweenService:Create(element, tweenInfo, {ImageTransparency = 0})
-            tween:Play()
-        elseif element:IsA("Frame") and element.Name:find("Toggle_") then
-            return
-        else
-            local tween = TweenService:Create(element, tweenInfo, {BackgroundTransparency = 0})
-            tween:Play()
-        end
-    end
-
-    -- Create window instance to return
-    local windowInstance = setmetatable({
-        _tabZone = nil,
-        _selectedTab = nil,
-        _currentTab = nil,
-        _tabSections = {},
-        _initialized = false,
-        _leftSections = {},
-        _rightSections = {},
-        _elementContainer = ElementContainer,
-        _sectionStates = {},
-        _toggleElements = {},
-        _dropdownElements = {},
-        _inputElements = {},
-        _bindElements = {},
-        _sliderElements = {},
-        _saveConfig = saveConfig or { enabled = false, fileName = "PizdecWareSettings" },
-        _savedToggles = {},
-        _savedDropdowns = {},
-        _savedInputs = {},
-        _savedBinds = {},
-        _savedSliders = {},
-        _openDropdowns = {},
-        _heartbeatConnection = nil
-    }, PizdecWare)
-
-    -- Load saved toggles and dropdowns
-    if windowInstance._saveConfig.enabled and HttpService and isFileAvailable and writeFileAvailable then
-        local success, savedData = pcall(function()
-            if not isfile(windowInstance._saveConfig.fileName..".json") then
-                return {}
-            end
-            local data = HttpService:JSONDecode(readfile(windowInstance._saveConfig.fileName..".json")) or {}
-            return data
-        end)
-        
-        if success and savedData then
-            windowInstance._savedToggles = savedData.toggles or {}
-            windowInstance._savedDropdowns = savedData.dropdowns or {}
-            windowInstance._savedInputs = savedData.inputs or {}
-            windowInstance._savedBinds = savedData.binds or {}
-            windowInstance._savedSliders = savedData.sliders or {}
-        else
-            warn("Failed to load saved configuration. File I/O may be restricted.")
-        end
-    end
-
-    -- Function to save toggle state
-    local function saveToggleState(window, toggleName, state)
-        if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
-        
-        window._savedToggles[toggleName] = state
-        
-        pcall(function()
-            local data = {
-                toggles = window._savedToggles,
-                dropdowns = window._savedDropdowns,
-                inputs = window._savedInputs,
-                binds = window._savedBinds,
-                sliders = window._savedSliders
-            }
-            writefile(window._saveConfig.fileName..".json", HttpService:JSONEncode(data))
-        end)
-    end
-
-    -- Function to load toggle state
-    local function loadToggleState(window, toggleName)
-        if not window._saveConfig.enabled or not window._savedToggles then return nil end
-        return window._savedToggles[toggleName]
-    end
-
-    -- Function to save dropdown state
-    local function saveDropdownState(window, dropdownName, value)
-        if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
-        
-        window._savedDropdowns[dropdownName] = value
-        
-        pcall(function()
-            local data = {
-                toggles = window._savedToggles,
-                dropdowns = window._savedDropdowns,
-                inputs = window._savedInputs,
-                binds = window._savedBinds,
-                sliders = window._savedSliders
-            }
-            writefile(window._saveConfig.fileName..".json", HttpService:JSONEncode(data))
-        end)
-    end
-
-    -- Function to load dropdown state
-    local function loadDropdownState(window, dropdownName)
-        if not window._saveConfig.enabled or not window._savedDropdowns then return nil end
-        return window._savedDropdowns[dropdownName]
-    end
-
-    -- Function to save input state
-    local function saveInputState(window, inputName, value)
-        if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
-        
-        window._savedInputs[inputName] = value
-        
-        pcall(function()
-            local data = {
-                toggles = window._savedToggles,
-                dropdowns = window._savedDropdowns,
-                inputs = window._savedInputs,
-                binds = window._savedBinds,
-                sliders = window._savedSliders
-            }
-            writefile(window._saveConfig.fileName..".json", HttpService:JSONEncode(data))
-        end)
-    end
-
-    -- Function to load input state
-    local function loadInputState(window, inputName)
-        if not window._saveConfig.enabled or not window._savedInputs then return nil end
-        return window._savedInputs[inputName]
-    end
-
-    -- Function to save bind state
-    local function saveBindState(window, bindName, value)
-        if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
-        
-        window._savedBinds[bindName] = value
-        
-        pcall(function()
-            local data = {
-                toggles = window._savedToggles,
-                dropdowns = window._savedDropdowns,
-                inputs = window._savedInputs,
-                binds = window._savedBinds,
-                sliders = window._savedSliders
-            }
-            writefile(window._saveConfig.fileName..".json", HttpService:JSONEncode(data))
-        end)
-    end
-
-    -- Function to load bind state
-    local function loadBindState(window, bindName)
-        if not window._saveConfig.enabled or not window._savedBinds then return nil end
-        return window._savedBinds[bindName]
-    end
-
-    -- Function to save slider state
-    local function saveSliderState(window, sliderName, value)
-        if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
-        
-        window._savedSliders[sliderName] = value
-        
-        pcall(function()
-            local data = {
-                toggles = window._savedToggles,
-                dropdowns = window._savedDropdowns,
-                inputs = window._savedInputs,
-                binds = window._savedBinds,
-                sliders = window._savedSliders
-            }
-            writefile(window._saveConfig.fileName..".json", HttpService:JSONEncode(data))
-        end)
-    end
-
-    -- Function to load slider state
-    local function loadSliderState(window, sliderName)
-        if not window._saveConfig.enabled or not window._savedSliders then return nil end
-        return window._savedSliders[sliderName]
-    end
-
-    local function getSortedElements(contentFrame)
-        local elems = {}
-        for _, child in ipairs(contentFrame:GetChildren()) do
-            if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_")) then
-                table.insert(elems, child)
-            end
-        end
-        table.sort(elems, function(a, b)
-            return a.Position.Y.Offset < b.Position.Y.Offset
-        end)
-        return elems
-    end
-
-    -- Function to update positions of all sections with synchronized animation
-    local function updateSectionPositions(container, sections)
-        local yOffset = 0
-        local totalHeight = 0
-        
-        local targetPositions = {}
-        for i, section in ipairs(sections) do
-            if section.Visible then
-                targetPositions[section] = UDim2.new(0, 0, 0, yOffset)
-                
-                if windowInstance._sectionStates[section] == false then
-                    yOffset = yOffset + 30 + 20
-                else
-                    local contentFrame = section:FindFirstChild("ContentFrame")
-                    local contentHeight = 0
-                    local elements = getSortedElements(contentFrame)
-                    local previous_type = nil
-                    for j, element in ipairs(elements) do
-                        local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
-                        local spacing
-                        if previous_type == nil then
-                            spacing = 5
-                        elseif previous_type == "toggle" and elem_type == "dropdown" then
-                            spacing = 3
-                        elseif previous_type == "dropdown" and elem_type == "toggle" then
-                            spacing = 5
-                        else
-                            spacing = 2
-                        end
-                        contentHeight = contentHeight + spacing + element.Size.Y.Offset
-                        previous_type = elem_type
-                    end
-                    local last_type = #elements > 0 and elements[#elements].Name:match("^Dropdown_") and "dropdown" or nil
-                    local bottom_padding = (last_type == "dropdown") and 10 or 15
-                    local sectionHeight = 30 + contentHeight + bottom_padding
-                    yOffset = yOffset + sectionHeight + 20
-                end
-                totalHeight = yOffset
-            end
-        end
-        
-        for section, position in pairs(targetPositions) do
-            local tween = TweenService:Create(
-                section,
-                TweenInfo.new(0.3, Enum.EasingStyle.Quad),
-                {Position = position}
-            )
-            tween:Play()
-        end
-        
-        windowInstance._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalHeight + 40)
-    end
-
-    -- Initialize UI elements
-    coroutine.wrap(function()
-        fadeIn(MainFrame)
-        fadeIn(ElementContainer)
-        wait(0.2)
-        
-        fadeIn(Logo)
-        fadeIn(W)
-        fadeIn(P)
-        fadeIn(PizdecWareLabel)
-        fadeIn(Info)
-        wait(0.3)
-        
-        windowInstance._tabZone = Instance.new("Frame")
-        windowInstance._tabZone.Name = "TabZone"
-        windowInstance._tabZone.Parent = MainFrame
-        windowInstance._tabZone.BackgroundTransparency = 1
-        windowInstance._tabZone.Position = UDim2.new(0, 0, 0.116, 0)
-        windowInstance._tabZone.Size = UDim2.new(0, 163, 0, 399)
-        windowInstance._tabZone.ZIndex = 1
-
-        local Tabs = Instance.new("TextLabel")
-        Tabs.Name = "Tabs"
-        Tabs.Parent = windowInstance._tabZone
-        Tabs.BackgroundTransparency = 1
-        Tabs.Position = UDim2.new(0.045, 0, 0, 0)
-        Tabs.Size = UDim2.new(0, 50, 0, 20)
-        Tabs.Font = Enum.Font.ArialBold
-        Tabs.Text = "Tabs"
-        Tabs.TextColor3 = Color3.fromRGB(147, 152, 156)
-        Tabs.TextSize = 14
-        Tabs.TextXAlignment = Enum.TextXAlignment.Left
-        Tabs.ZIndex = 1
-        fadeIn(Tabs)
-
-        windowInstance._selectedTab = Instance.new("Frame")
-        windowInstance._selectedTab.Name = "SelectedTab"
-        windowInstance._selectedTab.Parent = windowInstance._tabZone
-        windowInstance._selectedTab.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-        windowInstance._selectedTab.BackgroundTransparency = 0.6
-        windowInstance._selectedTab.Position = UDim2.new(0, 0, 0, 23)
-        windowInstance._selectedTab.Size = UDim2.new(0, 163, 0, 30)
-        windowInstance._selectedTab.ZIndex = 2
-        fadeIn(windowInstance._selectedTab)
-
-        local UIGradient = Instance.new("UIGradient")
-        UIGradient.Offset = Vector2.new(0, 1)
-        UIGradient.Rotation = 0
-        UIGradient.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0.00, 1.00), NumberSequenceKeypoint.new(0.01, 0.67), NumberSequenceKeypoint.new(1.00, 0.96)}
-        UIGradient.Parent = windowInstance._selectedTab
-
-        -- Fix gradient after animation
-        local function fixGradient()
-            windowInstance._selectedTab.BackgroundTransparency = 0.6
-            UIGradient.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0.00, 1.00), NumberSequenceKeypoint.new(0.01, 0.67), NumberSequenceKeypoint.new(1.00, 0.96)}
-        end
-
-        local CloseButton = Instance.new("ImageButton")
-        CloseButton.Name = "CloseButton"
-        CloseButton.Parent = MainFrame
-        CloseButton.BackgroundTransparency = 1
-        CloseButton.Position = UDim2.new(0.949, 0, 0.017, 0)
-        CloseButton.Size = UDim2.new(0, 25, 0, 25)
-        CloseButton.Image = "rbxassetid://12653789995"
-        CloseButton.ZIndex = 3
-        fadeIn(CloseButton)
-        CloseButton.MouseButton1Click:Connect(function()
-            ScreenGui:Destroy()
-        end)
-
-        windowInstance._initialized = true
-    end)()
-
-    function windowInstance:CreateTab(visualName, imageId)
-        while not self._initialized do wait() end
-        
-        local tabCount = 0
-        for _, child in ipairs(self._tabZone:GetChildren()) do
-            if child:IsA("TextLabel") and child.Name ~= "Tabs" then
-                tabCount = tabCount + 1
-            end
-        end
-        
-        local initialOffset = (23 + (tabCount * 30)) / self._tabZone.AbsoluteSize.Y
-        
-        local tab = Instance.new("TextLabel")
-        tab.Name = visualName
-        tab.Parent = self._tabZone
-        tab.BackgroundTransparency = 1
-        tab.Position = UDim2.new(0.307, 0, initialOffset, 0)
-        tab.Size = UDim2.new(0, 101, 0, 28)
-        tab.Font = Enum.Font.SourceSansBold
-        tab.Text = visualName
-        tab.TextColor3 = Color3.fromRGB(147, 152, 156)
-        tab.TextSize = 20
-        tab.TextXAlignment = Enum.TextXAlignment.Left
-        tab.ZIndex = 3
-        fadeIn(tab)
-
-        local image = Instance.new("ImageLabel")
-        image.Name = "TabImage"
-        image.Parent = tab
-        image.BackgroundTransparency = 1
-        image.Position = UDim2.new(-0.365, 0, 0.037, 0)
-        image.Size = UDim2.new(0, 26, 0, 26)
-        image.ZIndex = 3
-        image.Image = "rbxassetid://" .. imageId
-        image.ImageColor3 = Color3.fromRGB(147, 152, 156)
-        image.ImageTransparency = 1
-        fadeIn(image)
-
-        local function selectTab()
-            if not TweenService or not self._selectedTab then return end
-            
-            -- Close all open dropdowns when switching tabs
-            for container, list in pairs(self._openDropdowns) do
-                list.Visible = false
-                list.Size = UDim2.new(0, 165, 0, 0)
-                self._openDropdowns[container] = nil
-            end
-            
-            local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear)
-            
-            for _, child in ipairs(self._tabZone:GetChildren()) do
-                if child:IsA("TextLabel") and child ~= tab and child.Name ~= "Tabs" then
-                    local childImage = child:FindFirstChild("TabImage")
-                    TweenService:Create(child, tweenInfo, {TextColor3 = Color3.fromRGB(147, 152, 156)}):Play()
-                    if childImage then
-                        TweenService:Create(childImage, tweenInfo, {ImageColor3 = Color3.fromRGB(147, 152, 156)}):Play()
-                    end
-                end
-            end
-            
-            TweenService:Create(tab, tweenInfo, {TextColor3 = Color3.fromRGB(150, 17, 255)}):Play()
-            TweenService:Create(image, tweenInfo, {ImageColor3 = Color3.fromRGB(150, 17, 255)}):Play()
-
-            local newPosition = UDim2.new(0, 0, tab.Position.Y.Scale, 0)
-            local moveTween = TweenService:Create(
-                self._selectedTab, 
-                TweenInfo.new(0.1, Enum.EasingStyle.Linear),
-                {Position = newPosition, BackgroundTransparency = 0.6}
-            )
-            moveTween:Play()
-            
-            moveTween.Completed:Connect(function()
-                self._selectedTab.BackgroundTransparency = 0.6
-                -- Fix gradient after animation
-                local gradient = self._selectedTab:FindFirstChildOfClass("UIGradient")
-                if gradient then
-                    gradient.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0.00, 1.00), NumberSequenceKeypoint.new(0.01, 0.67), NumberSequenceKeypoint.new(1.00, 0.96)}
-                end
-            end)
-
-            for tabName, sections in pairs(self._tabSections) do
-                for _, section in ipairs(sections) do
-                    section.Visible = (tabName == tab.Name)
-                end
-            end
-
-            for _, sections in pairs({self._leftSections, self._rightSections}) do
-                updateSectionPositions(nil, sections)
-            end
-
-            self._currentTab = tab
-        end
-
-        tab.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                selectTab()
-            end
-        end)
-
-        image.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                selectTab()
-            end
-        end)
-
-        if not self._currentTab then
-            selectTab()
-        end
-
-        self._tabSections[tab.Name] = {}
-
-        return tab
-    end
-
-    function windowInstance:CreateSection(sectionName, tab, side)
-        if not tab then return nil end
-        
-        local container = (side == "left" and LeftContainer) or (side == "right" and RightContainer) or LeftContainer
-        local sectionsList = (side == "left" and self._leftSections) or (side == "right" and self._rightSections) or self._leftSections
-        
-        local yOffset = 0
-        for _, section in ipairs(sectionsList) do
-            if section.Visible then
-                if windowInstance._sectionStates[section] == false then
-                    yOffset = yOffset + 30 + 20
-                else
-                    local contentFrame = section:FindFirstChild("ContentFrame")
-                    local contentHeight = 0
-                    if contentFrame then
-                        local elements = getSortedElements(contentFrame)
-                        local previous_type = nil
-                        for j, element in ipairs(elements) do
-                            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
-                            local spacing
-                            if previous_type == nil then
-                                spacing = 5
-                            elseif previous_type == "toggle" and elem_type == "dropdown" then
-                                spacing = 3 -- Расстояние между toggle и dropdown
-                            elseif previous_type == "dropdown" and elem_type == "toggle" then
-                                spacing = 5 -- Расстояние между dropdown и toggle
-                            else
-                                spacing = 2 -- Обычное расстояние для других комбинаций
-                            end
-                            contentHeight = contentHeight + spacing + element.Size.Y.Offset
-                            previous_type = elem_type
-                        end
-                    end
-                    local last_type = #elements > 0 and elements[#elements].Name:match("^Dropdown_") and "dropdown" or nil
-                    local bottom_padding = (last_type == "dropdown") and 10 or 15
-                    local sectionHeight = 30 + contentHeight + bottom_padding
-                    yOffset = yOffset + sectionHeight + 20
-                end
-            end
-        end
-
-        local section = Instance.new("Frame")
-        section.Name = sectionName
-        section.Parent = container
-        section.BackgroundColor3 = Color3.fromRGB(17, 19, 23)
-        section.Position = UDim2.new(0, 0, 0, yOffset)
-        section.Size = UDim2.new(1, 0, 0, 30)
-        section.ZIndex = 4
-        section.Visible = (tab == self._currentTab)
-        section.ClipsDescendants = true
-        fadeIn(section)
-
-        windowInstance._sectionStates[section] = true
-
-        local UICornerSection = Instance.new("UICorner")
-        UICornerSection.CornerRadius = UDim.new(0, 3)
-        UICornerSection.Parent = section
-
-        local HeaderContainer = Instance.new("Frame")
-        HeaderContainer.Name = "HeaderContainer"
-        HeaderContainer.Parent = section
-        HeaderContainer.BackgroundTransparency = 1
-        HeaderContainer.Size = UDim2.new(1, 0, 0, 30)
-        HeaderContainer.ZIndex = 5
-
-        local SectionLabel = Instance.new("TextLabel")
-        SectionLabel.Name = "Label"
-        SectionLabel.Parent = HeaderContainer
-        SectionLabel.BackgroundTransparency = 1
-        SectionLabel.Position = UDim2.new(0.085, 0, 0.15, 0)
-        SectionLabel.Size = UDim2.new(0, 100, 0, 20)
-        SectionLabel.Font = Enum.Font.ArialBold
-        SectionLabel.Text = sectionName
-        SectionLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        SectionLabel.TextSize = 14
-        SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
-        SectionLabel.ZIndex = 5
-        fadeIn(SectionLabel)
-
-        local ShowSectionButton = Instance.new("TextButton")
-        ShowSectionButton.Name = "ShowSection"
-        ShowSectionButton.Parent = HeaderContainer
-        ShowSectionButton.BackgroundTransparency = 1
-        ShowSectionButton.Position = UDim2.new(0.86, 0, 0.15, 0)
-        ShowSectionButton.Size = UDim2.new(0, 20, 0, 20)
-        ShowSectionButton.Font = Enum.Font.SourceSans
-        ShowSectionButton.Text = "▼"
-        ShowSectionButton.TextColor3 = Color3.fromRGB(147, 152, 156)
-        ShowSectionButton.TextSize = 14
-        ShowSectionButton.ZIndex = 5
-        fadeIn(ShowSectionButton)
-
-        local SectionLine = Instance.new("Frame")
-        SectionLine.Name = "Line"
-        SectionLine.Parent = HeaderContainer
-        SectionLine.BackgroundColor3 = Color3.fromRGB(66, 63, 71)
-        SectionLine.Position = UDim2.new(0.045, 0, 1, 0)
-        SectionLine.Size = UDim2.new(0.91, 0, 0, 1)
-        SectionLine.ZIndex = 4
-        fadeIn(SectionLine)
-
-        local ContentFrame = Instance.new("Frame")
-        ContentFrame.Name = "ContentFrame"
-        ContentFrame.Parent = section
-        ContentFrame.BackgroundColor3 = Color3.fromRGB(17, 19, 23)
-        ContentFrame.BackgroundTransparency = 1
-        ContentFrame.Position = UDim2.new(0, 0, 0, 31)
-        ContentFrame.Size = UDim2.new(1, 0, 0, 0)
-        ContentFrame.ZIndex = 4
-        ContentFrame.ClipsDescendants = true
-
-        local collapsedSize = UDim2.new(1, 0, 0, 30)
-
-        local function toggleSection()
-            if not TweenService then return end
-            
-            local isExpanded = windowInstance._sectionStates[section]
-            windowInstance._sectionStates[section] = not isExpanded
-            
-            if not isExpanded then
-                ShowSectionButton.Text = "▼"
-                ContentFrame.BackgroundTransparency = 1
-                
-                for _, element in pairs(self._toggleElements) do
-                    if element.Parent == ContentFrame then
-                        element.Visible = true
-                        element.BackgroundTransparency = 1
-                    end
-                end
-                for _, element in pairs(self._dropdownElements) do
-                    if element.Parent == ContentFrame then
-                        element.Visible = true
-                        element.BackgroundTransparency = 1
-                    end
-                end
-                for _, element in pairs(self._inputElements) do
-                    if element.Parent == ContentFrame then
-                        element.Visible = true
-                        element.BackgroundTransparency = 1
-                    end
-                end
-                for _, element in pairs(self._bindElements) do
-                    if element.Parent == ContentFrame then
-                        element.Visible = true
-                        element.BackgroundTransparency = 1
-                    end
-                end
-                for _, element in pairs(self._sliderElements) do
-                    if element.Parent == ContentFrame then
-                        element.Visible = true
-                        element.BackgroundTransparency = 1
-                    end
-                end
-                
-                local contentHeight = 0
-                local elements = getSortedElements(ContentFrame)
-                local previous_type = nil
-                for j, element in ipairs(elements) do
-                    local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
-                    local spacing
-                    if previous_type == nil then
-                        spacing = 5
-                    elseif previous_type == "toggle" and elem_type == "dropdown" then
-                        spacing = 3
-                    elseif previous_type == "dropdown" and elem_type == "toggle" then
-                        spacing = 5
-                    else
-                        spacing = 2
-                    end
-                    contentHeight = contentHeight + spacing + element.Size.Y.Offset
-                    previous_type = elem_type
-                end
-                local last_type = #elements > 0 and elements[#elements].Name:match("^Dropdown_") and "dropdown" or nil
-                local bottom_padding = (last_type == "dropdown") and 10 or 15
-                local sizeTween = TweenService:Create(
-                    section,
-                    TweenInfo.new(0.3, Enum.EasingStyle.Quad),
-                    {Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)}
-                )
-                sizeTween:Play()
-            else
-                ShowSectionButton.Text = "▲"
-                
-                for _, element in pairs(self._toggleElements) do
-                    if element.Parent == ContentFrame then
-                        element.Visible = false
-                        element.BackgroundTransparency = 1
-                    end
-                end
-                for _, element in pairs(self._dropdownElements) do
-                    if element.Parent == ContentFrame then
-                        element.Visible = false
-                        element.BackgroundTransparency = 1
-                    end
-                end
-                for _, element in pairs(self._inputElements) do
-                    if element.Parent == ContentFrame then
-                        element.Visible = false
-                        element.BackgroundTransparency = 1
-                    end
-                end
-                for _, element in pairs(self._bindElements) do
-                    if element.Parent == ContentFrame then
-                        element.Visible = false
-                        element.BackgroundTransparency = 1
-                    end
-                end
-                for _, element in pairs(self._sliderElements) do
-                    if element.Parent == ContentFrame then
-                        element.Visible = false
-                        element.BackgroundTransparency = 1
-                    end
-                end
-                
-                for dropdownContainer, dropdownList in pairs(self._openDropdowns) do
-                    if dropdownContainer:IsDescendantOf(section) then
-                        dropdownList.Visible = false
-                        dropdownList.Size = UDim2.new(0, 165, 0, 0)
-                        self._openDropdowns[dropdownContainer] = nil
-                    end
-                end
-                
-                ContentFrame.Size = UDim2.new(1, 0, 0, 0)
-                local sizeTween = TweenService:Create(
-                    section,
-                    TweenInfo.new(0.3, Enum.EasingStyle.Quad),
-                    {Size = collapsedSize}
-                )
-                sizeTween:Play()
-            end
-            
-            updateSectionPositions(container, sectionsList)
-        end
-
-        ShowSectionButton.MouseButton1Click:Connect(toggleSection)
-
-        if not self._tabSections[tab.Name] then
-            self._tabSections[tab.Name] = {}
-        end
-        table.insert(self._tabSections[tab.Name], section)
-        table.insert(sectionsList, section)
-        
-        updateSectionPositions(container, sectionsList)
-
-        return section
-    end
-
-    -- New toggle creation function with simplified syntax
-    function windowInstance:CreateToggle(params)
-        if not params.section then return nil end
-        
-        local section = params.section
-        local toggleName = params.name or ""
-        local defaultValue = params.enable or false
-        local save = params.save or false
-        local callback = params.callback or function() end
-        
-        local ContentFrame = section:FindFirstChild("ContentFrame")
-        if not ContentFrame then return nil end
-        
-        if save and self._saveConfig.enabled then
-            local savedState = loadToggleState(self, toggleName)
-            if savedState ~= nil then
-                defaultValue = savedState
-            end
-        end
-        
-        local elements = getSortedElements(ContentFrame)
-        local new_type = "toggle"
-        local yOffset
-        if #elements == 0 then
-            yOffset = 5
-        else
-            local last = elements[#elements]
-            local last_type = last.Name:match("^Toggle_") and "toggle" or "dropdown"
-            local spacing
-            if last_type == "toggle" and new_type == "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
-            elseif last_type == "dropdown" and new_type == "toggle" then
-                spacing = 5 -- Расстояние между dropdown и toggle
-            else
-                spacing = 2 -- Обычное расстояние для других комбинаций
-            end
-            yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
-        end
-
-        local ToggleContainer = Instance.new("Frame")
-        ToggleContainer.Name = "Toggle_" .. toggleName
-        ToggleContainer.Parent = ContentFrame
-        ToggleContainer.BackgroundTransparency = 1
-        ToggleContainer.Size = UDim2.new(1, 0, 0, 30)
-        ToggleContainer.Position = UDim2.new(0, 0, 0, yOffset)
-        ToggleContainer.ZIndex = 5
-        ToggleContainer.Visible = true
-
-        local ToggleButton = Instance.new("TextButton")
-        ToggleButton.Name = "Button"
-        ToggleButton.Parent = ToggleContainer
-        ToggleButton.BackgroundColor3 = defaultValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(24, 29, 32)
-        ToggleButton.BorderSizePixel = 0
-        ToggleButton.Position = UDim2.new(0.085, 0, 0.1, 0)
-        ToggleButton.Size = UDim2.new(0, 20, 0, 20)
-        ToggleButton.Text = ""
-        ToggleButton.ZIndex = 6
-
-        local UICornerToggle = Instance.new("UICorner")
-        UICornerToggle.CornerRadius = UDim.new(0, 4)
-        UICornerToggle.Parent = ToggleButton
-
-        local Checkmark = Instance.new("TextLabel")
-        Checkmark.Name = "Checkmark"
-        Checkmark.Parent = ToggleButton
-        Checkmark.BackgroundTransparency = 1
-        Checkmark.Size = UDim2.new(1, 0, 1, 0)
-        Checkmark.Text = "✔️"
-        Checkmark.TextColor3 = Color3.fromRGB(24, 29, 32)
-        Checkmark.TextSize = 10
-        Checkmark.ZIndex = 7
-        Checkmark.Visible = defaultValue
-
-        local ToggleText = Instance.new("TextLabel")
-        ToggleText.Name = "Text"
-        ToggleText.Parent = ToggleContainer
-        ToggleText.BackgroundTransparency = 1
-        ToggleText.Position = UDim2.new(0.15, 20, 0.1, 0)
-        ToggleText.Size = UDim2.new(0.85, -20, 0, 20)
-        ToggleText.Font = Enum.Font.SourceSansBold
-        ToggleText.Text = toggleName
-        ToggleText.TextColor3 = Color3.fromRGB(147, 152, 156)
-        ToggleText.TextSize = 17
-        ToggleText.TextXAlignment = Enum.TextXAlignment.Left
-        ToggleText.ZIndex = 6
-
-        local isToggled = defaultValue or false
-        
-        ToggleButton.MouseButton1Click:Connect(function()
-            isToggled = not isToggled
-            
-            if isToggled then
-                ToggleButton.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-                Checkmark.Visible = true
-            else
-                ToggleButton.BackgroundColor3 = Color3.fromRGB(24, 29, 32)
-                Checkmark.Visible = false
-            end
-            
-            if save and self._saveConfig.enabled then
-                saveToggleState(self, toggleName, isToggled)
-            end
-            
-            callback(isToggled)
-        end)
-        
-        table.insert(self._toggleElements, ToggleContainer)
-        
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-        
-        local contentHeight = 0
-        local elements_updated = getSortedElements(ContentFrame)
-        local previous_type = nil
-        for j, element in ipairs(elements_updated) do
-            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
-            local spacing
-            if previous_type == nil then
-                spacing = 5
-            elseif previous_type == "toggle" and elem_type == "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
-            elseif previous_type == "dropdown" and elem_type == "toggle" then
-                spacing = 5 -- Расстояние между dropdown и toggle
-            else
-                spacing = 2 -- Обычное расстояние для других комбинаций
-            end
-            contentHeight = contentHeight + spacing + element.Size.Y.Offset
-            previous_type = elem_type
-        end
-        
-        if windowInstance._sectionStates[section] then
-            local bottom_padding = 15
-            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
-            ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
-        end
-        
-        updateSectionPositions(container, sectionsList)
-        
-        return {
-            Set = function(self, value)
-                isToggled = value
-                
-                if isToggled then
-                    ToggleButton.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-                    Checkmark.Visible = true
-                else
-                    ToggleButton.BackgroundColor3 = Color3.fromRGB(24, 29, 32)
-                    Checkmark.Visible = false
-                end
-                
-                if save and windowInstance._saveConfig.enabled then
-                    saveToggleState(windowInstance, toggleName, isToggled)
-                end
-                
-                callback(isToggled)
-            end,
-            Get = function(self)
-                return isToggled
-            end
-        }
-    end
-
-    -- New dropdown creation function with simplified syntax
-    function windowInstance:CreateDropdown(params)
-    -- Проверка параметров
-    if not params or not params.section then 
-        warn("CreateDropdown: Invalid parameters")
-        return nil 
-    end
-    
-    local section = params.section
-    if not section or not section:IsA("Frame") then
-        warn("CreateDropdown: Invalid section")
-        return nil
-    end
-    
-    local dropdownName = params.name or "Dropdown_"..tostring(math.random(1000,9999))
-    local options = params.options or {}
-    local defaultOption = params.default or nil
-    local multi = params.multi or false
-    local save = params.save or false
-    local callback = params.callback or function() end
-    
-    local ContentFrame = section:FindFirstChild("ContentFrame")
-    if not ContentFrame then
-        warn("CreateDropdown: ContentFrame not found in section")
-        return nil
-    end
-    
-    -- Загрузка сохраненного значения
-    if save and self._saveConfig and self._saveConfig.enabled then
-        local success, savedState = pcall(function()
-            return self:loadDropdownState(dropdownName)
-        end)
-        if success and savedState ~= nil then
-            if multi then
-                defaultOption = savedState
-            else
-                if table.find(options, savedState) then
-                    defaultOption = savedState
-                end
-            end
-        end
-    end
-    
-    -- Функция для безопасного получения элементов
-    local function getSafeSortedElements()
-        local elements = {}
-        for _, child in ipairs(ContentFrame:GetChildren()) do
-            if child:IsA("Frame") and child.Name then
-                if child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or child.Name:match("^Input_") or child.Name:match("^Bind_") then
-                    table.insert(elements, child)
-                end
-            end
-        end
-        table.sort(elements, function(a, b)
-            return (a.Position.Y.Offset or 0) < (b.Position.Y.Offset or 0)
-        end)
-        return elements
-    end
-
-    -- Расчет позиции нового элемента с увеличенным отступом для дропдаунов
-    local elements = getSafeSortedElements()
-    local yOffset = 5 -- Стандартный отступ для первого элемента
-    
-    if #elements > 0 then
-        local lastElement = elements[#elements]
-        if lastElement and lastElement.Position then
-            local lastType = lastElement.Name:match("^Toggle_") and "toggle" or 
-                           lastElement.Name:match("^Dropdown_") and "dropdown" or 
-                           lastElement.Name:match("^Input_") and "input" or 
-                           lastElement.Name:match("^Bind_") and "bind" or 
-                           "slider"
-            
-            -- Увеличенные отступы
-            local spacing = 5 -- Базовый отступ
-            if lastType == "toggle" and "dropdown" then
-                spacing = 3
-            elseif lastType == "dropdown" and "dropdown" then
-                spacing = 5 -- Увеличенный отступ между дропдаунами
-            elseif lastType == "dropdown" and "toggle" then
-                spacing = 5
-            end
-            
-            yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
-        end
-    end
-
-    -- Создание контейнера дропдауна
-    local DropdownContainer = Instance.new("Frame")
-    DropdownContainer.Name = "Dropdown_"..dropdownName
-    DropdownContainer.Parent = ContentFrame
-    DropdownContainer.BackgroundTransparency = 1
-    DropdownContainer.Size = UDim2.new(1, 0, 0, 50)
-    DropdownContainer.Position = UDim2.new(0, 0, 0, yOffset)
-    DropdownContainer.ZIndex = 5
-    DropdownContainer.Visible = true
-
-    -- Label дропдауна
-    local DropdownLabel = Instance.new("TextLabel")
-    DropdownLabel.Name = "Label"
-    DropdownLabel.Parent = DropdownContainer
-    DropdownLabel.BackgroundTransparency = 1
-    DropdownLabel.Position = UDim2.new(0.085, 0, 0, 0)
-    DropdownLabel.Size = UDim2.new(0, 165, 0, 20)
-    DropdownLabel.Font = Enum.Font.SourceSansBold
-    DropdownLabel.Text = dropdownName
-    DropdownLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-    DropdownLabel.TextSize = 15
-    DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
-    DropdownLabel.ZIndex = 6
-    
-    -- Кнопка дропдауна
-    local DropdownButton = Instance.new("TextButton")
-    DropdownButton.Name = "Button"
-    DropdownButton.Parent = DropdownContainer
-    DropdownButton.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-    DropdownButton.BorderSizePixel = 0
-    DropdownButton.Position = UDim2.new(0.085, 0, 0, 20)
-    DropdownButton.Size = UDim2.new(0, 165, 0, 30)
-    DropdownButton.Font = Enum.Font.SourceSans
-    DropdownButton.Text = ""
-    DropdownButton.TextColor3 = Color3.fromRGB(147, 152, 156)
-    DropdownButton.TextSize = 14
-    DropdownButton.ZIndex = 6
-    
-    local UICornerDropdown = Instance.new("UICorner")
-    UICornerDropdown.CornerRadius = UDim.new(0, 4)
-    UICornerDropdown.Parent = DropdownButton
-    
-    -- Текст выбранного значения
-    local SelectedText = Instance.new("TextLabel")
-    SelectedText.Name = "SelectedText"
-    SelectedText.Parent = DropdownButton
-    SelectedText.BackgroundTransparency = 1
-    SelectedText.Position = UDim2.new(0.05, 0, 0, 0)
-    SelectedText.Size = UDim2.new(0.9, 0, 1, 0)
-    SelectedText.Font = Enum.Font.SourceSans
-    SelectedText.Text = ""
-    SelectedText.TextColor3 = Color3.fromRGB(147, 152, 156)
-    SelectedText.TextSize = 14
-    SelectedText.TextXAlignment = Enum.TextXAlignment.Left
-    SelectedText.ZIndex = 7
-    
-    -- Список дропдауна
-    local DropdownList = Instance.new("Frame")
-    DropdownList.Name = "DropdownList_"..dropdownName
-    DropdownList.Parent = self._elementContainer.Parent
-    DropdownList.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-    DropdownList.BorderSizePixel = 0
-    DropdownList.Size = UDim2.new(0, 165, 0, 0)
-    DropdownList.Visible = false
-    DropdownList.ZIndex = 1000
-    DropdownList.ClipsDescendants = true
-    
-    local UICornerList = Instance.new("UICorner")
-    UICornerList.CornerRadius = UDim.new(0, 4)
-    UICornerList.Parent = DropdownList
-    
-    local ScrollingFrame = Instance.new("ScrollingFrame")
-    ScrollingFrame.Parent = DropdownList
-    ScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
-    ScrollingFrame.BackgroundTransparency = 1
-    ScrollingFrame.ScrollBarThickness = 5
-    ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
-    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.Parent = ScrollingFrame
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    
-    -- Логика выбора значений
-    local selectedOptions = {}
-    if multi then
-        if type(defaultOption) == "table" then
-            for _, option in ipairs(defaultOption) do
-                if table.find(options, option) then
-                    selectedOptions[option] = true
-                end
-            end
-        end
-    else
-        if table.find(options, defaultOption) then
-            selectedOptions[defaultOption] = true
-        end
-    end
-    
-    local function updateSelectedText()
-        if multi then
-            local count = 0
-            for _ in pairs(selectedOptions) do
-                count = count + 1
-            end
-            
-            if count == 0 then
-                SelectedText.Text = "None selected"
-            elseif count == 1 then
-                for option in pairs(selectedOptions) do
-                    SelectedText.Text = option
-                    break
-                end
-            else
-                SelectedText.Text = count .. " selected"
-            end
-        else
-            for option in pairs(selectedOptions) do
-                SelectedText.Text = option
-                return
-            end
-            SelectedText.Text = "Select option"
-        end
-    end
-    
-    local function createOptionButtons()
-        for _, child in ipairs(ScrollingFrame:GetChildren()) do
-            if child:IsA("TextButton") then
-                child:Destroy()
-            end
-        end
-        
-        for _, option in ipairs(options) do
-            local OptionButton = Instance.new("TextButton")
-            OptionButton.Name = "Option_"..option
-            OptionButton.Parent = ScrollingFrame
-            OptionButton.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-            OptionButton.BorderSizePixel = 0
-            OptionButton.Size = UDim2.new(1, 0, 0, 20)
-            OptionButton.Font = Enum.Font.SourceSans
-            OptionButton.Text = option
-            OptionButton.TextColor3 = selectedOptions[option] and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
-            OptionButton.TextSize = 14
-            OptionButton.ZIndex = 1001
-            
-            OptionButton.MouseButton1Click:Connect(function()
-                if multi then
-                    if selectedOptions[option] then
-                        selectedOptions[option] = nil
-                    else
-                        selectedOptions[option] = true
-                    end
-                    OptionButton.TextColor3 = selectedOptions[option] and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
-                else
-                    for opt in pairs(selectedOptions) do
-                        selectedOptions[opt] = nil
-                    end
-                    
-                    selectedOptions[option] = true
-                    
-                    for _, btn in ipairs(ScrollingFrame:GetChildren()) do
-                        if btn:IsA("TextButton") then
-                            btn.TextColor3 = btn == OptionButton and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
-                        end
-                    end
-                    
-                    DropdownList.Visible = false
-                    DropdownList.Size = UDim2.new(0, 165, 0, 0)
-                    self._openDropdowns[DropdownContainer] = nil
-                end
-                
-                updateSelectedText()
-                
-                if save and self._saveConfig.enabled then
-                    if multi then
-                        local selected = {}
-                        for opt in pairs(selectedOptions) do
-                            table.insert(selected, opt)
-                        end
-                        self:saveDropdownState(dropdownName, selected)
-                    else
-                        for opt in pairs(selectedOptions) do
-                            self:saveDropdownState(dropdownName, opt)
-                            break
-                        end
-                    end
-                end
-                
-                if callback then
-                    pcall(callback, multi and (function()
-                        local selected = {}
-                        for opt in pairs(selectedOptions) do
-                            table.insert(selected, opt)
-                        end
-                        return selected
-                    end)() or next(selectedOptions))
-                end
-            end)
-        end
-        
-        local optionCount = #options
-        local maxHeight = math.min(4, optionCount) * 20
-        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, optionCount * 20)
-    end
-    
-    createOptionButtons()
-    updateSelectedText()
-    
-    -- Управление открытием/закрытием дропдауна
-    local function toggleDropdown()
-        local isDropdownOpen = DropdownList.Visible
-        
-        if isDropdownOpen then
-            DropdownList.Visible = false
-            DropdownList.Size = UDim2.new(0, 165, 0, 0)
-            self._openDropdowns[DropdownContainer] = nil
-        else
-            -- Закрываем другие открытые дропдауны
-            for container, list in pairs(self._openDropdowns) do
-                list.Visible = false
-                list.Size = UDim2.new(0, 165, 0, 0)
-                self._openDropdowns[container] = nil
-            end
-            
-            -- Открываем текущий
-            local buttonPos = DropdownButton.AbsolutePosition
-            local buttonSize = DropdownButton.AbsoluteSize
-            local screenSize = workspace.CurrentCamera.ViewportSize
-            
-            local yPos = buttonPos.Y + buttonSize.Y
-            local maxHeight = math.min(4, #options) * 20
-            
-            if yPos + maxHeight > screenSize.Y then
-                yPos = buttonPos.Y - maxHeight
-            end
-            
-            DropdownList.Position = UDim2.new(0, buttonPos.X, 0, yPos)
-            DropdownList.Size = UDim2.new(0, 165, 0, maxHeight)
-            DropdownList.Visible = true
-            self._openDropdowns[DropdownContainer] = DropdownList
-            
-            if not self._heartbeatConnection then
-                self._heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function()
-                    for container, list in pairs(self._openDropdowns) do
-                        local button = container:FindFirstChild("Button")
-                        if button then
-                            local buttonPos = button.AbsolutePosition
-                            local buttonSize = button.AbsoluteSize
-                            local screenSize = workspace.CurrentCamera.ViewportSize
-                            
-                            local yPos = buttonPos.Y + buttonSize.Y
-                            local maxHeight = math.min(4, #container.options or 4) * 20
-                            
-                            if yPos + maxHeight > screenSize.Y then
-                                yPos = buttonPos.Y - maxHeight
-                            end
-                            
-                            list.Position = UDim2.new(0, buttonPos.X, 0, yPos)
-                        end
-                    end
-                end)
-            end
-        end
-    end
-    
-    DropdownButton.MouseButton1Click:Connect(toggleDropdown)
-    
-    -- Закрытие при клике вне дропдауна
-    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
-        
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and DropdownList.Visible then
-            local mousePos = game:GetService("UserInputService"):GetMouseLocation()
-            local absPos = DropdownList.AbsolutePosition
-            local absSize = DropdownList.AbsoluteSize
-            
-            if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
-                   mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y) then
-                toggleDropdown()
-            end
-        end
-    end)
-    
-    table.insert(self._dropdownElements, DropdownContainer)
-    
-    -- Обновление размеров секции
-    local function updateSectionSize()
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-        
-        local contentHeight = 0
-        local elements = getSafeSortedElements()
-        local previousType = nil
-        
-        for _, element in ipairs(elements) do
-            local elemType = element.Name:match("^Toggle_") and "toggle" or 
-                           element.Name:match("^Dropdown_") and "dropdown" or 
-                           element.Name:match("^Input_") and "input" or 
-                           "bind"
-            
-            local spacing = 5 -- Базовый отступ
-            if previousType == "toggle" and elemType == "dropdown" then
-                spacing = 3
-            elseif previousType == "dropdown" and elemType == "toggle" then
-                spacing = 5
-            elseif previousType == "dropdown" and elemType == "dropdown" then
-                spacing = 5 -- Увеличенный отступ между дропдаунами
-            end
-            
-            contentHeight = contentHeight + spacing + element.Size.Y.Offset
-            previousType = elemType
-        end
-        
-        if self._sectionStates[section] then
-            ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
-            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + 15)
-        end
-        
-        updateSectionPositions(container, sectionsList)
-    end
-    
-    task.defer(updateSectionSize)
-    
-    return {
-        Set = function(_, value)
-            if multi then
-                for opt in pairs(selectedOptions) do
-                    selectedOptions[opt] = nil
-                end
-                
-                if type(value) == "table" then
-                    for _, option in ipairs(value) do
-                        if table.find(options, option) then
-                            selectedOptions[option] = true
-                        end
-                    end
-                end
-            else
-                for opt in pairs(selectedOptions) do
-                    selectedOptions[opt] = nil
-                end
-                
-                if table.find(options, value) then
-                    selectedOptions[value] = true
-                end
-            end
-            
-            updateSelectedText()
-            createOptionButtons()
-            
-            if save and self._saveConfig.enabled then
-                if multi then
-                    local selected = {}
-                    for opt in pairs(selectedOptions) do
-                        table.insert(selected, opt)
-                    end
-                    self:saveDropdownState(dropdownName, selected)
-                else
-                    for opt in pairs(selectedOptions) do
-                        self:saveDropdownState(dropdownName, opt)
-                        break
-                    end
-                end
-            end
-            
-            if callback then
-                pcall(callback, multi and (function()
-                    local selected = {}
-                    for opt in pairs(selectedOptions) do
-                        table.insert(selected, opt)
-                    end
-                    return selected
-                end)() or next(selectedOptions))
-            end
-        end,
-        Get = function()
-            if multi then
-                local selected = {}
-                for opt in pairs(selectedOptions) do
-                    table.insert(selected, opt)
-                end
-                return selected
-            else
-                for opt in pairs(selectedOptions) do
-                    return opt
-                end
-                return nil
-            end
-        end,
-        UpdateOptions = function(_, newOptions)
-            options = newOptions
-            
-            for opt in pairs(selectedOptions) do
-                if not table.find(options, opt) then
-                    selectedOptions[opt] = nil
-                end
-            end
-            
-            updateSelectedText()
-            createOptionButtons()
-        end
-    }
-end
-
-    -- New slider creation function with simplified syntax
-    function windowInstance:CreateSlider(params)
-        if not params.section then return nil end
-        
-        local section = params.section
-        local sliderName = params.name or ""
-        local minValue = params.min or 0
-        local maxValue = params.max or 100
-        local defaultValue = params.default or minValue
-        local save = params.save or false
-        local callback = params.callback or function() end
-        
-        local ContentFrame = section:FindFirstChild("ContentFrame")
-        if not ContentFrame then return nil end
-        
-        if save and self._saveConfig.enabled then
-            local savedState = loadSliderState(self, sliderName)
-            if savedState ~= nil then
-                defaultValue = savedState
-            end
-        end
-        
-        local elements = getSortedElements(ContentFrame)
-        local yOffset
-        if #elements == 0 then
-            yOffset = 5
-        else
-            local last = elements[#elements]
-            local last_type = last.Name:match("^Toggle_") and "toggle" or "dropdown"
-            local spacing
-            if last_type == "toggle" and "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
-            elseif last_type == "dropdown" and "toggle" then
-                spacing = 5 -- Расстояние между dropdown и toggle
-            else
-                spacing = 2 -- Обычное расстояние для других комбинаций
-            end
-            yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing + 3 -- +3px дополнительно
-        end
-
-        local SliderContainer = Instance.new("Frame")
-        SliderContainer.Name = "Slider_" .. sliderName
-        SliderContainer.Parent = ContentFrame
-        SliderContainer.BackgroundTransparency = 1
-        SliderContainer.Size = UDim2.new(1, 0, 0, 30)
-        SliderContainer.Position = UDim2.new(0, 0, 0, yOffset)
-        SliderContainer.ZIndex = 5
-        SliderContainer.Visible = true
-
-        local SliderText = Instance.new("TextLabel")
-        SliderText.Name = "Text"
-        SliderText.Parent = SliderContainer
-        SliderText.BackgroundTransparency = 1
-        SliderText.Position = UDim2.new(0.085, 0, 0, -2) -- Поднят на 2px выше
-        SliderText.Size = UDim2.new(0, 165, 0, 22) -- Увеличена высота на 2px
-        SliderText.Font = Enum.Font.SourceSansBold
-        SliderText.Text = sliderName
-        SliderText.TextColor3 = Color3.fromRGB(147, 152, 156)
-        SliderText.TextSize = 15
-        SliderText.TextXAlignment = Enum.TextXAlignment.Left
-        SliderText.ZIndex = 6
-
-        local SliderValue = Instance.new("TextLabel")
-        SliderValue.Name = "Value"
-        SliderValue.Parent = SliderContainer
-        SliderValue.BackgroundTransparency = 1
-        SliderValue.Position = UDim2.new(0.085, 0, 0, -2) -- Поднят на 2px выше
-        SliderValue.Size = UDim2.new(0, 165, 0, 22) -- Увеличена высота на 2px
-        SliderValue.Font = Enum.Font.SourceSansBold
-        SliderValue.Text = tostring(defaultValue)
-        SliderValue.TextColor3 = Color3.fromRGB(147, 152, 156)
-        SliderValue.TextSize = 15
-        SliderValue.TextXAlignment = Enum.TextXAlignment.Right
-        SliderValue.ZIndex = 6
-
-        local SliderTrack = Instance.new("Frame")
-        SliderTrack.Name = "Track"
-        SliderTrack.Parent = SliderContainer
-        SliderTrack.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-        SliderTrack.BorderSizePixel = 0
-        SliderTrack.Position = UDim2.new(0.085, 0, 0, 23) -- Adjusted for 30px height
-        SliderTrack.Size = UDim2.new(0, 165, 0, 6)
-        SliderTrack.ZIndex = 6
-
-        local UICornerTrack = Instance.new("UICorner")
-        UICornerTrack.CornerRadius = UDim.new(0, 4)
-        UICornerTrack.Parent = SliderTrack
-
-        local SliderFill = Instance.new("Frame")
-        SliderFill.Name = "Fill"
-        SliderFill.Parent = SliderTrack
-        SliderFill.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-        SliderFill.BorderSizePixel = 0
-        SliderFill.Size = UDim2.new(0, 0, 1, 0)
-        SliderFill.ZIndex = 7
-
-        local UICornerFill = Instance.new("UICorner")
-        UICornerFill.Parent = SliderFill
-
-        local SliderThumb = Instance.new("TextButton")
-        SliderThumb.Name = "Thumb"
-        SliderThumb.Parent = SliderTrack
-        SliderThumb.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-        SliderThumb.BorderSizePixel = 0
-        SliderThumb.Size = UDim2.new(0, 16, 0, 16)
-        SliderThumb.Position = UDim2.new(0, -8, 0.5, -8)
-        SliderThumb.Text = ""
-        SliderThumb.ZIndex = 8
-        SliderThumb.AutoButtonColor = false
-
-        local UICornerThumb = Instance.new("UICorner")
-        UICornerThumb.CornerRadius = UDim.new(1, 0)
-        UICornerThumb.Parent = SliderThumb
-
-        local ThumbInner = Instance.new("Frame")
-        ThumbInner.Name = "Inner"
-        ThumbInner.Parent = SliderThumb
-        ThumbInner.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
-        ThumbInner.BorderSizePixel = 0
-        ThumbInner.Position = UDim2.new(0.125, 0, 0.125, 0)
-        ThumbInner.Size = UDim2.new(0.75, 0, 0.75, 0)
-        ThumbInner.ZIndex = 9
-
-        local UICornerInner = Instance.new("UICorner")
-        UICornerInner.CornerRadius = UDim.new(1, 0)
-        UICornerInner.Parent = ThumbInner
-
-        local currentValue = defaultValue or false
-        
-        local function updateSlider(value)
-            currentValue = math.clamp(value, minValue, maxValue)
-            SliderValue.Text = tostring(currentValue)
-            local fillSize = (currentValue - minValue) / (maxValue - minValue)
-            SliderFill.Size = UDim2.new(fillSize, 0, 1, 0)
-            SliderThumb.Position = UDim2.new(fillSize, -8, 0.5, -8)
-            
-            if save and self._saveConfig.enabled then
-                saveSliderState(self, sliderName, currentValue)
-            end
-            
-            callback(currentValue)
-        end
-        
-        updateSlider(defaultValue)
-        
-        local dragging = false
-        
-        SliderThumb.MouseButton1Down:Connect(function()
-            dragging = true
-        end)
-        
-        SliderTrack.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = true
-            end
-        end)
-        
-        UserInputService.InputChanged:Connect(function(input)
-            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                local relativeX = math.clamp(input.Position.X - SliderTrack.AbsolutePosition.X, 0, SliderTrack.AbsoluteSize.X)
-                local value = minValue + (maxValue - minValue) * (relativeX / SliderTrack.AbsoluteSize.X)
-                updateSlider(value)
-            end
-        end)
-        
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = false
-            end
-        end)
-        
-        table.insert(self._sliderElements, SliderContainer)
-        
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-        
-        local contentHeight = 0
-        local elements_updated = getSortedElements(ContentFrame)
-        local previous_type = nil
-        for j, element in ipairs(elements_updated) do
-            local elem_type = element.Name:match("^Toggle_") and "toggle" or "dropdown"
-            local spacing
-            if previous_type == nil then
-                spacing = 5
-            elseif previous_type == "toggle" and elem_type == "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
-            elseif previous_type == "dropdown" and elem_type == "toggle" then
-                spacing = 5 -- Расстояние между dropdown и toggle
-            else
-                spacing = 2 -- Обычное расстояние для других комбинаций
-            end
-            contentHeight = contentHeight + spacing + element.Size.Y.Offset
-            previous_type = elem_type
-        end
-        
-        if windowInstance._sectionStates[section] then
-            local bottom_padding = 15
-            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
-            ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
-        end
-        
-        updateSectionPositions(container, sectionsList)
-        
-        return {
-            Set = function(self, value)
-                updateSlider(value)
-            end,
-            Get = function(self)
-                return currentValue
-            end
-        }
-    end
-
-    function windowInstance:CreateInput(params)
-        if not params.section then return nil end
-        
-        local section = params.section
-        local inputName = params.name or ""
-        local defaultValue = params.default or ""
-        local save = params.save or false
-        local callback = params.callback or function() end
-        
-        local ContentFrame = section:FindFirstChild("ContentFrame")
-        if not ContentFrame then return nil end
-        
-        if save and self._saveConfig.enabled then
-            local savedState = loadInputState(self, inputName)
-            if savedState ~= nil then
-                defaultValue = savedState
-            end
-        end
-        
-        local elements = getSortedElements(ContentFrame)
-        local yOffset
-        if #elements == 0 then
-            yOffset = 5
-        else
-            local last = elements[#elements]
-            local last_type = last.Name:match("^Toggle_") and "toggle" or "dropdown"
-            local spacing
-            if last_type == "toggle" and "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
-            elseif last_type == "dropdown" and "toggle" then
-                spacing = 5 -- Расстояние между dropdown и toggle
-            else
-                spacing = 2 -- Обычное расстояние для других комбинаций
-            end
-            yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
-        end
-
-        local InputContainer = Instance.new("Frame")
-        InputContainer.Name = "Input_" .. inputName
-        InputContainer.Parent = ContentFrame
-        InputContainer.BackgroundTransparency = 1
-        InputContainer.Size = UDim2.new(1, 0, 0, 50)
-        InputContainer.Position = UDim2.new(0, 0, 0, yOffset)
-        InputContainer.ZIndex = 5
-        InputContainer.Visible = true
-
-        local InputText = Instance.new("TextLabel")
-        InputText.Name = "Text"
-        InputText.Parent = InputContainer
-        InputText.BackgroundTransparency = 1
-        InputText.Position = UDim2.new(0.085, 60, 0, 15) -- 50 (ширина) + 10 (отступ)
-        InputText.Size = UDim2.new(0, 100, 0, 30)
-        InputText.Font = Enum.Font.SourceSansBold
-        InputText.Text = inputName
-        InputText.TextColor3 = Color3.fromRGB(147, 152, 156)
-        InputText.TextSize = 15
-        InputText.TextXAlignment = Enum.TextXAlignment.Left
-        InputText.ZIndex = 6
-
-        local InputTopLabel = Instance.new("TextLabel")
-        InputTopLabel.Name = "InputTopLabel"
-        InputTopLabel.Parent = InputContainer
-        InputTopLabel.BackgroundTransparency = 1
-        InputTopLabel.Position = UDim2.new(0.085, 0, 0, 0)
-        InputTopLabel.Size = UDim2.new(0, 50, 0, 15)
-        InputTopLabel.Font = Enum.Font.SourceSans
-        InputTopLabel.Text = "Input"
-        InputTopLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        InputTopLabel.TextSize = 12
-        InputTopLabel.TextXAlignment = Enum.TextXAlignment.Center
-        InputTopLabel.ZIndex = 6
-
-        local InputFrame = Instance.new("TextButton")
-        InputFrame.Name = "InputFrame"
-        InputFrame.Parent = InputContainer
-        InputFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-        InputFrame.BorderSizePixel = 0
-        InputFrame.Position = UDim2.new(0.085, 0, 0, 15)
-        InputFrame.Size = UDim2.new(0, 50, 0, 30)
-        InputFrame.AutoButtonColor = false
-        InputFrame.Text = ""
-        InputFrame.ZIndex = 6
-
-        local UICornerInput = Instance.new("UICorner")
-        UICornerInput.CornerRadius = UDim.new(0, 4)
-        UICornerInput.Parent = InputFrame
-
-        local InputValue = Instance.new("TextLabel")
-        InputValue.Name = "Value"
-        InputValue.Parent = InputFrame
-        InputValue.BackgroundTransparency = 1
-        InputValue.Size = UDim2.new(1, 0, 1, 0)
-        InputValue.Font = Enum.Font.SourceSans
-        InputValue.Text = defaultValue
-        InputValue.TextColor3 = Color3.fromRGB(147, 152, 156)
-        InputValue.TextSize = 14
-        InputValue.TextXAlignment = Enum.TextXAlignment.Center
-        InputValue.ZIndex = 7
-        InputValue.ClipsDescendants = true
-
-        local currentValue = defaultValue or ""
-        
-        local function updateInput(value)
-            currentValue = value
-            InputValue.Text = currentValue
-            
-            if save and self._saveConfig.enabled then
-                saveInputState(self, inputName, currentValue)
-            end
-            
-            callback(currentValue)
-        end
-        
-        InputFrame.MouseButton1Click:Connect(function()
-            local inputBox = Instance.new("TextBox")
-            inputBox.Name = "InputBox"
-            inputBox.Parent = InputFrame
-            inputBox.BackgroundTransparency = 1
-            inputBox.Size = UDim2.new(1, 0, 1, 0)
-            inputBox.Font = Enum.Font.SourceSans
-            inputBox.Text = currentValue
-            inputBox.TextColor3 = Color3.fromRGB(147, 152, 156)
-            inputBox.TextSize = 14
-            inputBox.TextXAlignment = Enum.TextXAlignment.Center
-            inputBox.ZIndex = 8
-            inputBox.ClearTextOnFocus = false
-            inputBox.PlaceholderText = "Type..."
-            inputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
-            
-            InputValue.Visible = false
-            
-            inputBox.FocusLost:Connect(function(enterPressed)
-                currentValue = inputBox.Text
-                inputBox:Destroy()
-                InputValue.Visible = true
-                updateInput(currentValue)
-            end)
-            
-            inputBox:CaptureFocus()
-        end)
-        
-        table.insert(self._inputElements, InputContainer)
-        
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-        
-        local contentHeight = 0
-        local elements_updated = getSortedElements(ContentFrame)
-        local previous_type = nil
-        for j, element in ipairs(elements_updated) do
-            local elem_type = element.Name:match("^Toggle_") and "toggle" or "dropdown"
-            local spacing
-            if previous_type == nil then
-                spacing = 5
-            elseif previous_type == "toggle" and elem_type == "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
-            elseif previous_type == "dropdown" and elem_type == "toggle" then
-                spacing = 5 -- Расстояние между dropdown и toggle
-            else
-                spacing = 2 -- Обычное расстояние для других комбинаций
-            end
-            contentHeight = contentHeight + spacing + element.Size.Y.Offset
-            previous_type = elem_type
-        end
-        
-        if windowInstance._sectionStates[section] then
-            local bottom_padding = 15
-            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
-            ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
-        end
-        
-        updateSectionPositions(container, sectionsList)
-        
-        return {
-            Set = function(self, value)
-                updateInput(value)
-            end,
-            Get = function(self)
-                return currentValue
-            end
-        }
-    end
-
-    function windowInstance:CreateBind(params)
-        if not params.section then return nil end
-        
-        local section = params.section
-        local bindName = params.name or ""
-        local defaultValue = params.default or ""
-        local save = params.save or false
-        local callback = params.callback or function() end
-        
-        local ContentFrame = section:FindFirstChild("ContentFrame")
-        if not ContentFrame then return nil end
-        
-        if save and self._saveConfig.enabled then
-            local savedState = loadBindState(self, bindName)
-            if savedState ~= nil then
-                defaultValue = savedState
-            end
-        end
-        
-        local elements = getSortedElements(ContentFrame)
-        local yOffset
-        if #elements == 0 then
-            yOffset = 5
-        else
-            local last = elements[#elements]
-            local last_type = last.Name:match("^Toggle_") and "toggle" or "dropdown"
-            local spacing
-            if last_type == "toggle" and "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
-            elseif last_type == "dropdown" and "toggle" then
-                spacing = 5 -- Расстояние между dropdown и toggle
-            else
-                spacing = 2 -- Обычное расстояние для других комбинаций
-            end
-            yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
-        end
-
-        local BindContainer = Instance.new("Frame")
-        BindContainer.Name = "Bind_" .. bindName
-        BindContainer.Parent = ContentFrame
-        BindContainer.BackgroundTransparency = 1
-        BindContainer.Size = UDim2.new(1, 0, 0, 50)
-        BindContainer.Position = UDim2.new(0, 0, 0, yOffset)
-        BindContainer.ZIndex = 5
-        BindContainer.Visible = true
-
-        local BindText = Instance.new("TextLabel")
-        BindText.Name = "Text"
-        BindText.Parent = BindContainer
-        BindText.BackgroundTransparency = 1
-        BindText.Position = UDim2.new(0.085, 70, 0, 15) -- 60 (ширина) + 10 (отступ)
-        BindText.Size = UDim2.new(0, 100, 0, 30)
-        BindText.Font = Enum.Font.SourceSansBold
-        BindText.Text = bindName
-        BindText.TextColor3 = Color3.fromRGB(147, 152, 156)
-        BindText.TextSize = 15
-        BindText.TextXAlignment = Enum.TextXAlignment.Left
-        BindText.ZIndex = 6
-
-        local BindTopLabel = Instance.new("TextLabel")
-        BindTopLabel.Name = "BindTopLabel"
-        BindTopLabel.Parent = BindContainer
-        BindTopLabel.BackgroundTransparency = 1
-        BindTopLabel.Position = UDim2.new(0.085, 0, 0, 0)
-        BindTopLabel.Size = UDim2.new(0, 60, 0, 15)
-        BindTopLabel.Font = Enum.Font.SourceSans
-        BindTopLabel.Text = "Bind"
-        BindTopLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        BindTopLabel.TextSize = 12
-        BindTopLabel.TextXAlignment = Enum.TextXAlignment.Center
-        BindTopLabel.ZIndex = 6
-
-        local BindFrame = Instance.new("TextButton")
-        BindFrame.Name = "BindFrame"
-        BindFrame.Parent = BindContainer
-        BindFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-        BindFrame.BorderSizePixel = 0
-        BindFrame.Position = UDim2.new(0.085, 0, 0, 15)
-        BindFrame.Size = UDim2.new(0, 60, 0, 30)
-        BindFrame.AutoButtonColor = false
-        BindFrame.Text = ""
-        BindFrame.ZIndex = 6
-
-        local UICornerBind = Instance.new("UICorner")
-        UICornerBind.CornerRadius = UDim.new(0, 4)
-        UICornerBind.Parent = BindFrame
-
-        local BindValue = Instance.new("TextLabel")
-        BindValue.Name = "Value"
-        BindValue.Parent = BindFrame
-        BindValue.BackgroundTransparency = 1
-        BindValue.Size = UDim2.new(1, 0, 1, 0)
-        BindValue.Font = Enum.Font.SourceSans
-        BindValue.Text = defaultValue
-        BindValue.TextColor3 = Color3.fromRGB(147, 152, 156)
-        BindValue.TextSize = 14
-        BindValue.TextXAlignment = Enum.TextXAlignment.Center
-        BindValue.ZIndex = 7
-        BindValue.ClipsDescendants = true
-
-        local currentValue = defaultValue or ""
-        
-        local function updateBind(value)
-            currentValue = value
-            BindValue.Text = currentValue
-            
-            if save and self._saveConfig.enabled then
-                saveBindState(self, bindName, currentValue)
-            end
-            
-            callback(currentValue)
-        end
-        
-        BindFrame.MouseButton1Click:Connect(function()
-            BindValue.Text = "..."
-            local input
-            local connection = UserInputService.InputBegan:Connect(function(inp)
-                if inp.UserInputType == Enum.UserInputType.Keyboard then
-                    input = inp.KeyCode
-                end
-                connection:Disconnect()
-            end)
-            repeat wait() until input
-            updateBind(input.Name)
-        end)
-        
-        table.insert(self._bindElements, BindContainer)
-        
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-        
-        local contentHeight = 0
-        local elements_updated = getSortedElements(ContentFrame)
-        local previous_type = nil
-        for j, element in ipairs(elements_updated) do
-            local elem_type = element.Name:match("^Toggle_") and "toggle" or "dropdown"
-            local spacing
-            if previous_type == nil then
-                spacing = 5
-            elseif previous_type == "toggle" and elem_type == "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
-            elseif previous_type == "dropdown" and elem_type == "toggle" then
-                spacing = 5 -- Расстояние между dropdown и toggle
-            else
-                spacing = 2 -- Обычное расстояние для других комбинаций
-            end
-            contentHeight = contentHeight + spacing + element.Size.Y.Offset
-            previous_type = elem_type
-        end
-        
-        if windowInstance._sectionStates[section] then
-            local bottom_padding = 15
-            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
-            ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
-        end
-        
-        updateSectionPositions(container, sectionsList)
-        
-        return {
-            Set = function(self, value)
-                updateBind(value)
-            end,
-            Get = function(self)
-                return currentValue
-            end
-        }
     end
 
     return windowInstance
