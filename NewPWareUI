@@ -188,12 +188,11 @@ local function fadeIn(element)
         local tween = TweenService:Create(element, tweenInfo, {TextTransparency = 0})
         tween:Play()
     elseif element:IsA("ImageLabel") or element:IsA("ImageButton") then
-        -- ДОБАВЬТЕ эту проверку для BackgroundTransparency тоже
         if element.BackgroundTransparency < 1 then
             local tween = TweenService:Create(element, tweenInfo, {BackgroundTransparency = 0})
             tween:Play()
         end
-        if element.Image ~= "" then  -- Только если есть изображение
+        if element.Image ~= "" then
             local tween = TweenService:Create(element, tweenInfo, {ImageTransparency = 0})
             tween:Play()
         end
@@ -220,6 +219,7 @@ end
         _dropdownElements = {},
         _inputElements = {},
         _bindElements = {},
+        _buttonElements = {},
         _sliderElements = {},
         _colorSelectorElements = {},
         _saveConfig = saveConfig or { enabled = false, fileName = "PizdecWareSettings" },
@@ -234,13 +234,12 @@ end
     }, PizdecWare)
 
     -- Load saved toggles and dropdowns
-    -- Load saved toggles and dropdowns
 if windowInstance._saveConfig.enabled and HttpService and isFileAvailable and writeFileAvailable then
     local success, savedData = pcall(function()
         if not isfile(windowInstance._saveConfig.fileName..".json") then
             return {}
         end
-        local data = HttpService:JSONDecode(readfile(windowInstance._saveConfig.fileName..".json")) or {}
+        local data = HttpService:JSONEncode(readfile(windowInstance._saveConfig.fileName..".json")) or {}
         return data
     end)
 
@@ -303,6 +302,7 @@ end
         return window._savedDropdowns[dropdownName]
     end
 
+    -- Function to save input state
     -- Function to save input state
     local function saveInputState(window, inputName, value)
         if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
@@ -375,18 +375,18 @@ end
         return window._savedSliders[sliderName]
     end
 
-    local function getSortedElements(contentFrame)
-        local elems = {}
-        for _, child in ipairs(contentFrame:GetChildren()) do
-            if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_")) then
-                table.insert(elems, child)
-            end
+local function getSortedElements(contentFrame)
+    local elems = {}
+    for _, child in ipairs(contentFrame:GetChildren()) do
+        if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_") or child.Name:match("^Button_")) then
+            table.insert(elems, child)
         end
-        table.sort(elems, function(a, b)
-            return a.Position.Y.Offset < b.Position.Y.Offset
-        end)
-        return elems
     end
+    table.sort(elems, function(a, b)
+        return a.Position.Y.Offset < b.Position.Y.Offset
+    end)
+    return elems
+end
 
     local function get_bottom_padding(contentFrame)
         local elems = getSortedElements(contentFrame)
@@ -416,16 +416,16 @@ end
                         local elements = getSortedElements(contentFrame)
                         local previous_type = nil
                         for j, element in ipairs(elements) do
-                            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
+                            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or element.Name:match("^Slider_") and "slider" or element.Name:match("^Button_") and "button"
                             local spacing
                             if previous_type == nil then
                                 spacing = 5
                             elseif previous_type == "toggle" and elem_type == "dropdown" then
-                                spacing = 3 -- Расстояние между toggle и dropdown
+                                spacing = 3
                             elseif previous_type == "dropdown" and elem_type == "toggle" then
-                                spacing = 5 -- Расстояние между dropdown и toggle
+                                spacing = 5
                             else
-                                spacing = 2 -- Обычное расстояние для других комбинаций
+                                spacing = 2
                             end
                             contentHeight = contentHeight + spacing + element.Size.Y.Offset
                             previous_type = elem_type
@@ -547,7 +547,7 @@ function windowInstance:CreateTab(visualName, imageId)
     tab.TextColor3 = Color3.fromRGB(147, 152, 156)
     tab.TextSize = 20
     tab.TextXAlignment = Enum.TextXAlignment.Left
-    tab.ZIndex = 5  -- Увеличено для consistency
+    tab.ZIndex = 5
     tab.TextTransparency = 1
     fadeIn(tab)
 
@@ -556,34 +556,29 @@ function windowInstance:CreateTab(visualName, imageId)
     imageContainer.Name = "ImageContainer"
     imageContainer.Parent = tab
     imageContainer.BackgroundTransparency = 1
-    imageContainer.Position = UDim2.new(-0.3, 0, 0, 0)  -- Фиксированная позиция
+    imageContainer.Position = UDim2.new(-0.3, 0, 0, 0)
     imageContainer.Size = UDim2.new(0, 26, 0, 26)
-    imageContainer.ZIndex = 5  -- Такой же как у таба
+    imageContainer.ZIndex = 5
 
     local image = Instance.new("ImageLabel")
     image.Name = "TabImage"
     image.Parent = imageContainer
     image.BackgroundTransparency = 1
-    image.Position = UDim2.new(0, 0, 0, 0)  -- Центрируем в контейнере
-    image.Size = UDim2.new(1, 0, 1, 0)      -- Занимает весь контейнер
-    image.ZIndex = 6                        -- Выше чем контейнер
+    image.Position = UDim2.new(0, 0, 0, 0)
+    image.Size = UDim2.new(1, 0, 1, 0)
+    image.ZIndex = 6
     image.Image = "rbxassetid://" .. imageId
     image.ImageColor3 = Color3.fromRGB(255, 255, 255)
     image.ImageTransparency = 1
-    image.ScaleType = Enum.ScaleType.Fit    -- Правильное масштабирование
+    image.ScaleType = Enum.ScaleType.Fit
     image.BackgroundTransparency = 1
 
     -- Немедленная попытка загрузки с обработкой ошибок
     local success, loadError = pcall(function()
-        -- Устанавливаем изображение и предзагружаем
         image.Image = "rbxassetid://" .. imageId
-
-        -- Проверяем существование изображения
         if game:GetService("ContentProvider") then
             game:GetService("ContentProvider"):PreloadAsync({image})
         end
-
-        -- Проверяем, что изображение валидно
         if image.Image == "" then
             error("Empty image")
         end
@@ -591,11 +586,10 @@ function windowInstance:CreateTab(visualName, imageId)
 
     if not success then
         warn("Failed to load tab image with ID: " .. imageId .. " - Error: " .. tostring(loadError))
-        -- Используем fallback - цветной квадрат вместо изображения
         image.Image = ""
         image.BackgroundTransparency = 0
         image.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-        image.ImageTransparency = 1  -- Скрываем изображение, показываем фон
+        image.ImageTransparency = 1
     end
 
     -- Анимация появления
@@ -716,11 +710,11 @@ end
                             if previous_type == nil then
                                 spacing = 5
                             elseif previous_type == "toggle" and elem_type == "dropdown" then
-                                spacing = 3 -- Расстояние между toggle и dropdown
+                                spacing = 3
                             elseif previous_type == "dropdown" and elem_type == "toggle" then
-                                spacing = 5 -- Расстояние между dropdown и toggle
+                                spacing = 5
                             else
-                                spacing = 2 -- Обычное расстояние для других комбинаций
+                                spacing = 2
                             end
                             contentHeight = contentHeight + spacing + element.Size.Y.Offset
                             previous_type = elem_type
@@ -845,6 +839,12 @@ end
                         element.BackgroundTransparency = 1
                     end
                 end
+                for _, element in pairs(self._buttonElements) do
+                    if element.Parent == ContentFrame then
+                        element.Visible = true
+                        element.BackgroundTransparency = 1
+                    end
+                end
 
                 local contentHeight = 0
                 local elements = getSortedElements(ContentFrame)
@@ -855,11 +855,11 @@ end
                     if previous_type == nil then
                         spacing = 5
                     elseif previous_type == "toggle" and elem_type == "dropdown" then
-                        spacing = 3 -- Расстояние между toggle и dropdown
+                        spacing = 3
                     elseif previous_type == "dropdown" and elem_type == "toggle" then
-                        spacing = 5 -- Расстояние между dropdown и toggle
+                        spacing = 5
                     else
-                        spacing = 2 -- Обычное расстояние для других комбинаций
+                        spacing = 2
                     end
                     contentHeight = contentHeight + spacing + element.Size.Y.Offset
                     previous_type = elem_type
@@ -901,6 +901,12 @@ end
                     end
                 end
                 for _, element in pairs(self._sliderElements) do
+                    if element.Parent == ContentFrame then
+                        element.Visible = false
+                        element.BackgroundTransparency = 1
+                    end
+                end
+                for _, element in pairs(self._buttonElements) do
                     if element.Parent == ContentFrame then
                         element.Visible = false
                         element.BackgroundTransparency = 1
@@ -971,7 +977,8 @@ end
                               last.Name:match("^Dropdown_") and "dropdown" or
                               last.Name:match("^Input_") and "input" or
                               last.Name:match("^Bind_") and "bind" or
-                              last.Name:match("^Slider_") and "slider" or nil
+                              last.Name:match("^Slider_") and "slider" or
+                              last.Name:match("^Button_") and "button" or nil
             local spacing = 2
             if last_type then
                 if last_type == "slider" and new_type == "dropdown" then
@@ -984,6 +991,8 @@ end
                     spacing = 5
                 elseif last_type == "dropdown" and new_type == "dropdown" then
                     spacing = 5
+                elseif last_type == "button" and new_type == "toggle" then
+                    spacing = 2
                 end
             end
             yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
@@ -1065,16 +1074,16 @@ end
         local elements_updated = getSortedElements(ContentFrame)
         local previous_type = nil
         for j, element in ipairs(elements_updated) do
-            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
+            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or element.Name:match("^Slider_") and "slider" or element.Name:match("^Button_") and "button"
             local spacing
             if previous_type == nil then
                 spacing = 5
             elseif previous_type == "toggle" and elem_type == "dropdown" then
-                spacing = 3 -- Расстояние между toggle и dropdown
+                spacing = 3
             elseif previous_type == "dropdown" and elem_type == "toggle" then
-                spacing = 5 -- Расстояние между dropdown и toggle
+                spacing = 5
             else
-                spacing = 2 -- Обычное расстояние для других комбинаций
+                spacing = 2
             end
             contentHeight = contentHeight + spacing + element.Size.Y.Offset
             previous_type = elem_type
@@ -1114,284 +1123,598 @@ end
 
     -- New dropdown creation function with simplified syntax
     function windowInstance:CreateDropdown(params)
-    -- Проверка параметров
-    if not params or not params.section then
-        warn("CreateDropdown: Invalid parameters")
-        return nil
-    end
-
-    local section = params.section
-    if not section or not section:IsA("Frame") then
-        warn("CreateDropdown: Invalid section")
-        return nil
-    end
-
-    local dropdownName = params.name or "Dropdown_"..tostring(math.random(1000,9999))
-    local options = params.options or {}
-    local defaultOption = params.default or nil
-    local multi = params.multi or false
-    local save = params.save or false
-    local callback = params.callback or function() end
-
-    local ContentFrame = section:FindFirstChild("ContentFrame")
-    if not ContentFrame then
-        warn("CreateDropdown: ContentFrame not found in section")
-        return nil
-    end
-
-
-if save and self._saveConfig and self._saveConfig.enabled then
-    local success, savedState = pcall(function()
-        return loadDropdownState(self, dropdownName)
-    end)
-    if success and savedState ~= nil then
-        if multi then
-            defaultOption = savedState
-        else
-            if table.find(options, savedState) then
-                defaultOption = savedState
-            end
-        end
-    end
-end
-
-
-    local function getSafeSortedElements()
-        local elements = {}
-        for _, child in ipairs(ContentFrame:GetChildren()) do
-            if child:IsA("Frame") and child.Name then
-                if child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_") then
-                    table.insert(elements, child)
-                end
-            end
-        end
-        table.sort(elements, function(a, b)
-            return (a.Position.Y.Offset or 0) < (b.Position.Y.Offset or 0)
-        end)
-        return elements
-    end
-
-
-    local elements = getSafeSortedElements()
-    local new_type = "dropdown"
-    local yOffset = 5 -- Стандартный отступ для первого элемента
-
-    if #elements > 0 then
-        local lastElement = elements[#elements]
-        if lastElement and lastElement.Position then
-            local lastType = lastElement.Name:match("^Toggle_") and "toggle" or
-                             lastElement.Name:match("^Dropdown_") and "dropdown" or
-                             lastElement.Name:match("^Input_") and "input" or
-                             lastElement.Name:match("^Bind_") and "bind" or
-                             lastElement.Name:match("^Slider_") and "slider" or nil
-
-            -- Увеличенные отступы
-            local spacing = 2 -- Базовый отступ (согласован с другими функциями)
-            if lastType then
-                if lastType == "slider" and new_type == "dropdown" then
-                    spacing = 0
-                elseif lastType == "slider" then
-                    spacing = 5
-                elseif lastType == "toggle" and new_type == "dropdown" then
-                    spacing = 3
-                elseif lastType == "dropdown" and new_type == "toggle" then
-                    spacing = 5
-                elseif lastType == "dropdown" and new_type == "dropdown" then
-                    spacing = 5 -- Увеличенный отступ между дропдаунами
-                end
-            end
-
-            yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
-        end
-    end
-
-    -- Создание контейнера дропдауна
-    local DropdownContainer = Instance.new("Frame")
-    DropdownContainer.Name = "Dropdown_"..dropdownName
-    DropdownContainer.Parent = ContentFrame
-    DropdownContainer.BackgroundTransparency = 1
-    DropdownContainer.Size = UDim2.new(1, 0, 0, 50)
-    DropdownContainer.Position = UDim2.new(0, 0, 0, yOffset)
-    DropdownContainer.ZIndex = 5
-    DropdownContainer.Visible = true
-
-    -- Label дропдауна
-    local DropdownLabel = Instance.new("TextLabel")
-    DropdownLabel.Name = "Label"
-    DropdownLabel.Parent = DropdownContainer
-    DropdownLabel.BackgroundTransparency = 1
-    DropdownLabel.Position = UDim2.new(0.085, 0, 0, 0)
-    DropdownLabel.Size = UDim2.new(0, 165, 0, 20)
-    DropdownLabel.Font = Enum.Font.SourceSansBold
-    DropdownLabel.Text = dropdownName
-    DropdownLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-    DropdownLabel.TextSize = 15
-    DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
-    DropdownLabel.ZIndex = 6
-
-    -- Кнопка дропдауна
-    local DropdownButton = Instance.new("TextButton")
-    DropdownButton.Name = "Button"
-    DropdownButton.Parent = DropdownContainer
-    DropdownButton.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-    DropdownButton.BorderSizePixel = 0
-    DropdownButton.Position = UDim2.new(0.085, 0, 0, 20)
-    DropdownButton.Size = UDim2.new(0, 165, 0, 30)
-    DropdownButton.Font = Enum.Font.SourceSans
-    DropdownButton.Text = ""
-    DropdownButton.TextColor3 = Color3.fromRGB(147, 152, 156)
-    DropdownButton.TextSize = 14
-    DropdownButton.ZIndex = 6
-
-    local UICornerDropdown = Instance.new("UICorner")
-    UICornerDropdown.CornerRadius = UDim.new(0, 4)
-    UICornerDropdown.Parent = DropdownButton
-
-    -- Текст выбранного значения
-    local SelectedText = Instance.new("TextLabel")
-    SelectedText.Name = "SelectedText"
-    SelectedText.Parent = DropdownButton
-    SelectedText.BackgroundTransparency = 1
-    SelectedText.Position = UDim2.new(0.05, 0, 0, 0)
-    SelectedText.Size = UDim2.new(0.9, 0, 1, 0)
-    SelectedText.Font = Enum.Font.SourceSans
-    SelectedText.Text = ""
-    SelectedText.TextColor3 = Color3.fromRGB(147, 152, 156)
-    SelectedText.TextSize = 14
-    SelectedText.TextXAlignment = Enum.TextXAlignment.Left
-    SelectedText.ZIndex = 7
-
-    -- Список дропдауна
-    local DropdownList = Instance.new("Frame")
-    DropdownList.Name = "DropdownList_"..dropdownName
-    DropdownList.Parent = self._screenGui
-    DropdownList.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-    DropdownList.BorderSizePixel = 0
-    DropdownList.Size = UDim2.new(0, 165, 0, 0)
-    DropdownList.Visible = false
-    DropdownList.ZIndex = 1000
-    DropdownList.ClipsDescendants = true
-
-    local UICornerList = Instance.new("UICorner")
-    UICornerList.CornerRadius = UDim.new(0, 4)
-    UICornerList.Parent = DropdownList
-
-    local ScrollingFrame = Instance.new("ScrollingFrame")
-    ScrollingFrame.Parent = DropdownList
-    ScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
-    ScrollingFrame.BackgroundTransparency = 1
-    ScrollingFrame.ScrollBarThickness = 5
-    ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
-    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.Parent = ScrollingFrame
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    -- Логика выбора значений
-    local selectedOptions = {}
-    if multi then
-        if type(defaultOption) == "table" then
-            for _, option in ipairs(defaultOption) do
-                if table.find(options, option) then
-                    selectedOptions[option] = true
-                end
-            end
-        end
-    else
-        if table.find(options, defaultOption) then
-            selectedOptions[defaultOption] = true
-        end
-    end
-
-    local function updateSelectedText()
-        if multi then
-            local count = 0
-            for _ in pairs(selectedOptions) do
-                count = count + 1
-            end
-
-            if count == 0 then
-                SelectedText.Text = "None selected"
-            elseif count == 1 then
-                for option in pairs(selectedOptions) do
-                    SelectedText.Text = option
-                    break
-                end
-            else
-                SelectedText.Text = count .. " selected"
-            end
-        else
-            for option in pairs(selectedOptions) do
-                SelectedText.Text = option
-                return
-            end
-            SelectedText.Text = "Select option"
-        end
-    end
-
-    local function createOptionButtons()
-        for _, child in ipairs(ScrollingFrame:GetChildren()) do
-            if child:IsA("TextButton") then
-                child:Destroy()
-            end
+        if not params or not params.section then
+            warn("CreateDropdown: Invalid parameters")
+            return nil
         end
 
-        for _, option in ipairs(options) do
-            local OptionButton = Instance.new("TextButton")
-            OptionButton.Name = "Option_"..option
-            OptionButton.Parent = ScrollingFrame
-            OptionButton.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-            OptionButton.BorderSizePixel = 0
-            OptionButton.Size = UDim2.new(1, 0, 0, 20)
-            OptionButton.Font = Enum.Font.SourceSans
-            OptionButton.Text = option
-            OptionButton.TextColor3 = selectedOptions[option] and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
-            OptionButton.TextSize = 14
-            OptionButton.ZIndex = 1001
+        local section = params.section
+        if not section or not section:IsA("Frame") then
+            warn("CreateDropdown: Invalid section")
+            return nil
+        end
 
-            OptionButton.MouseButton1Click:Connect(function()
+        local dropdownName = params.name or "Dropdown_"..tostring(math.random(1000,9999))
+        local options = params.options or {}
+        local defaultOption = params.default or nil
+        local multi = params.multi or false
+        local save = params.save or false
+        local callback = params.callback or function() end
+
+        local ContentFrame = section:FindFirstChild("ContentFrame")
+        if not ContentFrame then
+            warn("CreateDropdown: ContentFrame not found in section")
+            return nil
+        end
+
+        if save and self._saveConfig and self._saveConfig.enabled then
+            local success, savedState = pcall(function()
+                return loadDropdownState(self, dropdownName)
+            end)
+            if success and savedState ~= nil then
                 if multi then
-                    if selectedOptions[option] then
-                        selectedOptions[option] = nil
-                    else
+                    defaultOption = savedState
+                else
+                    if table.find(options, savedState) then
+                        defaultOption = savedState
+                    end
+                end
+            end
+        end
+
+        local function getSafeSortedElements()
+            local elements = {}
+            for _, child in ipairs(ContentFrame:GetChildren()) do
+                if child:IsA("Frame") and child.Name then
+                    if child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_") or child.Name:match("^Button_") then
+                        table.insert(elements, child)
+                    end
+                end
+            end
+            table.sort(elements, function(a, b)
+                return (a.Position.Y.Offset or 0) < (b.Position.Y.Offset or 0)
+            end)
+            return elements
+        end
+
+        local elements = getSafeSortedElements()
+        local new_type = "dropdown"
+        local yOffset = 5
+
+        if #elements > 0 then
+            local lastElement = elements[#elements]
+            if lastElement and lastElement.Position then
+                local lastType = lastElement.Name:match("^Toggle_") and "toggle" or
+                                 lastElement.Name:match("^Dropdown_") and "dropdown" or
+                                 lastElement.Name:match("^Input_") and "input" or
+                                 lastElement.Name:match("^Bind_") and "bind" or
+                                 lastElement.Name:match("^Slider_") and "slider" or
+                                 lastElement.Name:match("^Button_") and "button" or nil
+
+                local spacing = 2
+                if lastType then
+                    if lastType == "slider" and new_type == "dropdown" then
+                        spacing = 0
+                    elseif lastType == "slider" then
+                        spacing = 5
+                    elseif lastType == "toggle" and new_type == "dropdown" then
+                        spacing = 3
+                    elseif lastType == "dropdown" and new_type == "toggle" then
+                        spacing = 5
+                    elseif lastType == "dropdown" and new_type == "dropdown" then
+                        spacing = 5
+                    elseif lastType == "button" and new_type == "dropdown" then
+                        spacing = 2
+                    end
+                end
+
+                yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
+            end
+        end
+
+        -- Создание контейнера дропдауна
+        local DropdownContainer = Instance.new("Frame")
+        DropdownContainer.Name = "Dropdown_"..dropdownName
+        DropdownContainer.Parent = ContentFrame
+        DropdownContainer.BackgroundTransparency = 1
+        DropdownContainer.Size = UDim2.new(1, 0, 0, 50)
+        DropdownContainer.Position = UDim2.new(0, 0, 0, yOffset)
+        DropdownContainer.ZIndex = 5
+        DropdownContainer.Visible = true
+
+        -- Label дропдауна
+        local DropdownLabel = Instance.new("TextLabel")
+        DropdownLabel.Name = "Label"
+        DropdownLabel.Parent = DropdownContainer
+        DropdownLabel.BackgroundTransparency = 1
+        DropdownLabel.Position = UDim2.new(0.085, 0, 0, 0)
+        DropdownLabel.Size = UDim2.new(0, 165, 0, 20)
+        DropdownLabel.Font = Enum.Font.SourceSansBold
+        DropdownLabel.Text = dropdownName
+        DropdownLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+        DropdownLabel.TextSize = 15
+        DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
+        DropdownLabel.ZIndex = 6
+
+        -- Кнопка дропдауна
+        local DropdownButton = Instance.new("TextButton")
+        DropdownButton.Name = "Button"
+        DropdownButton.Parent = DropdownContainer
+        DropdownButton.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+        DropdownButton.BorderSizePixel = 0
+        DropdownButton.Position = UDim2.new(0.085, 0, 0, 20)
+        DropdownButton.Size = UDim2.new(0, 165, 0, 30)
+        DropdownButton.Font = Enum.Font.SourceSans
+        DropdownButton.Text = ""
+        DropdownButton.TextColor3 = Color3.fromRGB(147, 152, 156)
+        DropdownButton.TextSize = 14
+        DropdownButton.ZIndex = 6
+
+        local UICornerDropdown = Instance.new("UICorner")
+        UICornerDropdown.CornerRadius = UDim.new(0, 4)
+        UICornerDropdown.Parent = DropdownButton
+
+        -- Текст выбранного значения
+        local SelectedText = Instance.new("TextLabel")
+        SelectedText.Name = "SelectedText"
+        SelectedText.Parent = DropdownButton
+        SelectedText.BackgroundTransparency = 1
+        SelectedText.Position = UDim2.new(0.05, 0, 0, 0)
+        SelectedText.Size = UDim2.new(0.9, 0, 1, 0)
+        SelectedText.Font = Enum.Font.SourceSans
+        SelectedText.Text = ""
+        SelectedText.TextColor3 = Color3.fromRGB(147, 152, 156)
+        SelectedText.TextSize = 14
+        SelectedText.TextXAlignment = Enum.TextXAlignment.Left
+        SelectedText.ZIndex = 7
+
+        -- Список дропдауна
+        local DropdownList = Instance.new("Frame")
+        DropdownList.Name = "DropdownList_"..dropdownName
+        DropdownList.Parent = self._screenGui
+        DropdownList.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+        DropdownList.BorderSizePixel = 0
+        DropdownList.Size = UDim2.new(0, 165, 0, 0)
+        DropdownList.Visible = false
+        DropdownList.ZIndex = 1000
+        DropdownList.ClipsDescendants = true
+
+        local UICornerList = Instance.new("UICorner")
+        UICornerList.CornerRadius = UDim.new(0, 4)
+        UICornerList.Parent = DropdownList
+
+        local ScrollingFrame = Instance.new("ScrollingFrame")
+        ScrollingFrame.Parent = DropdownList
+        ScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+        ScrollingFrame.BackgroundTransparency = 1
+        ScrollingFrame.ScrollBarThickness = 5
+        ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+        local UIListLayout = Instance.new("UIListLayout")
+        UIListLayout.Parent = ScrollingFrame
+        UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+        -- Логика выбора значений
+        local selectedOptions = {}
+        if multi then
+            if type(defaultOption) == "table" then
+                for _, option in ipairs(defaultOption) do
+                    if table.find(options, option) then
                         selectedOptions[option] = true
                     end
-                    OptionButton.TextColor3 = selectedOptions[option] and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
+                end
+            end
+        else
+            if table.find(options, defaultOption) then
+                selectedOptions[defaultOption] = true
+            end
+        end
+
+        local function updateSelectedText()
+            if multi then
+                local count = 0
+                for _ in pairs(selectedOptions) do
+                    count = count + 1
+                end
+
+                if count == 0 then
+                    SelectedText.Text = "None selected"
+                elseif count == 1 then
+                    for option in pairs(selectedOptions) do
+                        SelectedText.Text = option
+                        break
+                    end
+                else
+                    SelectedText.Text = count .. " selected"
+                end
+            else
+                for option in pairs(selectedOptions) do
+                    SelectedText.Text = option
+                    return
+                end
+                SelectedText.Text = "Select option"
+            end
+        end
+
+        local function createOptionButtons()
+            for _, child in ipairs(ScrollingFrame:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child:Destroy()
+                end
+            end
+
+            for _, option in ipairs(options) do
+                local OptionButton = Instance.new("TextButton")
+                OptionButton.Name = "Option_"..option
+                OptionButton.Parent = ScrollingFrame
+                OptionButton.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+                OptionButton.BorderSizePixel = 0
+                OptionButton.Size = UDim2.new(1, 0, 0, 20)
+                OptionButton.Font = Enum.Font.SourceSans
+                OptionButton.Text = option
+                OptionButton.TextColor3 = selectedOptions[option] and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
+                OptionButton.TextSize = 14
+                OptionButton.ZIndex = 1001
+
+                OptionButton.MouseButton1Click:Connect(function()
+                    if multi then
+                        if selectedOptions[option] then
+                            selectedOptions[option] = nil
+                        else
+                            selectedOptions[option] = true
+                        end
+                        OptionButton.TextColor3 = selectedOptions[option] and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
+                    else
+                        for opt in pairs(selectedOptions) do
+                            selectedOptions[opt] = nil
+                        end
+
+                        selectedOptions[option] = true
+
+                        for _, btn in ipairs(ScrollingFrame:GetChildren()) do
+                            if btn:IsA("TextButton") then
+                                btn.TextColor3 = btn == OptionButton and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
+                            end
+                        end
+
+                        DropdownList.Visible = false
+                        DropdownList.Size = UDim2.new(0, 165, 0, 0)
+                        self._openDropdowns[DropdownContainer] = nil
+                    end
+
+                    updateSelectedText()
+
+                    if save and self._saveConfig.enabled then
+                        if multi then
+                            local selected = {}
+                            for opt in pairs(selectedOptions) do
+                                table.insert(selected, opt)
+                            end
+                            saveDropdownState(self, dropdownName, selected)
+                        else
+                            for opt in pairs(selectedOptions) do
+                                saveDropdownState(self, dropdownName, opt)
+                                break
+                            end
+                        end
+                    end
+
+                    if callback then
+                        pcall(callback, multi and (function()
+                            local selected = {}
+                            for opt in pairs(selectedOptions) do
+                                table.insert(selected, opt)
+                            end
+                            return selected
+                        end)() or next(selectedOptions))
+                    end
+                end)
+            end
+
+            local optionCount = #options
+            local maxHeight = math.min(4, optionCount) * 20
+            ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, optionCount * 20)
+        end
+
+        createOptionButtons()
+        updateSelectedText()
+
+        -- Управление открытием/закрытием дропдауна
+        local function toggleDropdown()
+            local isDropdownOpen = DropdownList.Visible
+
+            if isDropdownOpen then
+                DropdownList.Visible = false
+                DropdownList.Size = UDim2.new(0, 165, 0, 0)
+                windowInstance._openDropdowns[DropdownContainer] = nil
+
+                local hasOpenDropdowns = false
+                for _, list in pairs(windowInstance._openDropdowns) do
+                    if list.Visible then
+                        hasOpenDropdowns = true
+                        break
+                    end
+                end
+                if not hasOpenDropdowns and windowInstance._heartbeatConnection then
+                    windowInstance._heartbeatConnection:Disconnect()
+                    windowInstance._heartbeatConnection = nil
+                end
+            else
+                for container, list in pairs(windowInstance._openDropdowns) do
+                    list.Visible = false
+                    list.Size = UDim2.new(0, 165, 0, 0)
+                    windowInstance._openDropdowns[container] = nil
+                end
+
+                local button = DropdownContainer:FindFirstChild("Button")
+                if not button then
+                    warn("Button not found in DropdownContainer: " .. DropdownContainer.Name)
+                    return
+                end
+
+                local buttonPos = button.AbsolutePosition
+                local buttonSize = button.AbsoluteSize
+                local screenSize = windowInstance._screenGui.AbsoluteSize
+
+                local yPos = buttonPos.Y + buttonSize.Y
+                local scrolling = DropdownList:FindFirstChild("ScrollingFrame")
+                local optionCount = scrolling and (scrolling.CanvasSize.Y.Offset / 20) or 0
+                local maxHeight = math.min(4, optionCount) * 20
+
+                local hasOverlap = false
+                for _, colorSelector in pairs(windowInstance._colorSelectorElements) do
+                    local colorButton = colorSelector:FindFirstChild("Button")
+                    if colorButton and colorButton.Parent:FindFirstChild("ColorPickerFrame") and colorButton.Parent.ColorPickerFrame.Visible then
+                        local pickerPos = colorButton.Parent.ColorPickerFrame.AbsolutePosition
+                        local pickerSize = colorButton.Parent.ColorPickerFrame.AbsoluteSize
+                        if buttonPos.Y < pickerPos.Y + pickerSize.Y and buttonPos.Y + buttonSize.Y > pickerPos.Y then
+                            hasOverlap = true
+                            yPos = pickerPos.Y - maxHeight - 5
+                            break
+                        end
+                    end
+                end
+
+                if not hasOverlap then
+                    if yPos + maxHeight > screenSize.Y then
+                        yPos = buttonPos.Y - maxHeight
+                    end
+                end
+
+                DropdownList.Position = UDim2.new(0, buttonPos.X, 0, yPos)
+                DropdownList.Size = UDim2.new(0, 165, 0, maxHeight)
+                DropdownList.Visible = true
+                windowInstance._openDropdowns[DropdownContainer] = DropdownList
+
+                if not windowInstance._heartbeatConnection then
+                    windowInstance._heartbeatConnection = RunService.Heartbeat:Connect(function()
+                        if next(windowInstance._openDropdowns) then
+                        end
+                    end)
+                end
+            end
+        end
+
+        DropdownButton.MouseButton1Click:Connect(toggleDropdown)
+
+        -- Закрытие при клике вне дропдауна
+        game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+            if gameProcessed then return end
+
+            if input.UserInputType == Enum.UserInputType.MouseButton1 and DropdownList.Visible then
+                local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+                local absPos = DropdownList.AbsolutePosition
+                local absSize = DropdownList.AbsoluteSize
+
+                if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
+                       mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y) then
+                    toggleDropdown()
+                end
+            end
+        end)
+
+        table.insert(self._dropdownElements, DropdownContainer)
+
+        -- Обновление размеров секции
+        local function updateSectionSize()
+            local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+            local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+
+            local contentHeight = 0
+            local elements = getSafeSortedElements()
+            local previousType = nil
+
+            for _, element in ipairs(elements) do
+                local elemType = element.Name:match("^Toggle_") and "toggle" or
+                               element.Name:match("^Dropdown_") and "dropdown" or
+                               element.Name:match("^Input_") and "input" or
+                               element.Name:match("^Bind_") and "bind" or
+                               element.Name:match("^Slider_") and "slider" or
+                               element.Name:match("^Button_") and "button"
+
+                local spacing = 5
+                if previousType == "toggle" and elemType == "dropdown" then
+                    spacing = 3
+                elseif previousType == "dropdown" and elemType == "toggle" then
+                    spacing = 5
+                elseif previousType == "dropdown" and elemType == "dropdown" then
+                    spacing = 5
+                elseif previousType == "slider" and elemType == "dropdown" then
+                    spacing = 0
+                elseif previousType == "slider" then
+                    spacing = 5
+                elseif previousType == "button" and elemType == "dropdown" then
+                    spacing = 2
+                else
+                    spacing = 2
+                end
+
+                contentHeight = contentHeight + spacing + element.Size.Y.Offset
+                previousType = elemType
+            end
+
+            if self._sectionStates[section] then
+                local bottom_padding = get_bottom_padding(ContentFrame)
+                ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
+                section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
+            end
+
+            updateSectionPositions(container, sectionsList)
+        end
+
+        -- Функция для обновления позиций всех элементов в секции
+        local function updateSectionLayout()
+            local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+            local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+
+            local allElements = {}
+            for _, child in ipairs(ContentFrame:GetChildren()) do
+                if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or
+                   child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_") or child.Name:match("^Button_")) then
+                    table.insert(allElements, child)
+                end
+            end
+
+            table.sort(allElements, function(a, b)
+                return a.Position.Y.Offset < b.Position.Y.Offset
+            end)
+
+            local currentY = 5
+            for i, element in ipairs(allElements) do
+                local spacing = 5
+
+                if i > 1 then
+                    local prevElement = allElements[i-1]
+                    local prevType = prevElement.Name:match("^Toggle_") and "toggle" or
+                                   prevElement.Name:match("^Dropdown_") and "dropdown" or
+                                   prevElement.Name:match("^Input_") and "input" or
+                                   prevElement.Name:match("^Bind_") and "bind" or
+                                   prevElement.Name:match("^Slider_") and "slider" or
+                                   prevElement.Name:match("^Button_") and "button"
+
+                    local elementType = element.Name:match("^Toggle_") and "toggle" or
+                                      element.Name:match("^Dropdown_") and "dropdown" or
+                                      element.Name:match("^Input_") and "input" or
+                                      element.Name:match("^Bind_") and "bind" or
+                                      element.Name:match("^Slider_") and "slider" or
+                                      element.Name:match("^Button_") and "button"
+
+                    spacing = 2
+                    if prevType == "slider" and elementType == "dropdown" then
+                        spacing = 0
+                    elseif prevType == "slider" then
+                        spacing = 5
+                    elseif prevType == "toggle" and elementType == "dropdown" then
+                        spacing = 3
+                    elseif prevType == "dropdown" and elementType == "toggle" then
+                        spacing = 5
+                    elseif prevType == "dropdown" and elementType == "dropdown" then
+                        spacing = 5
+                    elseif prevType == "button" and elementType == "toggle" then
+                        spacing = 2
+                    end
+                end
+
+                element.Position = UDim2.new(0, 0, 0, currentY)
+                currentY = currentY + element.Size.Y.Offset + spacing
+            end
+
+            local totalContentHeight = 0
+            local previousElementType = nil
+
+            for _, element in ipairs(allElements) do
+                local elementType = element.Name:match("^Toggle_") and "toggle" or
+                                  element.Name:match("^Dropdown_") and "dropdown" or
+                                  element.Name:match("^Input_") and "input" or
+                                  element.Name:match("^Bind_") and "bind" or
+                                  element.Name:match("^Slider_") and "slider" or
+                                  element.Name:match("^Button_") and "button"
+
+                local elementSpacing = 5
+
+                if previousElementType == "slider" and elementType == "dropdown" then
+                    elementSpacing = 0
+                elseif previousElementType == "slider" then
+                    elementSpacing = 5
+                elseif previousElementType == "toggle" and elementType == "dropdown" then
+                    elementSpacing = 3
+                elseif previousElementType == "dropdown" and elementType == "toggle" then
+                    elementSpacing = 5
+                elseif previousElementType == "button" and elementType == "dropdown" then
+                    elementSpacing = 2
+                else
+                    elementSpacing = 2
+                end
+
+                totalContentHeight = totalContentHeight + elementSpacing + element.Size.Y.Offset
+                previousElementType = elementType
+            end
+
+            if self._sectionStates[section] then
+                local bottom_padding = get_bottom_padding(ContentFrame)
+                ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
+                section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + bottom_padding)
+            end
+
+            updateSectionPositions(container, sectionsList)
+
+            local totalSectionsHeight = 0
+            for _, sec in ipairs(sectionsList) do
+                if sec.Visible then
+                    if self._sectionStates[sec] == false then
+                        totalSectionsHeight = totalSectionsHeight + 30 + 20
+                    else
+                        totalSectionsHeight = totalSectionsHeight + sec.Size.Y.Offset + 20
+                    end
+                end
+            end
+            self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
+        end
+
+        task.defer(updateSectionLayout)
+
+        return {
+            Set = function(_, value)
+                if multi then
+                    for opt in pairs(selectedOptions) do
+                        selectedOptions[opt] = nil
+                    end
+
+                    if type(value) == "table" then
+                        for _, option in ipairs(value) do
+                            if table.find(options, option) then
+                                selectedOptions[option] = true
+                            end
+                        end
+                    end
                 else
                     for opt in pairs(selectedOptions) do
                         selectedOptions[opt] = nil
                     end
 
-                    selectedOptions[option] = true
-
-                    for _, btn in ipairs(ScrollingFrame:GetChildren()) do
-                        if btn:IsA("TextButton") then
-                            btn.TextColor3 = btn == OptionButton and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(147, 152, 156)
-                        end
+                    if table.find(options, value) then
+                        selectedOptions[value] = true
                     end
-
-                    DropdownList.Visible = false
-                    DropdownList.Size = UDim2.new(0, 165, 0, 0)
-                    self._openDropdowns[DropdownContainer] = nil
                 end
 
                 updateSelectedText()
+                createOptionButtons()
 
-if save and self._saveConfig.enabled then
-    if multi then
-        local selected = {}
-        for opt in pairs(selectedOptions) do
-            table.insert(selected, opt)
-        end
-        saveDropdownState(self, dropdownName, selected) -- Исправлено: save вместо return load
-    else
-        for opt in pairs(selectedOptions) do
-            saveDropdownState(self, dropdownName, opt) -- Исправлено: opt вместо selected
-            break
-        end
-    end
-end
+                if save and self._saveConfig.enabled then
+                    if multi then
+                        local selected = {}
+                        for opt in pairs(selectedOptions) do
+                            table.insert(selected, opt)
+                        end
+                        self:saveDropdownState(dropdownName, selected)
+                    else
+                        for opt in pairs(selectedOptions) do
+                            saveDropdownState(self, dropdownName, opt)
+                            break
+                        end
+                    end
+                end
 
                 if callback then
                     pcall(callback, multi and (function()
@@ -1402,952 +1725,639 @@ end
                         return selected
                     end)() or next(selectedOptions))
                 end
-            end)
-        end
-
-        local optionCount = #options
-        local maxHeight = math.min(4, optionCount) * 20
-        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, optionCount * 20)
-    end
-
-    createOptionButtons()
-    updateSelectedText()
-
-    -- Управление открытием/закрытием дропдауна
-   local function toggleDropdown()
-    local isDropdownOpen = DropdownList.Visible
-
-    if isDropdownOpen then
-        DropdownList.Visible = false
-        DropdownList.Size = UDim2.new(0, 165, 0, 0)
-        windowInstance._openDropdowns[DropdownContainer] = nil
-
-        -- Отключаем Heartbeat, если нет открытых дропдаунов
-        local hasOpenDropdowns = false
-        for _, list in pairs(windowInstance._openDropdowns) do
-            if list.Visible then
-                hasOpenDropdowns = true
-                break
-            end
-        end
-        if not hasOpenDropdowns and windowInstance._heartbeatConnection then
-            windowInstance._heartbeatConnection:Disconnect()
-            windowInstance._heartbeatConnection = nil
-        end
-    else
-        for container, list in pairs(windowInstance._openDropdowns) do
-            list.Visible = false
-            list.Size = UDim2.new(0, 165, 0, 0)
-            windowInstance._openDropdowns[container] = nil
-        end
-
-        local button = DropdownContainer:FindFirstChild("Button")
-        if not button then
-            warn("Button not found in DropdownContainer: " .. DropdownContainer.Name)
-            return
-        end
-
-        local buttonPos = button.AbsolutePosition
-        local buttonSize = button.AbsoluteSize
-        local screenSize = windowInstance._screenGui.AbsoluteSize
-
-        local yPos = buttonPos.Y + buttonSize.Y
-        local scrolling = DropdownList:FindFirstChild("ScrollingFrame")
-        local optionCount = scrolling and (scrolling.CanvasSize.Y.Offset / 20) or 0
-        local maxHeight = math.min(4, optionCount) * 20
-
-        -- Проверка на перекрытие с ColorPickerFrame
-        local hasOverlap = false
-        for _, colorSelector in pairs(windowInstance._colorSelectorElements) do
-            local colorButton = colorSelector:FindFirstChild("Button")
-            if colorButton and colorButton.Parent:FindFirstChild("ColorPickerFrame") and colorButton.Parent.ColorPickerFrame.Visible then
-                local pickerPos = colorButton.Parent.ColorPickerFrame.AbsolutePosition
-                local pickerSize = colorButton.Parent.ColorPickerFrame.AbsoluteSize
-                if buttonPos.Y < pickerPos.Y + pickerSize.Y and buttonPos.Y + buttonSize.Y > pickerPos.Y then
-                    hasOverlap = true
-                    yPos = pickerPos.Y - maxHeight - 5
-                    break
-                end
-            end
-        end
-
-        -- Корректировка позиции, если выходит за экран
-        if not hasOverlap then
-            if yPos + maxHeight > screenSize.Y then
-                yPos = buttonPos.Y - maxHeight
-            end
-        end
-
-        DropdownList.Position = UDim2.new(0, buttonPos.X, 0, yPos)
-        DropdownList.Size = UDim2.new(0, 165, 0, maxHeight)
-        DropdownList.Visible = true
-        windowInstance._openDropdowns[DropdownContainer] = DropdownList
-
-        -- Подключаем Heartbeat только если его нет
-        if not windowInstance._heartbeatConnection then
-            windowInstance._heartbeatConnection = RunService.Heartbeat:Connect(function()
-                if next(windowInstance._openDropdowns) then
-                end
-            end)
-        end
-    end
-end
-
-    DropdownButton.MouseButton1Click:Connect(toggleDropdown)
-
-    -- Закрытие при клике вне дропдауна
-    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
-
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and DropdownList.Visible then
-            local mousePos = game:GetService("UserInputService"):GetMouseLocation()
-            local absPos = DropdownList.AbsolutePosition
-            local absSize = DropdownList.AbsoluteSize
-
-            if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
-                   mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y) then
-                toggleDropdown()
-            end
-        end
-    end)
-
-    table.insert(self._dropdownElements, DropdownContainer)
-
-    -- Обновление размеров секции
-    local function updateSectionSize()
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-
-        local contentHeight = 0
-        local elements = getSafeSortedElements()
-        local previousType = nil
-
-        for _, element in ipairs(elements) do
-            local elemType = element.Name:match("^Toggle_") and "toggle" or
-                           element.Name:match("^Dropdown_") and "dropdown" or
-                           element.Name:match("^Input_") and "input" or
-                           element.Name:match("^Bind_") and "bind" or
-                           "slider"
-
-            local spacing = 5 -- Базовый отступ
-            if previousType == "toggle" and elemType == "dropdown" then
-                spacing = 3
-            elseif previousType == "dropdown" and elemType == "toggle" then
-                spacing = 5
-            elseif previousType == "dropdown" and elemType == "dropdown" then
-                spacing = 5 -- Увеличенный отступ между дропдаунами
-            elseif previousType == "slider" and elemType == "dropdown" then
-                spacing = 0
-            elseif previousType == "slider" then
-                spacing = 5
-            else
-                spacing = 2
-            end
-
-            contentHeight = contentHeight + spacing + element.Size.Y.Offset
-            previousType = elemType
-        end
-
-        if self._sectionStates[section] then
-            local bottom_padding = get_bottom_padding(ContentFrame)
-            ContentFrame.Size = UDim2.new(1, 0, 0, contentHeight)
-            section.Size = UDim2.new(1, 0, 0, 30 + contentHeight + bottom_padding)
-        end
-
-        updateSectionPositions(container, sectionsList)
-    end
-
-    -- Функция для обновления позиций всех элементов в секции с учетом ВСЕХ элементов
-    local function updateSectionLayout()
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-
-        -- Получаем все элементы и сортируем по позиции Y
-        local allElements = {}
-        for _, child in ipairs(ContentFrame:GetChildren()) do
-            if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or
-               child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_")) then
-                table.insert(allElements, child)
-            end
-        end
-
-        table.sort(allElements, function(a, b)
-            return a.Position.Y.Offset < b.Position.Y.Offset
-        end)
-
-        -- Пересчитываем позиции с правильными отступами
-        local currentY = 5
-        for i, element in ipairs(allElements) do
-            local spacing = 5
-
-            if i > 1 then
-                local prevElement = allElements[i-1]
-                local prevType = prevElement.Name:match("^Toggle_") and "toggle" or
-                               prevElement.Name:match("^Dropdown_") and "dropdown" or
-                               prevElement.Name:match("^Input_") and "input" or
-                               prevElement.Name:match("^Bind_") and "bind" or
-                               "slider"
-
-                local elementType = element.Name:match("^Toggle_") and "toggle" or
-                                  element.Name:match("^Dropdown_") and "dropdown" or
-                                  element.Name:match("^Input_") and "input" or
-                                  element.Name:match("^Bind_") and "bind" or
-                                  "slider"
-
-                spacing = 2 -- Базовый
-                if prevType == "slider" and elementType == "dropdown" then
-                    spacing = 0
-                elseif prevType == "slider" then
-                    spacing = 5
-                elseif prevType == "toggle" and elementType == "dropdown" then
-                    spacing = 3
-                elseif prevType == "dropdown" and elementType == "toggle" then
-                    spacing = 5
-                elseif prevType == "dropdown" and elementType == "dropdown" then
-                    spacing = 5
-                end
-            end
-
-            element.Position = UDim2.new(0, 0, 0, currentY)
-            currentY = currentY + element.Size.Y.Offset + spacing
-        end
-
-        -- ОБНОВЛЯЕМ РАЗМЕР КОНТЕЙНЕРА С УЧЕТОМ ВСЕХ ЭЛЕМЕНТОВ ВКЛЮЧАЯ ДРОПДАУНЫ
-        local totalContentHeight = 0
-        local previousElementType = nil
-
-        for _, element in ipairs(allElements) do
-            local elementType = element.Name:match("^Toggle_") and "toggle" or
-                              element.Name:match("^Dropdown_") and "dropdown" or
-                              element.Name:match("^Input_") and "input" or
-                              element.Name:match("^Bind_") and "bind" or
-                              "slider"
-
-            local elementSpacing = 5
-
-            if previousElementType == "slider" and elementType == "dropdown" then
-                elementSpacing = 5
-            elseif previousElementType == "slider" then
-                elementSpacing = 5
-            elseif previousElementType == "toggle" and elementType == "dropdown" then
-                elementSpacing = 3
-            elseif previousElementType == "dropdown" and elementType == "toggle" then
-                elementSpacing = 5
-            elseif previousElementType == "dropdown" and elementType == "dropdown" then
-                elementSpacing = 5
-            else
-                elementSpacing = 5
-            end
-
-            totalContentHeight = totalContentHeight + elementSpacing + element.Size.Y.Offset
-            previousElementType = elementType
-        end
-
-        -- Обновляем размеры контента и секции
-        if self._sectionStates[section] then
-            local bottom_padding = get_bottom_padding(ContentFrame)
-            ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
-            section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + bottom_padding)
-        end
-
-        -- Обновляем позиции всех секций
-        updateSectionPositions(container, sectionsList)
-
-        -- Обновляем CanvasSize контейнера
-        local totalSectionsHeight = 0
-        for _, sec in ipairs(sectionsList) do
-            if sec.Visible then
-                if self._sectionStates[sec] == false then
-                    totalSectionsHeight = totalSectionsHeight + 30 + 20
-                else
-                    totalSectionsHeight = totalSectionsHeight + sec.Size.Y.Offset + 20
-                end
-            end
-        end
-        self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
-    end
-
-    task.defer(updateSectionLayout)
-
-    return {
-        Set = function(_, value)
-            if multi then
-                for opt in pairs(selectedOptions) do
-                    selectedOptions[opt] = nil
-                end
-
-                if type(value) == "table" then
-                    for _, option in ipairs(value) do
-                        if table.find(options, option) then
-                            selectedOptions[option] = true
-                        end
-                    end
-                end
-            else
-                for opt in pairs(selectedOptions) do
-                    selectedOptions[opt] = nil
-                end
-
-                if table.find(options, value) then
-                    selectedOptions[value] = true
-                end
-            end
-
-            updateSelectedText()
-            createOptionButtons()
-
-            if save and self._saveConfig.enabled then
+            end,
+            Get = function()
                 if multi then
                     local selected = {}
                     for opt in pairs(selectedOptions) do
                         table.insert(selected, opt)
                     end
-                    self:saveDropdownState(dropdownName, selected)
+                    return selected
                 else
                     for opt in pairs(selectedOptions) do
-                        saveDropdownState(self, dropdownName, opt)
-                        break
+                        return opt
+                    end
+                    return nil
+                end
+            end,
+            UpdateOptions = function(_, newOptions)
+                options = newOptions
+
+                for opt in pairs(selectedOptions) do
+                    if not table.find(options, opt) then
+                        selectedOptions[opt] = nil
                     end
                 end
-            end
 
-            if callback then
-                pcall(callback, multi and (function()
-                    local selected = {}
-                    for opt in pairs(selectedOptions) do
-                        table.insert(selected, opt)
-                    end
-                    return selected
-                end)() or next(selectedOptions))
+                updateSelectedText()
+                createOptionButtons()
             end
-        end,
-        Get = function()
-            if multi then
-                local selected = {}
-                for opt in pairs(selectedOptions) do
-                    table.insert(selected, opt)
-                end
-                return selected
-            else
-                for opt in pairs(selectedOptions) do
-                    return opt
-                end
-                return nil
-            end
-        end,
-        UpdateOptions = function(_, newOptions)
-            options = newOptions
-
-            for opt in pairs(selectedOptions) do
-                if not table.find(options, opt) then
-                    selectedOptions[opt] = nil
-                end
-            end
-
-            updateSelectedText()
-            createOptionButtons()
-        end
-    }
-end
+        }
+    end
 
     -- New slider creation function
-function windowInstance:CreateSlider(params)
-    -- Parameter validation
-    if not params or not params.section then
-        warn("CreateSlider: Invalid parameters")
-        return nil
-    end
-
-    local section = params.section
-    if not section or not section:IsA("Frame") then
-        warn("CreateSlider: Invalid section")
-        return nil
-    end
-
-    local sliderName = params.name or "Slider"
-    local minValue = params.min or 0
-    local maxValue = params.max or 100
-    local defaultValue = params.default or math.floor((minValue + maxValue) / 2)
-    local save = params.save or false
-    local callback = params.callback or function() end
-    local precise = params.precise or false
-
-    -- Ensure min is less than max
-    if minValue > maxValue then
-        minValue, maxValue = maxValue, minValue
-    end
-
-    -- Clamp default value
-    defaultValue = math.clamp(defaultValue, minValue, maxValue)
-
-    local ContentFrame = section:FindFirstChild("ContentFrame")
-    if not ContentFrame then
-        warn("CreateSlider: ContentFrame not found in section")
-        return nil
-    end
-
-    -- Load saved value
-    if save and self._saveConfig.enabled then
-        local success, savedState = pcall(function()
-            return loadSliderState(self, sliderName)
-        end)
-        if success and savedState ~= nil then
-            defaultValue = tonumber(savedState) or defaultValue
-            defaultValue = math.clamp(defaultValue, minValue, maxValue)
-        end
-    end
-
-    -- Get proper yOffset based on existing elements - УВЕЛИЧЕН на 3px
-    local elements = getSortedElements(ContentFrame)
-    local new_type = "slider"
-    local yOffset = 5
-
-    if #elements > 0 then
-        local lastElement = elements[#elements]
-        local lastType = lastElement.Name:match("^Toggle_") and "toggle" or
-                         lastElement.Name:match("^Dropdown_") and "dropdown" or
-                         lastElement.Name:match("^Input_") and "input" or
-                         lastElement.Name:match("^Bind_") and "bind" or
-                         lastElement.Name:match("^Slider_") and "slider" or nil
-        local spacing = 2
-
-        if lastType then
-            if lastType == "slider" and new_type == "dropdown" then
-                spacing = 5
-            elseif lastType == "slider" then
-                spacing = 5
-            elseif lastType == "toggle" and new_type == "dropdown" then
-                spacing = 3
-            elseif lastType == "dropdown" and new_type == "toggle" then
-                spacing = 5
-            elseif lastType == "dropdown" and new_type == "dropdown" then
-                spacing = 5
-            end
+    function windowInstance:CreateSlider(params)
+        -- Parameter validation
+        if not params or not params.section then
+            warn("CreateSlider: Invalid parameters")
+            return nil
         end
 
-        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
-    end
+        local section = params.section
+        if not section or not section:IsA("Frame") then
+            warn("CreateSlider: Invalid section")
+            return nil
+        end
 
-    -- Create container for Slider (30px height)
-    local SliderContainer = Instance.new("Frame")
-    SliderContainer.Name = "Slider_" .. sliderName
-    SliderContainer.Parent = ContentFrame
-    SliderContainer.BackgroundTransparency = 1
-    SliderContainer.Size = UDim2.new(1, 0, 0, 30) -- 30px height
-    SliderContainer.Position = UDim2.new(0, 0, 0, yOffset)
-    SliderContainer.ZIndex = 5
-    SliderContainer.Visible = true
+        local sliderName = params.name or "Slider"
+        local minValue = params.min or 0
+        local maxValue = params.max or 100
+        local defaultValue = params.default or math.floor((minValue + maxValue) / 2)
+        local save = params.save or false
+        local callback = params.callback or function() end
+        local precise = params.precise or false
 
-    -- Slider name label (поднят на 2 пикселя выше)
-    local SliderLabel = Instance.new("TextLabel")
-    SliderLabel.Name = "TextLabel"
-    SliderLabel.Parent = SliderContainer
-    SliderLabel.BackgroundTransparency = 1
-    SliderLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Поднят на 2px выше
-    SliderLabel.Size = UDim2.new(0, 165, 0, 22) -- Увеличена высота на 2px
-    SliderLabel.Font = Enum.Font.SourceSansBold
-    SliderLabel.Text = sliderName
-    SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-    SliderLabel.TextSize = 15
-    SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-    SliderLabel.ZIndex = 6
+        -- Ensure min is less than max
+        if minValue > maxValue then
+            minValue, maxValue = maxValue, minValue
+        end
 
-    -- Slider value label (поднят на 2 пикселя выше)
-    local ValueLabel = Instance.new("TextLabel")
-    ValueLabel.Name = "Value"
-    ValueLabel.Parent = SliderContainer
-    ValueLabel.BackgroundTransparency = 1
-    ValueLabel.Position = UDim2.new(0.085, 0, 0, -2) -- Поднят на 2px выше
-    ValueLabel.Size = UDim2.new(0, 165, 0, 22) -- Увеличена высота на 2px
-    ValueLabel.Font = Enum.Font.SourceSansBold
-    ValueLabel.Text = tostring(defaultValue)
-    ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-    ValueLabel.TextSize = 15
-    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
-    ValueLabel.ZIndex = 6
+        -- Clamp default value
+        defaultValue = math.clamp(defaultValue, minValue, maxValue)
 
-    -- Slider track (positioned for 30px container)
-    local SliderTrack = Instance.new("Frame")
-    SliderTrack.Name = "Track"
-    SliderTrack.Parent = SliderContainer
-    SliderTrack.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-    SliderTrack.BorderSizePixel = 0
-    SliderTrack.Position = UDim2.new(0.085, 0, 0, 23) -- Adjusted for 30px height
-    SliderTrack.Size = UDim2.new(0, 165, 0, 6)
-    SliderTrack.ZIndex = 6
+        local ContentFrame = section:FindFirstChild("ContentFrame")
+        if not ContentFrame then
+            warn("CreateSlider: ContentFrame not found in section")
+            return nil
+        end
 
-    local UICornerTrack = Instance.new("UICorner")
-    UICornerTrack.CornerRadius = UDim.new(0, 4)
-    UICornerTrack.Parent = SliderTrack
-
-    -- Slider fill
-    local SliderFill = Instance.new("Frame")
-    SliderFill.Name = "Fill"
-    SliderFill.Parent = SliderTrack
-    SliderFill.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-    SliderFill.BorderSizePixel = 0
-    SliderFill.Size = UDim2.new(0, 0, 1, 0)
-    SliderFill.ZIndex = 7
-
-    local UICornerFill = Instance.new("UICorner")
-    UICornerFill.Parent = SliderFill
-
-    -- Slider thumb
-    local SliderThumb = Instance.new("TextButton")
-    SliderThumb.Name = "Thumb"
-    SliderThumb.Parent = SliderTrack
-    SliderThumb.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-    SliderThumb.BorderSizePixel = 0
-    SliderThumb.Size = UDim2.new(0, 16, 0, 16)
-    SliderThumb.Position = UDim2.new(0, -8, 0.5, -8)
-    SliderThumb.Text = ""
-    SliderThumb.ZIndex = 8
-    SliderThumb.AutoButtonColor = false
-
-    local UICornerThumb = Instance.new("UICorner")
-    UICornerThumb.CornerRadius = UDim.new(1, 0)
-    UICornerThumb.Parent = SliderThumb
-
-    local ThumbInner = Instance.new("Frame")
-    ThumbInner.Name = "Inner"
-    ThumbInner.Parent = SliderThumb
-    ThumbInner.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
-    ThumbInner.BorderSizePixel = 0
-    ThumbInner.Position = UDim2.new(0.125, 0, 0.125, 0)
-    ThumbInner.Size = UDim2.new(0.75, 0, 0.75, 0)
-    ThumbInner.ZIndex = 9
-
-    local UICornerInner = Instance.new("UICorner")
-    UICornerInner.CornerRadius = UDim.new(1, 0)
-    UICornerInner.Parent = ThumbInner
-
-    -- Calculate initial fill and thumb position
-    local function getValueFromPosition(x)
-        local trackWidth = SliderTrack.AbsoluteSize.X
-        local relativePos = math.clamp(x - SliderTrack.AbsolutePosition.X, 0, trackWidth)
-        local normalized = relativePos / trackWidth
-        local value = minValue + (maxValue - minValue) * normalized
-        return precise and value or math.floor(value + 0.5)
-    end
-
-    local function getPositionFromValue(value)
-        local normalized = (value - minValue) / (maxValue - minValue)
-        return normalized * SliderTrack.AbsoluteSize.X
-    end
-
-    local currentValue = defaultValue
-    local isDragging = false
-
-    -- Update visual elements based on current value
-    local function updateSlider(value)
-        currentValue = math.clamp(value, minValue, maxValue)
-        local displayValue = precise and string.format("%.2f", currentValue) or tostring(math.floor(currentValue + 0.5))
-        ValueLabel.Text = displayValue
-
-        local fillWidth = getPositionFromValue(currentValue)
-        SliderFill.Size = UDim2.new(0, fillWidth, 1, 0)
-        SliderThumb.Position = UDim2.new(0, fillWidth - 8, 0.5, -8)
-
+        -- Load saved value
         if save and self._saveConfig.enabled then
-            saveSliderState(self, sliderName, currentValue)
-        end
-
-        callback(currentValue)
-    end
-
-    -- Initialize slider
-    updateSlider(defaultValue)
-
-    -- Mouse down on thumb
-    SliderThumb.MouseButton1Down:Connect(function()
-        isDragging = true
-    end)
-
-    -- Mouse down on track (jump to position)
-    SliderTrack.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDragging = true
-            local mousePos = input.Position
-            local newValue = getValueFromPosition(mousePos.X)
-            updateSlider(newValue)
-        end
-    end)
-
-    -- Mouse movement while dragging
-    local mouseMoveConnection
-    mouseMoveConnection = UserInputService.InputChanged:Connect(function(input)
-        if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local newValue = getValueFromPosition(input.Position.X)
-            updateSlider(newValue)
-        end
-    end)
-
-    -- Mouse up to stop dragging
-    local mouseUpConnection
-    mouseUpConnection = UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDragging = false
-        end
-    end)
-
-    -- Clean up connections when slider is destroyed
-    SliderContainer.Destroying:Connect(function()
-        if mouseMoveConnection then
-            mouseMoveConnection:Disconnect()
-        end
-        if mouseUpConnection then
-            mouseUpConnection:Disconnect()
-        end
-    end)
-
-    table.insert(self._sliderElements, SliderContainer)
-
-    -- Функция для обновления позиций всех элементов в секции с учетом ВСЕХ элементов
-    local function updateSectionLayout()
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-
-        -- Получаем все элементы и сортируем по позиции Y
-        local allElements = {}
-        for _, child in ipairs(ContentFrame:GetChildren()) do
-            if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or
-               child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_")) then
-                table.insert(allElements, child)
+            local success, savedState = pcall(function()
+                return loadSliderState(self, sliderName)
+            end)
+            if success and savedState ~= nil then
+                defaultValue = tonumber(savedState) or defaultValue
+                defaultValue = math.clamp(defaultValue, minValue, maxValue)
             end
         end
 
-        table.sort(allElements, function(a, b)
-            return a.Position.Y.Offset < b.Position.Y.Offset
+        -- Get proper yOffset based on existing elements
+        local elements = getSortedElements(ContentFrame)
+        local new_type = "slider"
+        local yOffset = 5
+
+        if #elements > 0 then
+            local lastElement = elements[#elements]
+            local lastType = lastElement.Name:match("^Toggle_") and "toggle" or
+                             lastElement.Name:match("^Dropdown_") and "dropdown" or
+                             lastElement.Name:match("^Input_") and "input" or
+                             lastElement.Name:match("^Bind_") and "bind" or
+                             lastElement.Name:match("^Slider_") and "slider" or
+                             lastElement.Name:match("^Button_") and "button" or nil
+            local spacing = 2
+
+            if lastType then
+                if lastType == "slider" and new_type == "dropdown" then
+                    spacing = 5
+                elseif lastType == "slider" then
+                    spacing = 5
+                elseif lastType == "toggle" and new_type == "dropdown" then
+                    spacing = 3
+                elseif lastType == "dropdown" and new_type == "toggle" then
+                    spacing = 5
+                elseif lastType == "dropdown" and new_type == "dropdown" then
+                    spacing = 5
+                elseif lastType == "button" and new_type == "slider" then
+                    spacing = 2
+                end
+            end
+
+            yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
+        end
+
+        -- Create container for Slider (30px height)
+        local SliderContainer = Instance.new("Frame")
+        SliderContainer.Name = "Slider_" .. sliderName
+        SliderContainer.Parent = ContentFrame
+        SliderContainer.BackgroundTransparency = 1
+        SliderContainer.Size = UDim2.new(1, 0, 0, 30)
+        SliderContainer.Position = UDim2.new(0, 0, 0, yOffset)
+        SliderContainer.ZIndex = 5
+        SliderContainer.Visible = true
+
+        -- Slider name label
+        local SliderLabel = Instance.new("TextLabel")
+        SliderLabel.Name = "TextLabel"
+        SliderLabel.Parent = SliderContainer
+        SliderLabel.BackgroundTransparency = 1
+        SliderLabel.Position = UDim2.new(0.085, 0, 0, -2)
+        SliderLabel.Size = UDim2.new(0, 165, 0, 22)
+        SliderLabel.Font = Enum.Font.SourceSansBold
+        SliderLabel.Text = sliderName
+        SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+        SliderLabel.TextSize = 15
+        SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+        SliderLabel.ZIndex = 6
+
+        -- Slider value label
+        local ValueLabel = Instance.new("TextLabel")
+        ValueLabel.Name = "Value"
+        ValueLabel.Parent = SliderContainer
+        ValueLabel.BackgroundTransparency = 1
+        ValueLabel.Position = UDim2.new(0.085, 0, 0, -2)
+        ValueLabel.Size = UDim2.new(0, 165, 0, 22)
+        ValueLabel.Font = Enum.Font.SourceSansBold
+        ValueLabel.Text = tostring(defaultValue)
+                ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+        ValueLabel.TextSize = 15
+        ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+        ValueLabel.ZIndex = 6
+
+        -- Slider track (positioned for 30px container)
+        local SliderTrack = Instance.new("Frame")
+        SliderTrack.Name = "Track"
+        SliderTrack.Parent = SliderContainer
+        SliderTrack.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+        SliderTrack.BorderSizePixel = 0
+        SliderTrack.Position = UDim2.new(0.085, 0, 0, 23)
+        SliderTrack.Size = UDim2.new(0, 165, 0, 6)
+        SliderTrack.ZIndex = 6
+
+        local UICornerTrack = Instance.new("UICorner")
+        UICornerTrack.CornerRadius = UDim.new(0, 4)
+        UICornerTrack.Parent = SliderTrack
+
+        -- Slider fill
+        local SliderFill = Instance.new("Frame")
+        SliderFill.Name = "Fill"
+        SliderFill.Parent = SliderTrack
+        SliderFill.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+        SliderFill.BorderSizePixel = 0
+        SliderFill.Size = UDim2.new(0, 0, 1, 0)
+        SliderFill.ZIndex = 7
+
+        local UICornerFill = Instance.new("UICorner")
+        UICornerFill.Parent = SliderFill
+
+        -- Slider thumb
+        local SliderThumb = Instance.new("TextButton")
+        SliderThumb.Name = "Thumb"
+        SliderThumb.Parent = SliderTrack
+        SliderThumb.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+        SliderThumb.BorderSizePixel = 0
+        SliderThumb.Size = UDim2.new(0, 16, 0, 16)
+        SliderThumb.Position = UDim2.new(0, -8, 0.5, -8)
+        SliderThumb.Text = ""
+        SliderThumb.ZIndex = 8
+        SliderThumb.AutoButtonColor = false
+
+        local UICornerThumb = Instance.new("UICorner")
+        UICornerThumb.CornerRadius = UDim.new(1, 0)
+        UICornerThumb.Parent = SliderThumb
+
+        local ThumbInner = Instance.new("Frame")
+        ThumbInner.Name = "Inner"
+        ThumbInner.Parent = SliderThumb
+        ThumbInner.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
+        ThumbInner.BorderSizePixel = 0
+        ThumbInner.Position = UDim2.new(0.125, 0, 0.125, 0)
+        ThumbInner.Size = UDim2.new(0.75, 0, 0.75, 0)
+        ThumbInner.ZIndex = 9
+
+        local UICornerInner = Instance.new("UICorner")
+        UICornerInner.CornerRadius = UDim.new(1, 0)
+        UICornerInner.Parent = ThumbInner
+
+        -- Calculate initial fill and thumb position
+        local function getValueFromPosition(x)
+            local trackWidth = SliderTrack.AbsoluteSize.X
+            local relativePos = math.clamp(x - SliderTrack.AbsolutePosition.X, 0, trackWidth)
+            local normalized = relativePos / trackWidth
+            local value = minValue + (maxValue - minValue) * normalized
+            return precise and value or math.floor(value + 0.5)
+        end
+
+        local function getPositionFromValue(value)
+            local normalized = (value - minValue) / (maxValue - minValue)
+            return normalized * SliderTrack.AbsoluteSize.X
+        end
+
+        local currentValue = defaultValue
+        local isDragging = false
+
+        -- Update visual elements based on current value
+        local function updateSlider(value)
+            currentValue = math.clamp(value, minValue, maxValue)
+            local displayValue = precise and string.format("%.2f", currentValue) or tostring(math.floor(currentValue + 0.5))
+            ValueLabel.Text = displayValue
+
+            local fillWidth = getPositionFromValue(currentValue)
+            SliderFill.Size = UDim2.new(0, fillWidth, 1, 0)
+            SliderThumb.Position = UDim2.new(0, fillWidth - 8, 0.5, -8)
+
+            if save and self._saveConfig.enabled then
+                saveSliderState(self, sliderName, currentValue)
+            end
+
+            callback(currentValue)
+        end
+
+        -- Initialize slider
+        updateSlider(defaultValue)
+
+        -- Mouse down on thumb
+        SliderThumb.MouseButton1Down:Connect(function()
+            isDragging = true
         end)
 
-        -- Пересчитываем позиции с правильными отступами
-        local currentY = 5
-        for i, element in ipairs(allElements) do
-            local spacing = 5
+        -- Mouse down on track (jump to position)
+        SliderTrack.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                isDragging = true
+                local mousePos = input.Position
+                local newValue = getValueFromPosition(mousePos.X)
+                updateSlider(newValue)
+            end
+        end)
 
-            if i > 1 then
-                local prevElement = allElements[i-1]
-                local prevType = prevElement.Name:match("^Toggle_") and "toggle" or
-                               prevElement.Name:match("^Dropdown_") and "dropdown" or
-                               prevElement.Name:match("^Input_") and "input" or
-                               prevElement.Name:match("^Bind_") and "bind" or
-                               "slider"
+        -- Mouse movement while dragging
+        local mouseMoveConnection
+        mouseMoveConnection = UserInputService.InputChanged:Connect(function(input)
+            if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                local newValue = getValueFromPosition(input.Position.X)
+                updateSlider(newValue)
+            end
+        end)
 
+        -- Mouse up to stop dragging
+        local mouseUpConnection
+        mouseUpConnection = UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                isDragging = false
+            end
+        end)
+
+        -- Clean up connections when slider is destroyed
+        SliderContainer.Destroying:Connect(function()
+            if mouseMoveConnection then
+                mouseMoveConnection:Disconnect()
+            end
+            if mouseUpConnection then
+                mouseUpConnection:Disconnect()
+            end
+        end)
+
+        table.insert(self._sliderElements, SliderContainer)
+
+        -- Функция для обновления позиций всех элементов в секции
+        local function updateSectionLayout()
+            local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+            local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+
+            local allElements = {}
+            for _, child in ipairs(ContentFrame:GetChildren()) do
+                if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or
+                   child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_") or child.Name:match("^Button_")) then
+                    table.insert(allElements, child)
+                end
+            end
+
+            table.sort(allElements, function(a, b)
+                return a.Position.Y.Offset < b.Position.Y.Offset
+            end)
+
+            local currentY = 5
+            for i, element in ipairs(allElements) do
+                local spacing = 5
+
+                if i > 1 then
+                    local prevElement = allElements[i-1]
+                    local prevType = prevElement.Name:match("^Toggle_") and "toggle" or
+                                   prevElement.Name:match("^Dropdown_") and "dropdown" or
+                                   prevElement.Name:match("^Input_") and "input" or
+                                   prevElement.Name:match("^Bind_") and "bind" or
+                                   prevElement.Name:match("^Slider_") and "slider" or
+                                   prevElement.Name:match("^Button_") and "button"
+
+                    local elementType = element.Name:match("^Toggle_") and "toggle" or
+                                      element.Name:match("^Dropdown_") and "dropdown" or
+                                      element.Name:match("^Input_") and "input" or
+                                      element.Name:match("^Bind_") and "bind" or
+                                      element.Name:match("^Slider_") and "slider" or
+                                      element.Name:match("^Button_") and "button"
+
+                    if prevType == "slider" and elementType == "dropdown" then
+                        spacing = 0
+                    elseif prevType == "slider" then
+                        spacing = 5
+                    elseif prevType == "toggle" and elementType == "dropdown" then
+                        spacing = 3
+                    elseif prevType == "dropdown" and elementType == "toggle" then
+                        spacing = 5
+                    elseif prevType == "button" and elementType == "slider" then
+                        spacing = 2
+                    else
+                        spacing = 2
+                    end
+                end
+
+                element.Position = UDim2.new(0, 0, 0, currentY)
+                currentY = currentY + element.Size.Y.Offset + spacing
+            end
+
+            local totalContentHeight = 0
+            local previousElementType = nil
+
+            for _, element in ipairs(allElements) do
                 local elementType = element.Name:match("^Toggle_") and "toggle" or
                                   element.Name:match("^Dropdown_") and "dropdown" or
                                   element.Name:match("^Input_") and "input" or
                                   element.Name:match("^Bind_") and "bind" or
-                                  "slider"
+                                  element.Name:mark("^Slider_") and "slider" or
+                                  element.Name:match("^Button_") and "button"
 
-                -- Уменьшенный отступ после слайдера для дропдауна
-                if prevType == "slider" and elementType == "dropdown" then
-                    spacing = 0
-                elseif prevType == "slider" then
-                    spacing = 5
-                elseif prevType == "toggle" and elementType == "dropdown" then
-                    spacing = 3
-                elseif prevType == "dropdown" and elementType == "toggle" then
-                    spacing = 5
-                elseif previousType == "slider" and elemType == "toggle" then
-                    spacing = 10
+                local elementSpacing = 5
+
+                if previousElementType == "slider" and elementType == "dropdown" then
+                    elementSpacing = 0
+                elseif previousElementType == "slider" then
+                    elementSpacing = 5
+                elseif previousElementType == "toggle" and elementType == "dropdown" then
+                    elementSpacing = 3
+                elseif previousElementType == "dropdown" and elementType == "toggle" then
+                    elementSpacing = 5
+                elseif previousElementType == "button" and elementType == "slider" then
+                    elementSpacing = 2
                 else
-                    spacing = 10
+                    elementSpacing = 2
+                end
+
+                totalContentHeight = totalContentHeight + elementSpacing + element.Size.Y.Offset
+                previousElementType = elementType
+            end
+
+            if self._sectionStates[section] then
+                local bottom_padding = get_bottom_padding(ContentFrame)
+                ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
+                section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + bottom_padding)
+            end
+
+            updateSectionPositions(container, sectionsList)
+
+            local totalSectionsHeight = 0
+            for _, sec in ipairs(sectionsList) do
+                if sec.Visible then
+                    if self._sectionStates[sec] == false then
+                        totalSectionsHeight = totalSectionsHeight + 30 + 20
+                    else
+                        totalSectionsHeight = totalSectionsHeight + sec.Size.Y.Offset + 20
+                    end
                 end
             end
-
-            element.Position = UDim2.new(0, 0, 0, currentY)
-            currentY = currentY + element.Size.Y.Offset + spacing
+                        self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
         end
 
-        -- ОБНОВЛЯЕМ РАЗМЕР КОНТЕЙНЕРА С УЧЕТОМ ВСЕХ ЭЛЕМЕНТОВ ВКЛЮЧАЯ ДРОПДАУНЫ
-        local totalContentHeight = 0
-        local previousElementType = nil
+        -- Немедленное обновление после создания слайдера
+        task.defer(updateSectionLayout)
 
-        for _, element in ipairs(allElements) do
-            local elementType = element.Name:match("^Toggle_") and "toggle" or
-                              element.Name:match("^Dropdown_") and "dropdown" or
-                              element.Name:match("^Input_") and "input" or
-                              element.Name:match("^Bind_") and "bind" or
-                              "slider"
-
-            local elementSpacing = 5
-
-            if previousElementType == "slider" and elementType == "dropdown" then
-                elementSpacing = 0
-            elseif previousElementType == "slider" then
-                elementSpacing = 5
-            elseif previousElementType == "toggle" and elementType == "dropdown" then
-                elementSpacing = 3
-            elseif previousElementType == "dropdown" and elementType == "toggle" then
-                elementSpacing = 5
-            else
-                elementSpacing = 2
-            end
-
-            totalContentHeight = totalContentHeight + elementSpacing + element.Size.Y.Offset
-            previousElementType = elementType
-        end
-
-        -- Обновляем размеры контента и секции
-        if self._sectionStates[section] then
-            local bottom_padding = get_bottom_padding(ContentFrame)
-            ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
-            section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + bottom_padding)
-        end
-
-        -- Обновляем позиции всех секций
-        updateSectionPositions(container, sectionsList)
-
-        -- Обновляем CanvasSize контейнера
-        local totalSectionsHeight = 0
-        for _, sec in ipairs(sectionsList) do
-            if sec.Visible then
-                if self._sectionStates[sec] == false then
-                    totalSectionsHeight = totalSectionsHeight + 30 + 20
-                else
-                    totalSectionsHeight = totalSectionsHeight + sec.Size.Y.Offset + 20
+        return {
+            Set = function(self, value)
+                updateSlider(value)
+            end,
+            Get = function(self)
+                return currentValue
+            end,
+            SetRange = function(self, newMin, newMax)
+                if newMin and newMax then
+                    if newMin > newMax then
+                        newMin, newMax = newMax, newMin
+                    end
+                    minValue = newMin
+                    maxValue = newMax
+                    updateSlider(math.clamp(currentValue, minValue, maxValue))
                 end
             end
-        end
-        self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
+        }
     end
 
-    -- Немедленное обновление после создания слайдера
-    task.defer(updateSectionLayout)
-
-    return {
-        Set = function(self, value)
-            updateSlider(value)
-        end,
-        Get = function(self)
-            return currentValue
-        end,
-        SetRange = function(self, newMin, newMax)
-            if newMin and newMax then
-                if newMin > newMax then
-                    newMin, newMax = newMax, newMin
-                end
-                minValue = newMin
-                maxValue = newMax
-                updateSlider(math.clamp(currentValue, minValue, maxValue))
-            end
-        end
-    }
-end
     -- New input creation function with original style
-   function windowInstance:CreateInput(params)
-    -- Проверка параметров
-    if not params or not params.section then
-        warn("CreateInput: Invalid parameters")
-        return nil
-    end
-
-    local section = params.section
-    if not section or not section:IsA("Frame") then
-        warn("CreateInput: Invalid section")
-        return nil
-    end
-
-    local inputName = params.name or "Input"
-    local defaultText = params.default or ""
-    local save = params.save or false
-    local callback = params.callback or function() end
-
-    local ContentFrame = section:FindFirstChild("ContentFrame")
-    if not ContentFrame then
-        warn("CreateInput: ContentFrame not found in section")
-        return nil
-    end
-
-    -- Загрузка сохраненного значения
-    if save and self._saveConfig.enabled then
-        local success, savedState = pcall(function()
-            return loadInputState(self, inputName)
-        end)
-        if success and savedState ~= nil then
-            defaultText = savedState
+    function windowInstance:CreateInput(params)
+        -- Проверка параметров
+        if not params or not params.section then
+            warn("CreateInput: Invalid parameters")
+            return nil
         end
-    end
 
-    -- Расчет позиции нового элемента
-    local elements = getSortedElements(ContentFrame)
-    local new_type = "input"
-    local yOffset = 5
+        local section = params.section
+        if not section or not section:IsA("Frame") then
+            warn("CreateInput: Invalid section")
+            return nil
+        end
 
-    if #elements > 0 then
-        local last = elements[#elements]
-        local last_type = last.Name:match("^Toggle_") and "toggle" or
-                          last.Name:match("^Dropdown_") and "dropdown" or
-                          last.Name:match("^Input_") and "input" or
-                          last.Name:match("^Bind_") and "bind" or
-                          last.Name:match("^Slider_") and "slider" or nil
-        local spacing = 2
+        local inputName = params.name or "Input"
+        local defaultText = params.default or ""
+        local save = params.save or false
+        local callback = params.callback or function() end
 
-        if last_type then
-            if last_type == "slider" and new_type == "dropdown" then
-                spacing = 0
-            elseif last_type == "slider" then
-                spacing = 5
-            elseif last_type == "toggle" and new_type == "dropdown" then
-                spacing = 3
-            elseif last_type == "dropdown" and new_type == "toggle" then
-                spacing = 5
-            elseif last_type == "dropdown" and new_type == "dropdown" then
-                spacing = 5
+        local ContentFrame = section:FindFirstChild("ContentFrame")
+        if not ContentFrame then
+            warn("CreateInput: ContentFrame not found in section")
+            return nil
+        end
+
+        -- Загрузка сохраненного значения
+        if save and self._saveConfig.enabled then
+            local success, savedState = pcall(function()
+                return loadInputState(self, inputName)
+            end)
+            if success and savedState ~= nil then
+                defaultText = savedState
             end
         end
 
-        yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
-    end
+        -- Расчет позиции нового элемента
+        local elements = getSortedElements(ContentFrame)
+        local new_type = "input"
+        local yOffset = 5
 
-    -- Создаем контейнер для Input
-    local InputContainer = Instance.new("Frame")
-    InputContainer.Name = "Input_" .. inputName
-    InputContainer.Parent = ContentFrame
-    InputContainer.BackgroundTransparency = 1
-    InputContainer.Size = UDim2.new(1, 0, 0, 50)
-    InputContainer.Position = UDim2.new(0, 0, 0, yOffset)
-    InputContainer.ZIndex = 5
-    InputContainer.Visible = true
+        if #elements > 0 then
+            local last = elements[#elements]
+            local last_type = last.Name:match("^Toggle_") and "toggle" or
+                              last.Name:match("^Dropdown_") and "dropdown" or
+                              last.Name:match("^Input_") and "input" or
+                              last.Name:match("^Bind_") and "bind" or
+                              last.Name:match("^Slider_") and "slider" or
+                              last.Name:match("^Button_") and "button" or nil
+            local spacing = 2
 
-    -- Текст "Input" сверху
-    local InputTopLabel = Instance.new("TextLabel")
-    InputTopLabel.Name = "InputTopLabel"
-    InputTopLabel.Parent = InputContainer
-    InputTopLabel.BackgroundTransparency = 1
-    InputTopLabel.Position = UDim2.new(0.085, 0, 0, 0)
-    InputTopLabel.Size = UDim2.new(0, 50, 0, 15)
-    InputTopLabel.Font = Enum.Font.SourceSans
-    InputTopLabel.Text = "Input"
-    InputTopLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-    InputTopLabel.TextSize = 12
-    InputTopLabel.TextXAlignment = Enum.TextXAlignment.Center
-    InputTopLabel.ZIndex = 6
+            if last_type then
+                if last_type == "slider" and new_type == "dropdown" then
+                    spacing = 0
+                elseif last_type == "slider" then
+                    spacing = 5
+                elseif last_type == "toggle" and new_type == "dropdown" then
+                    spacing = 3
+                elseif last_type == "dropdown" and new_type == "toggle" then
+                    spacing = 5
+                elseif last_type == "dropdown" and new_type == "dropdown" then
+                    spacing = 5
+                elseif last_type == "button" and new_type == "input" then
+                    spacing = 2
+                end
+            end
 
-    -- Основное поле ввода (ширина 50px)
-    local InputFrame = Instance.new("TextButton")
-    InputFrame.Name = "InputFrame"
-    InputFrame.Parent = InputContainer
-    InputFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-    InputFrame.BorderSizePixel = 0
-    InputFrame.Position = UDim2.new(0.085, 0, 0, 15)
-    InputFrame.Size = UDim2.new(0, 50, 0, 30)
-    InputFrame.AutoButtonColor = false
-    InputFrame.Text = ""
-    InputFrame.ZIndex = 6
+            yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
+        end
 
-    local UICornerInput = Instance.new("UICorner")
-    UICornerInput.CornerRadius = UDim.new(0, 4)
-    UICornerInput.Parent = InputFrame
+        -- Создаем контейнер для Input
+        local InputContainer = Instance.new("Frame")
+        InputContainer.Name = "Input_" .. inputName
+        InputContainer.Parent = ContentFrame
+        InputContainer.BackgroundTransparency = 1
+        InputContainer.Size = UDim2.new(1, 0, 0, 50)
+        InputContainer.Position = UDim2.new(0, 0, 0, yOffset)
+        InputContainer.ZIndex = 5
+        InputContainer.Visible = true
 
-    -- Текст внутри инпута
-    local InputTextLabel = Instance.new("TextLabel")
-    InputTextLabel.Name = "InputText"
-    InputTextLabel.Parent = InputFrame
-    InputTextLabel.BackgroundTransparency = 1
-    InputTextLabel.Size = UDim2.new(1, 0, 1, 0)
-    InputTextLabel.Font = Enum.Font.SourceSans
-    InputTextLabel.Text = defaultText
-    InputTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-    InputTextLabel.TextSize = 14
-    InputTextLabel.TextXAlignment = Enum.TextXAlignment.Center
-    InputTextLabel.ZIndex = 7
-    InputTextLabel.ClipsDescendants = true
+        -- Текст "Input" сверху
+        local InputTopLabel = Instance.new("TextLabel")
+        InputTopLabel.Name = "InputTopLabel"
+        InputTopLabel.Parent = InputContainer
+        InputTopLabel.BackgroundTransparency = 1
+        InputTopLabel.Position = UDim2.new(0.085, 0, 0, 0)
+        InputTopLabel.Size = UDim2.new(0, 50, 0, 15)
+        InputTopLabel.Font = Enum.Font.SourceSans
+        InputTopLabel.Text = "Input"
+        InputTopLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+        InputTopLabel.TextSize = 12
+        InputTopLabel.TextXAlignment = Enum.TextXAlignment.Center
+        InputTopLabel.ZIndex = 6
 
-    -- Название инпута (с отступом 10px от InputFrame)
-    local InputNameLabel = Instance.new("TextLabel")
-    InputNameLabel.Name = "InputName"
-    InputNameLabel.Parent = InputContainer
-    InputNameLabel.BackgroundTransparency = 1
-    InputNameLabel.Position = UDim2.new(0.085, 60, 0, 15) -- 50 (ширина) + 10 (отступ)
-    InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
-    InputNameLabel.Font = Enum.Font.SourceSansBold
-    InputNameLabel.Text = inputName
-    InputNameLabel.TextColor3 = Color3.fromRGB(147, 152, 156) -- Явный цвет
-    InputNameLabel.TextTransparency = 0 -- Полная непрозрачность
-    InputNameLabel.TextSize = 15
-    InputNameLabel.TextXAlignment = Enum.TextXAlignment.Left
-    InputNameLabel.ZIndex = 6
+        -- Основное поле ввода (ширина 50px)
+        local InputFrame = Instance.new("TextButton")
+        InputFrame.Name = "InputFrame"
+        InputFrame.Parent = InputContainer
+        InputFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+        InputFrame.BorderSizePixel = 0
+        InputFrame.Position = UDim2.new(0.085, 0, 0, 15)
+        InputFrame.Size = UDim2.new(0, 50, 0, 30)
+        InputFrame.AutoButtonColor = false
+        InputFrame.Text = ""
+        InputFrame.ZIndex = 6
 
-    local currentText = defaultText
+        local UICornerInput = Instance.new("UICorner")
+        UICornerInput.CornerRadius = UDim.new(0, 4)
+        UICornerInput.Parent = InputFrame
 
-    local function updateText()
-        InputTextLabel.Text = currentText
+        -- Текст внутри инпута
+        local InputTextLabel = Instance.new("TextLabel")
+        InputTextLabel.Name = "InputText"
+        InputTextLabel.Parent = InputFrame
+        InputTextLabel.BackgroundTransparency = 1
+        InputTextLabel.Size = UDim2.new(1, 0, 1, 0)
+        InputTextLabel.Font = Enum.Font.SourceSans
+        InputTextLabel.Text = defaultText
+        InputTextLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+        InputTextLabel.TextSize = 14
+        InputTextLabel.TextXAlignment = Enum.TextXAlignment.Center
+        InputTextLabel.ZIndex = 7
+        InputTextLabel.ClipsDescendants = true
 
-        if save and self._saveConfig.enabled then
-            pcall(function()
-                saveInputState(self, inputName, currentText)
+        -- Название инпута (с отступом 10px от InputFrame)
+        local InputNameLabel = Instance.new("TextLabel")
+        InputNameLabel.Name = "InputName"
+        InputNameLabel.Parent = InputContainer
+        InputNameLabel.BackgroundTransparency = 1
+        InputNameLabel.Position = UDim2.new(0.085, 60, 0, 15) -- 50 (ширина) + 10 (отступ)
+        InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
+        InputNameLabel.Font = Enum.Font.SourceSansBold
+        InputNameLabel.Text = inputName
+        InputNameLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+        InputNameLabel.TextTransparency = 0
+        InputNameLabel.TextSize = 15
+        InputNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+        InputNameLabel.ZIndex = 6
+
+        local currentText = defaultText
+
+        local function updateText()
+            InputTextLabel.Text = currentText
+
+            if save and self._saveConfig.enabled then
+                pcall(function()
+                    saveInputState(self, inputName, currentText)
+                end)
+            end
+
+            if callback then
+                pcall(callback, currentText)
+            end
+        end
+
+        InputFrame.MouseButton1Click:Connect(function()
+            local inputBox = Instance.new("TextBox")
+            inputBox.Name = "InputBox"
+            inputBox.Parent = InputFrame
+            inputBox.BackgroundTransparency = 1
+            inputBox.Size = UDim2.new(1, 0, 1, 0)
+            inputBox.Font = Enum.Font.SourceSans
+            inputBox.Text = currentText
+            inputBox.TextColor3 = Color3.fromRGB(147, 152, 156)
+            inputBox.TextSize = 14
+            inputBox.TextXAlignment = Enum.TextXAlignment.Center
+            inputBox.ZIndex = 8
+            inputBox.ClearTextOnFocus = false
+            inputBox.PlaceholderText = "Type..."
+            inputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+
+            InputTextLabel.Visible = false
+
+            inputBox.FocusLost:Connect(function(enterPressed)
+                currentText = inputBox.Text
+                inputBox:Destroy()
+                InputTextLabel.Visible = true
+                updateText()
             end)
-        end
 
-        if callback then
-            pcall(callback, currentText)
-        end
-    end
-
-    InputFrame.MouseButton1Click:Connect(function()
-        local inputBox = Instance.new("TextBox")
-        inputBox.Name = "InputBox"
-        inputBox.Parent = InputFrame
-        inputBox.BackgroundTransparency = 1
-        inputBox.Size = UDim2.new(1, 0, 1, 0)
-        inputBox.Font = Enum.Font.SourceSans
-        inputBox.Text = currentText
-        inputBox.TextColor3 = Color3.fromRGB(147, 152, 156)
-        inputBox.TextSize = 14
-        inputBox.TextXAlignment = Enum.TextXAlignment.Center
-        inputBox.ZIndex = 8
-        inputBox.ClearTextOnFocus = false
-        inputBox.PlaceholderText = "Type..."
-        inputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
-
-        InputTextLabel.Visible = false
-
-        inputBox.FocusLost:Connect(function(enterPressed)
-            currentText = inputBox.Text
-            inputBox:Destroy()
-            InputTextLabel.Visible = true
-            updateText()
+            inputBox:CaptureFocus()
         end)
 
-        inputBox:CaptureFocus()
-    end)
+        updateText()
 
-    updateText()
+        table.insert(self._inputElements, InputContainer)
 
-    table.insert(self._inputElements, InputContainer)
+        -- Обновление размеров секции
+        task.defer(function()
+            local currentElements = getSortedElements(ContentFrame)
+            local totalHeight = 0
 
-    -- Обновление размеров секции
-    task.defer(function()
-        local currentElements = getSortedElements(ContentFrame)
-        local totalHeight = 0
+            if #currentElements > 0 then
+                local lastElement = currentElements[#currentElements]
+                totalHeight = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset
+            end
 
-        if #currentElements > 0 then
-            local lastElement = currentElements[#currentElements]
-            totalHeight = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset
-        end
+            if windowInstance._sectionStates[section] then
+                local bottom_padding = get_bottom_padding(ContentFrame)
+                ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 5)
+                section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + bottom_padding)
+            end
 
-        if windowInstance._sectionStates[section] then
-            local bottom_padding = get_bottom_padding(ContentFrame)
-            ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 5)
-            section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + bottom_padding)
-        end
+            local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+            local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+            updateSectionPositions(container, sectionsList)
+        end)
 
-        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-        updateSectionPositions(container, sectionsList)
-    end)
-
-    return {
-        Set = function(self, value)
-            currentText = tostring(value)
-            updateText()
-        end,
-        Get = function(self)
-            return currentText
-        end
-    }
-end
+        return {
+            Set = function(self, value)
+                currentText = tostring(value)
+                updateText()
+            end,
+            Get = function(self)
+                return currentText
+            end
+        }
+    end
 
     -- New bind creation function (similar to input but for keybinds)
     function windowInstance:CreateBind(params)
@@ -2404,7 +2414,8 @@ end
                               last.Name:match("^Dropdown_") and "dropdown" or
                               last.Name:match("^Input_") and "input" or
                               last.Name:match("^Bind_") and "bind" or
-                              last.Name:match("^Slider_") and "slider" or nil
+                              last.Name:match("^Slider_") and "slider" or
+                              last.Name:match("^Button_") and "button" or nil
             local spacing = 2
 
             if last_type then
@@ -2418,6 +2429,8 @@ end
                     spacing = 5
                 elseif last_type == "dropdown" and new_type == "dropdown" then
                     spacing = 5
+                elseif last_type == "button" and new_type == "bind" then
+                    spacing = 2
                 end
             end
 
@@ -2440,7 +2453,7 @@ end
         BindTopLabel.Parent = BindContainer
         BindTopLabel.BackgroundTransparency = 1
         BindTopLabel.Position = UDim2.new(0.085, 0, 0, 0)
-        BindTopLabel.Size = UDim2.new(0, 60, 0, 15) -- Width matches bind frame
+        BindTopLabel.Size = UDim2.new(0, 60, 0, 15)
         BindTopLabel.Font = Enum.Font.SourceSans
         BindTopLabel.Text = "Bind"
         BindTopLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
@@ -2483,7 +2496,7 @@ end
         BindNameLabel.Name = "BindName"
         BindNameLabel.Parent = BindContainer
         BindNameLabel.BackgroundTransparency = 1
-        BindNameLabel.Position = UDim2.new(0.085, 70, 0, 15) -- 60 (width) + 10 (offset)
+        BindNameLabel.Position = UDim2.new(0.085, 70, 0, 15)
         BindNameLabel.Size = UDim2.new(0, 100, 0, 30)
         BindNameLabel.Font = Enum.Font.SourceSansBold
         BindNameLabel.Text = bindName
@@ -2619,64 +2632,233 @@ end
         }
     end
 
+    -- New button creation function
+       -- New button creation function with original style from Section3
+    function windowInstance:CreateButton(params)
+        -- Parameter validation
+        if not params or not params.section then
+            warn("CreateButton: Invalid parameters")
+            return nil
+        end
 
+        local section = params.section
+        if not section or not section:IsA("Frame") then
+            warn("CreateButton: Invalid section")
+            return nil
+        end
 
+        local buttonName = params.name or "Button"
+        local callback = params.callback or function() end
 
+        local ContentFrame = section:FindFirstChild("ContentFrame")
+        if not ContentFrame then
+            warn("CreateButton: ContentFrame not found in section")
+            return nil
+        end
 
+        -- Calculate position for new element
+        local elements = getSortedElements(ContentFrame)
+        local new_type = "button"
+        local yOffset = 5
 
+        if #elements > 0 then
+            local last = elements[#elements]
+            local last_type = last.Name:match("^Toggle_") and "toggle" or
+                              last.Name:match("^Dropdown_") and "dropdown" or
+                              last.Name:match("^Input_") and "input" or
+                              last.Name:match("^Bind_") and "bind" or
+                              last.Name:match("^Slider_") and "slider" or
+                              last.Name:match("^Button_") and "button" or nil
+            local spacing = 2
 
+            if last_type then
+                if last_type == "slider" and new_type == "dropdown" then
+                    spacing = 0
+                elseif last_type == "slider" then
+                    spacing = 5
+                elseif last_type == "toggle" and new_type == "dropdown" then
+                    spacing = 3
+                elseif last_type == "dropdown" and new_type == "toggle" then
+                    spacing = 5
+                elseif last_type == "dropdown" and new_type == "dropdown" then
+                    spacing = 5
+                elseif last_type == "button" then
+                    spacing = 2
+                end
+            end
 
-local function updateAllDropdownPositions()
-    if not windowInstance or not windowInstance._openDropdowns then return end
-    for dropdownContainer, dropdownList in pairs(windowInstance._openDropdowns) do
-        if dropdownContainer and dropdownContainer:IsA("Frame") and dropdownList and dropdownList:IsA("Frame") then
-            local button = dropdownContainer:FindFirstChild("Button")
-            if button then
-                local buttonPos = button.AbsolutePosition
-                local buttonSize = button.AbsoluteSize
-                local screenSize = windowInstance._screenGui and windowInstance._screenGui.AbsoluteSize or Vector2.new(0, 0)
-                local scrolling = dropdownList:FindFirstChild("ScrollingFrame")
-                local optionCount = scrolling and (scrolling.CanvasSize.Y.Offset / 20) or 0
-                local maxHeight = math.min(4, optionCount) * 20
+            yOffset = last.Position.Y.Offset + last.Size.Y.Offset + spacing
+        end
 
-                local yPos = buttonPos.Y + buttonSize.Y
-                local hasOverlap = false
-                for _, colorSelector in pairs(windowInstance._colorSelectorElements or {}) do
-                    local colorButton = colorSelector:FindFirstChild("Button")
-                    if colorButton and colorButton.Parent:FindFirstChild("ColorPickerFrame") and colorButton.Parent.ColorPickerFrame.Visible then
-                        local pickerPos = colorButton.Parent.ColorPickerFrame.AbsolutePosition
-                        local pickerSize = colorButton.Parent.ColorPickerFrame.AbsoluteSize
-                        if buttonPos.Y < pickerPos.Y + pickerSize.Y and buttonPos.Y + buttonSize.Y > pickerPos.Y then
-                            hasOverlap = true
-                            yPos = pickerPos.Y - maxHeight - 5
-                            break
+        -- Create container for Button
+        local ButtonContainer = Instance.new("Frame")
+        ButtonContainer.Name = "Button_" .. buttonName
+        ButtonContainer.Parent = ContentFrame
+        ButtonContainer.BackgroundTransparency = 1
+        ButtonContainer.Size = UDim2.new(1, 0, 0, 30)
+        ButtonContainer.Position = UDim2.new(0, 0, 0, yOffset)
+        ButtonContainer.ZIndex = 5
+        ButtonContainer.Visible = true
+
+        -- Кнопка в стиле из Section3 с выравниванием по левому краю как другие элементы
+        local ButtonFrame = Instance.new("TextButton")
+        ButtonFrame.Name = "ButtonFrame"
+        ButtonFrame.Parent = ButtonContainer
+        ButtonFrame.BackgroundColor3 = Color3.fromRGB(24, 29, 32) -- Темно-серый как в оригинале
+        ButtonFrame.BorderSizePixel = 0
+        ButtonFrame.Position = UDim2.new(0.085, 0, 0.1, 0) -- Выравнивание по левому краю как другие элементы (8.5%)
+        ButtonFrame.Size = UDim2.new(0, 40, 0, 20) -- Ширина 40px как requested
+        ButtonFrame.AutoButtonColor = false
+        ButtonFrame.Text = "" -- Серая эмоджи мышки
+        ButtonFrame.TextColor3 = Color3.fromRGB(147, 152, 156) -- Серый цвет текста
+        ButtonFrame.TextSize = 14
+        ButtonFrame.ZIndex = 6
+
+        local UICornerButton = Instance.new("UICorner")
+        UICornerButton.CornerRadius = UDim.new(0, 4) -- Уголки как в оригинале
+        UICornerButton.Parent = ButtonFrame
+
+        -- Название кнопки (с отступом 10px от кнопки)
+        local ButtonNameLabel = Instance.new("TextLabel")
+        ButtonNameLabel.Name = "ButtonName"
+        ButtonNameLabel.Parent = ButtonContainer
+        ButtonNameLabel.BackgroundTransparency = 1
+        ButtonNameLabel.Position = UDim2.new(0.085, 50, 0.1, 0) -- 40 (ширина) + 10 (отступ)
+        ButtonNameLabel.Size = UDim2.new(0, 100, 0, 20)
+        ButtonNameLabel.Font = Enum.Font.SourceSansBold
+        ButtonNameLabel.Text = buttonName
+        ButtonNameLabel.TextColor3 = Color3.fromRGB(147, 152, 156) -- Серый текст как в оригинале
+        ButtonNameLabel.TextTransparency = 0
+        ButtonNameLabel.TextSize = 17 -- Размер текста как в оригинале
+        ButtonNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+        ButtonNameLabel.ZIndex = 6
+
+        -- Анимация наведения и нажатия в стиле оригинальной UI
+        local function onButtonHover()
+            if not TweenService then return end
+            local tween = TweenService:Create(
+                ButtonFrame,
+                TweenInfo.new(0.2, Enum.EasingStyle.Quad),
+                {BackgroundColor3 = Color3.fromRGB(35, 40, 45)} -- Более светлый серый при наведении
+            )
+            tween:Play()
+        end
+
+        local function onButtonLeave()
+            if not TweenService then return end
+            local tween = TweenService:Create(
+                ButtonFrame,
+                TweenInfo.new(0.2, Enum.EasingStyle.Quad),
+                {BackgroundColor3 = Color3.fromRGB(24, 29, 32)} -- Возврат к оригинальному цвету
+            )
+            tween:Play()
+        end
+
+        local function onButtonPress()
+            if not TweenService then return end
+            local tween = TweenService:Create(
+                ButtonFrame,
+                TweenInfo.new(0.1, Enum.EasingStyle.Quad),
+                {BackgroundColor3 = Color3.fromRGB(150, 17, 255)} -- Фиолетовый при нажатии
+            )
+            tween:Play()
+
+            -- Вызов callback
+            pcall(callback)
+
+            -- Возврат к обычному цвету
+            wait(0.1)
+            onButtonHover()
+        end
+
+        ButtonFrame.MouseEnter:Connect(onButtonHover)
+        ButtonFrame.MouseLeave:Connect(onButtonLeave)
+        ButtonFrame.MouseButton1Click:Connect(onButtonPress)
+
+        table.insert(self._buttonElements, ButtonContainer)
+
+        -- Обновление размеров секции
+        task.defer(function()
+            local currentElements = getSortedElements(ContentFrame)
+            local totalHeight = 0
+
+            if #currentElements > 0 then
+                local lastElement = currentElements[#currentElements]
+                totalHeight = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset
+            end
+
+            if windowInstance._sectionStates[section] then
+                local bottom_padding = get_bottom_padding(ContentFrame)
+                ContentFrame.Size = UDim2.new(1, 0, 0, totalHeight + 5)
+                section.Size = UDim2.new(1, 0, 0, 30 + totalHeight + bottom_padding)
+            end
+
+            local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+            local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+            updateSectionPositions(container, sectionsList)
+        end)
+
+        return {
+            SetText = function(self, newText)
+                ButtonNameLabel.Text = newText or buttonName
+            end,
+            SetCallback = function(self, newCallback)
+                callback = newCallback or callback
+            end
+        }
+    end
+
+    local function updateAllDropdownPositions()
+        if not windowInstance or not windowInstance._openDropdowns then return end
+        for dropdownContainer, dropdownList in pairs(windowInstance._openDropdowns) do
+            if dropdownContainer and dropdownContainer:IsA("Frame") and dropdownList and dropdownList:IsA("Frame") then
+                local button = dropdownContainer:FindFirstChild("Button")
+                if button then
+                    local buttonPos = button.AbsolutePosition
+                    local buttonSize = button.AbsoluteSize
+                    local screenSize = windowInstance._screenGui and windowInstance._screenGui.AbsoluteSize or Vector2.new(0, 0)
+                    local scrolling = dropdownList:FindFirstChild("ScrollingFrame")
+                    local optionCount = scrolling and (scrolling.CanvasSize.Y.Offset / 20) or 0
+                    local maxHeight = math.min(4, optionCount) * 20
+
+                    local yPos = buttonPos.Y + buttonSize.Y
+                    local hasOverlap = false
+                    for _, colorSelector in pairs(windowInstance._colorSelectorElements or {}) do
+                        local colorButton = colorSelector:FindFirstChild("Button")
+                        if colorButton and colorButton.Parent:FindFirstChild("ColorPickerFrame") and colorButton.Parent.ColorPickerFrame.Visible then
+                            local pickerPos = colorButton.Parent.ColorPickerFrame.AbsolutePosition
+                            local pickerSize = colorButton.Parent.ColorPickerFrame.AbsoluteSize
+                            if buttonPos.Y < pickerPos.Y + pickerSize.Y and buttonPos.Y + buttonSize.Y > pickerPos.Y then
+                                hasOverlap = true
+                                yPos = pickerPos.Y - maxHeight - 5
+                                break
+                            end
                         end
                     end
-                end
 
-                if not hasOverlap then
-                    if yPos + maxHeight > screenSize.Y then
-                        yPos = buttonPos.Y - maxHeight
+                    if not hasOverlap then
+                        if yPos + maxHeight > screenSize.Y then
+                            yPos = buttonPos.Y - maxHeight
+                        end
                     end
-                end
 
-                dropdownList.Position = UDim2.new(0, buttonPos.X, 0, yPos)
+                    dropdownList.Position = UDim2.new(0, buttonPos.X, 0, yPos)
+                else
+                    warn("Button not found in DropdownContainer: " .. (dropdownContainer and dropdownContainer.Name or "nil"))
+                    dropdownList.Visible = false
+                    dropdownList.Size = UDim2.new(0, 165, 0, 0)
+                    windowInstance._openDropdowns[dropdownContainer] = nil
+                end
             else
-                warn("Button not found in DropdownContainer: " .. (dropdownContainer and dropdownContainer.Name or "nil"))
-                dropdownList.Visible = false
-                dropdownList.Size = UDim2.new(0, 165, 0, 0)
-                windowInstance._openDropdowns[dropdownContainer] = nil
-            end
-        else
-            warn("Invalid DropdownContainer or DropdownList: " .. (dropdownContainer and dropdownContainer.Name or "nil"))
-            if dropdownList then
-                dropdownList.Visible = false
-                dropdownList.Size = UDim2.new(0, 165, 0, 0)
-                windowInstance._openDropdowns[dropdownContainer] = nil
+                warn("Invalid DropdownContainer or DropdownList: " .. (dropdownContainer and dropdownContainer.Name or "nil"))
+                if dropdownList then
+                    dropdownList.Visible = false
+                    dropdownList.Size = UDim2.new(0, 165, 0, 0)
+                    windowInstance._openDropdowns[dropdownContainer] = nil
+                end
             end
         end
     end
-end
 
     return windowInstance
 end
