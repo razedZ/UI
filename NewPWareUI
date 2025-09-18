@@ -16,6 +16,19 @@ local writeFileAvailable = pcall(function() return writefile end)
 local PizdecWare = {}
 PizdecWare.__index = PizdecWare
 
+-- Функция для получения имени переменной
+local function getCallingVariableName()
+    local level = 3
+    for i = 1, 255 do
+        local name, value = debug.getlocal(level, i)
+        if not name then break end
+        if type(value) == "table" and value.Get then
+            return name
+        end
+    end
+    return nil
+end
+
 function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Parent = game:GetService("CoreGui")
@@ -239,7 +252,7 @@ if windowInstance._saveConfig.enabled and HttpService and isFileAvailable and wr
         if not isfile(windowInstance._saveConfig.fileName..".json") then
             return {}
         end
-        local data = HttpService:JSONEncode(readfile(windowInstance._saveConfig.fileName..".json")) or {}
+        local data = HttpService:JSONDecode(readfile(windowInstance._saveConfig.fileName..".json")) or {}
         return data
     end)
 
@@ -302,7 +315,6 @@ end
         return window._savedDropdowns[dropdownName]
     end
 
-    -- Function to save input state
     -- Function to save input state
     local function saveInputState(window, inputName, value)
         if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
@@ -606,7 +618,7 @@ function windowInstance:CreateTab(visualName, imageId)
         if not TweenService or not self._selectedTab then return end
 
         -- Close all open dropdowns when switching tabs
-        for container, list in pairs(self._openDropdowns) do
+        for container, list in pairs(self._openDropdowns) then
             list.Visible = false
             list.Size = UDim2.new(0, 165, 0, 0)
             self._openDropdowns[container] = nil
@@ -705,7 +717,7 @@ end
                         local elements = getSortedElements(contentFrame)
                         local previous_type = nil
                         for j, element in ipairs(elements) do
-                            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
+                            local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or element.Name:match("^Slider_") and "slider" or element.Name:match("^Button_") and "button"
                             local spacing
                             if previous_type == nil then
                                 spacing = 5
@@ -959,9 +971,12 @@ end
         local ContentFrame = section:FindFirstChild("ContentFrame")
         if not ContentFrame then return nil end
 
+        -- Загрузка сохраненного значения
         if save and self._saveConfig.enabled then
-            local savedState = loadToggleState(self, toggleName)
-            if savedState ~= nil then
+            local success, savedState = pcall(function()
+                return loadToggleState(self, getCallingVariableName() or toggleName)
+            end)
+            if success and savedState ~= nil then
                 defaultValue = savedState
             end
         end
@@ -1059,7 +1074,7 @@ end
             end
 
             if save and self._saveConfig.enabled then
-                saveToggleState(self, toggleName, isToggled)
+                saveToggleState(self, getCallingVariableName() or toggleName, isToggled)
             end
 
             callback(isToggled)
@@ -1110,7 +1125,7 @@ end
                 end
 
                 if save and windowInstance._saveConfig.enabled then
-                    saveToggleState(windowInstance, toggleName, isToggled)
+                    saveToggleState(windowInstance, getCallingVariableName() or toggleName, isToggled)
                 end
 
                 callback(isToggled)
@@ -1147,9 +1162,10 @@ end
             return nil
         end
 
-        if save and self._saveConfig and self._saveConfig.enabled then
+        -- Загрузка сохраненного значения
+        if save and self._saveConfig.enabled then
             local success, savedState = pcall(function()
-                return loadDropdownState(self, dropdownName)
+                return loadDropdownState(self, getCallingVariableName() or dropdownName)
             end)
             if success and savedState ~= nil then
                 if multi then
@@ -1335,6 +1351,21 @@ end
                 end
                 SelectedText.Text = "Select option"
             end
+
+            if save and self._saveConfig.enabled then
+                if multi then
+                    local selected = {}
+                    for opt in pairs(selectedOptions) do
+                        table.insert(selected, opt)
+                    end
+                    saveDropdownState(self, getCallingVariableName() or dropdownName, selected)
+                else
+                    for opt in pairs(selectedOptions) do
+                        saveDropdownState(self, getCallingVariableName() or dropdownName, opt)
+                        break
+                    end
+                end
+            end
         end
 
         local function createOptionButtons()
@@ -1384,21 +1415,6 @@ end
                     end
 
                     updateSelectedText()
-
-                    if save and self._saveConfig.enabled then
-                        if multi then
-                            local selected = {}
-                            for opt in pairs(selectedOptions) do
-                                table.insert(selected, opt)
-                            end
-                            saveDropdownState(self, dropdownName, selected)
-                        else
-                            for opt in pairs(selectedOptions) do
-                                saveDropdownState(self, dropdownName, opt)
-                                break
-                            end
-                        end
-                    end
 
                     if callback then
                         pcall(callback, multi and (function()
@@ -1707,10 +1723,10 @@ end
                         for opt in pairs(selectedOptions) do
                             table.insert(selected, opt)
                         end
-                        self:saveDropdownState(dropdownName, selected)
+                        saveDropdownState(self, getCallingVariableName() or dropdownName, selected)
                     else
                         for opt in pairs(selectedOptions) do
-                            saveDropdownState(self, dropdownName, opt)
+                            saveDropdownState(self, getCallingVariableName() or dropdownName, opt)
                             break
                         end
                     end
@@ -1723,7 +1739,7 @@ end
                             table.insert(selected, opt)
                         end
                         return selected
-                    end)() or next(selectedOptions))
+                        end)() or next(selectedOptions))
                 end
             end,
             Get = function()
@@ -1756,390 +1772,282 @@ end
     end
 
     -- New slider creation function
-    function windowInstance:CreateSlider(params)
-        -- Parameter validation
-        if not params or not params.section then
-            warn("CreateSlider: Invalid parameters")
-            return nil
+ function windowInstance:CreateSlider(params)
+    if not params or not params.section then
+        warn("CreateSlider: Invalid parameters")
+        return nil
+    end
+
+    local section = params.section
+    if not section or not section:IsA("Frame") then
+        warn("CreateSlider: Invalid section")
+        return nil
+    end
+
+    local sliderName = params.name or "Slider"
+    local minValue = params.min or 0
+    local maxValue = params.max or 100
+    local defaultValue = params.default or math.floor((minValue + maxValue) / 2)
+    local save = params.save or false
+    local callback = params.callback or function() end
+    local precise = params.precise or false
+
+    if minValue > maxValue then
+        minValue, maxValue = maxValue, minValue
+    end
+
+    local ContentFrame = section:FindFirstChild("ContentFrame")
+    if not ContentFrame then
+        warn("CreateSlider: ContentFrame not found in section")
+        return nil
+    end
+
+    -- Загружаем сохраненное значение ПЕРЕД созданием UI
+    local loadedValue = nil
+    if save and self._saveConfig.enabled then
+        local success, savedState = pcall(function()
+            return loadSliderState(self, getCallingVariableName() or sliderName)
+        end)
+        if success and savedState ~= nil then
+            local parsedValue = tonumber(savedState)
+            if parsedValue and parsedValue >= minValue and parsedValue <= maxValue then
+                loadedValue = parsedValue
+            else
+                warn("CreateSlider: Saved value for " .. sliderName .. " is invalid or out of range, using default")
+            end
+        else
+            warn("CreateSlider: Failed to load saved state for " .. sliderName)
         end
+    end
 
-        local section = params.section
-        if not section or not section:IsA("Frame") then
-            warn("CreateSlider: Invalid section")
-            return nil
-        end
+    -- Устанавливаем начальное значение: сохраненное (если валидно) или default
+    local initialValue = loadedValue or defaultValue
+    initialValue = math.clamp(initialValue, minValue, maxValue)
 
-        local sliderName = params.name or "Slider"
-        local minValue = params.min or 0
-        local maxValue = params.max or 100
-        local defaultValue = params.default or math.floor((minValue + maxValue) / 2)
-        local save = params.save or false
-        local callback = params.callback or function() end
-        local precise = params.precise or false
+    local elements = getSortedElements(ContentFrame)
+    local new_type = "slider"
+    local yOffset = 5
 
-        -- Ensure min is less than max
-        if minValue > maxValue then
-            minValue, maxValue = maxValue, minValue
-        end
+    if #elements > 0 then
+        local lastElement = elements[#elements]
+        local lastType = lastElement.Name:match("^Toggle_") and "toggle" or
+                         lastElement.Name:match("^Dropdown_") and "dropdown" or
+                         lastElement.Name:match("^Input_") and "input" or
+                         lastElement.Name:match("^Bind_") and "bind" or
+                         lastElement.Name:match("^Slider_") and "slider" or
+                         lastElement.Name:match("^Button_") and "button" or nil
+        local spacing = 2
 
-        -- Clamp default value
-        defaultValue = math.clamp(defaultValue, minValue, maxValue)
-
-        local ContentFrame = section:FindFirstChild("ContentFrame")
-        if not ContentFrame then
-            warn("CreateSlider: ContentFrame not found in section")
-            return nil
-        end
-
-        -- Load saved value
-        if save and self._saveConfig.enabled then
-            local success, savedState = pcall(function()
-                return loadSliderState(self, sliderName)
-            end)
-            if success and savedState ~= nil then
-                defaultValue = tonumber(savedState) or defaultValue
-                defaultValue = math.clamp(defaultValue, minValue, maxValue)
+        if lastType then
+            if lastType == "slider" and new_type == "dropdown" then
+                spacing = 5
+            elseif lastType == "slider" then
+                spacing = 5
+            elseif lastType == "toggle" and new_type == "dropdown" then
+                spacing = 3
+            elseif lastType == "dropdown" and new_type == "toggle" then
+                spacing = 5
+            elseif lastType == "dropdown" and new_type == "dropdown" then
+                spacing = 5
+            elseif lastType == "button" and new_type == "slider" then
+                spacing = 2
             end
         end
 
-        -- Get proper yOffset based on existing elements
-        local elements = getSortedElements(ContentFrame)
-        local new_type = "slider"
-        local yOffset = 5
+        yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
+    end
 
-        if #elements > 0 then
-            local lastElement = elements[#elements]
-            local lastType = lastElement.Name:match("^Toggle_") and "toggle" or
-                             lastElement.Name:match("^Dropdown_") and "dropdown" or
-                             lastElement.Name:match("^Input_") and "input" or
-                             lastElement.Name:match("^Bind_") and "bind" or
-                             lastElement.Name:match("^Slider_") and "slider" or
-                             lastElement.Name:match("^Button_") and "button" or nil
-            local spacing = 2
+    local SliderContainer = Instance.new("Frame")
+    SliderContainer.Name = "Slider_" .. sliderName
+    SliderContainer.Parent = ContentFrame
+    SliderContainer.BackgroundTransparency = 1
+    SliderContainer.Size = UDim2.new(1, 0, 0, 42)
+    SliderContainer.Position = UDim2.new(0, 0, 0, yOffset)
+    SliderContainer.ZIndex = 5
+    SliderContainer.Visible = true
 
-            if lastType then
-                if lastType == "slider" and new_type == "dropdown" then
-                    spacing = 5
-                elseif lastType == "slider" then
-                    spacing = 5
-                elseif lastType == "toggle" and new_type == "dropdown" then
-                    spacing = 3
-                elseif lastType == "dropdown" and new_type == "toggle" then
-                    spacing = 5
-                elseif lastType == "dropdown" and new_type == "dropdown" then
-                    spacing = 5
-                elseif lastType == "button" and new_type == "slider" then
-                    spacing = 2
-                end
-            end
+    local SliderLabel = Instance.new("TextLabel")
+    SliderLabel.Name = "TextLabel"
+    SliderLabel.Parent = SliderContainer
+    SliderLabel.BackgroundTransparency = 1
+    SliderLabel.Position = UDim2.new(0.085, 0, 0, -2)
+    SliderLabel.Size = UDim2.new(0, 165, 0, 22)
+    SliderLabel.Font = Enum.Font.SourceSansBold
+    SliderLabel.Text = sliderName
+    SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    SliderLabel.TextSize = 15
+    SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SliderLabel.ZIndex = 6
 
-            yOffset = lastElement.Position.Y.Offset + lastElement.Size.Y.Offset + spacing
-        end
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Name = "Value"
+    ValueLabel.Parent = SliderContainer
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.Position = UDim2.new(0.085, 0, 0, -2)
+    ValueLabel.Size = UDim2.new(0, 165, 0, 22)
+    ValueLabel.Font = Enum.Font.SourceSansBold
+    ValueLabel.Text = ""  -- Устанавливаем позже в updateSlider
+    ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
+    ValueLabel.TextSize = 15
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    ValueLabel.ZIndex = 6
 
-        -- Create container for Slider (30px height)
-        local SliderContainer = Instance.new("Frame")
-        SliderContainer.Name = "Slider_" .. sliderName
-        SliderContainer.Parent = ContentFrame
-        SliderContainer.BackgroundTransparency = 1
-        SliderContainer.Size = UDim2.new(1, 0, 0, 42)
-        SliderContainer.Position = UDim2.new(0, 0, 0, yOffset)
-        SliderContainer.ZIndex = 5
-        SliderContainer.Visible = true
+    local SliderTrack = Instance.new("Frame")
+    SliderTrack.Name = "Track"
+    SliderTrack.Parent = SliderContainer
+    SliderTrack.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
+    SliderTrack.BorderSizePixel = 0
+    SliderTrack.Position = UDim2.new(0.085, 0, 0, 23)
+    SliderTrack.Size = UDim2.new(0, 165, 0, 6)
+    SliderTrack.ZIndex = 6
 
-        -- Slider name label
-        local SliderLabel = Instance.new("TextLabel")
-        SliderLabel.Name = "TextLabel"
-        SliderLabel.Parent = SliderContainer
-        SliderLabel.BackgroundTransparency = 1
-        SliderLabel.Position = UDim2.new(0.085, 0, 0, -2)
-        SliderLabel.Size = UDim2.new(0, 165, 0, 22)
-        SliderLabel.Font = Enum.Font.SourceSansBold
-        SliderLabel.Text = sliderName
-        SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        SliderLabel.TextSize = 15
-        SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-        SliderLabel.ZIndex = 6
+    local UICornerTrack = Instance.new("UICorner")
+    UICornerTrack.CornerRadius = UDim.new(0, 4)
+    UICornerTrack.Parent = SliderTrack
 
-        -- Slider value label
-        local ValueLabel = Instance.new("TextLabel")
-        ValueLabel.Name = "Value"
-        ValueLabel.Parent = SliderContainer
-        ValueLabel.BackgroundTransparency = 1
-        ValueLabel.Position = UDim2.new(0.085, 0, 0, -2)
-        ValueLabel.Size = UDim2.new(0, 165, 0, 22)
-        ValueLabel.Font = Enum.Font.SourceSansBold
-        ValueLabel.Text = tostring(defaultValue)
-                ValueLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
-        ValueLabel.TextSize = 15
-        ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
-        ValueLabel.ZIndex = 6
+    local SliderFill = Instance.new("Frame")
+    SliderFill.Name = "Fill"
+    SliderFill.Parent = SliderTrack
+    SliderFill.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+    SliderFill.BorderSizePixel = 0
+    SliderFill.Size = UDim2.new(0, 0, 1, 0)  -- Устанавливаем позже
+    SliderFill.ZIndex = 7
 
-        -- Slider track (positioned for 30px container)
-        local SliderTrack = Instance.new("Frame")
-        SliderTrack.Name = "Track"
-        SliderTrack.Parent = SliderContainer
-        SliderTrack.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
-        SliderTrack.BorderSizePixel = 0
-        SliderTrack.Position = UDim2.new(0.085, 0, 0, 23)
-        SliderTrack.Size = UDim2.new(0, 165, 0, 6)
-        SliderTrack.ZIndex = 6
-
-        local UICornerTrack = Instance.new("UICorner")
-        UICornerTrack.CornerRadius = UDim.new(0, 4)
-        UICornerTrack.Parent = SliderTrack
-
-        -- Slider fill
-        local SliderFill = Instance.new("Frame")
-        SliderFill.Name = "Fill"
-        SliderFill.Parent = SliderTrack
-        SliderFill.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-        SliderFill.BorderSizePixel = 0
-        SliderFill.Size = UDim2.new(0, 0, 1, 0)
-        SliderFill.ZIndex = 7
-
-        local UICornerFill = Instance.new("UICorner")
+    local UICornerFill = Instance.new("UICorner")
         UICornerFill.Parent = SliderFill
 
-        -- Slider thumb
-        local SliderThumb = Instance.new("TextButton")
-        SliderThumb.Name = "Thumb"
-        SliderThumb.Parent = SliderTrack
-        SliderThumb.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-        SliderThumb.BorderSizePixel = 0
-        SliderThumb.Size = UDim2.new(0, 16, 0, 16)
-        SliderThumb.Position = UDim2.new(0, -8, 0.5, -8)
-        SliderThumb.Text = ""
-        SliderThumb.ZIndex = 8
-        SliderThumb.AutoButtonColor = false
+    local SliderThumb = Instance.new("TextButton")
+    SliderThumb.Name = "Thumb"
+    SliderThumb.Parent = SliderTrack
+    SliderThumb.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+    SliderThumb.BorderSizePixel = 0
+    SliderThumb.Size = UDim2.new(0, 16, 0, 16)
+    SliderThumb.Position = UDim2.new(0, -8, 0.5, -8)  -- Устанавливаем позже
+    SliderThumb.Text = ""
+    SliderThumb.ZIndex = 8
+    SliderThumb.AutoButtonColor = false
 
-        local UICornerThumb = Instance.new("UICorner")
-        UICornerThumb.CornerRadius = UDim.new(1, 0)
-        UICornerThumb.Parent = SliderThumb
+    local UICornerThumb = Instance.new("UICorner")
+    UICornerThumb.CornerRadius = UDim.new(1, 0)
+    UICornerThumb.Parent = SliderThumb
 
-        local ThumbInner = Instance.new("Frame")
-        ThumbInner.Name = "Inner"
-        ThumbInner.Parent = SliderThumb
-        ThumbInner.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
-        ThumbInner.BorderSizePixel = 0
-        ThumbInner.Position = UDim2.new(0.125, 0, 0.125, 0)
-        ThumbInner.Size = UDim2.new(0.75, 0, 0.75, 0)
-        ThumbInner.ZIndex = 9
+    local ThumbInner = Instance.new("Frame")
+    ThumbInner.Name = "Inner"
+    ThumbInner.Parent = SliderThumb
+    ThumbInner.BackgroundColor3 = Color3.fromRGB(27, 29, 33)
+    ThumbInner.BorderSizePixel = 0
+    ThumbInner.Position = UDim2.new(0.125, 0, 0.125, 0)
+    ThumbInner.Size = UDim2.new(0.75, 0, 0.75, 0)
+    ThumbInner.ZIndex = 9
 
-        local UICornerInner = Instance.new("UICorner")
-        UICornerInner.CornerRadius = UDim.new(1, 0)
-        UICornerInner.Parent = ThumbInner
+    local UICornerInner = Instance.new("UICorner")
+    UICornerInner.CornerRadius = UDim.new(1, 0)
+    UICornerInner.Parent = ThumbInner
 
-        -- Calculate initial fill and thumb position
-        local function getValueFromPosition(x)
-            local trackWidth = SliderTrack.AbsoluteSize.X
-            local relativePos = math.clamp(x - SliderTrack.AbsolutePosition.X, 0, trackWidth)
-            local normalized = relativePos / trackWidth
-            local value = minValue + (maxValue - minValue) * normalized
-            return precise and value or math.floor(value + 0.5)
-        end
-
-        local function getPositionFromValue(value)
-            local normalized = (value - minValue) / (maxValue - minValue)
-            return normalized * SliderTrack.AbsoluteSize.X
-        end
-
-        local currentValue = defaultValue
-        local isDragging = false
-
-        -- Update visual elements based on current value
-        local function updateSlider(value)
-            currentValue = math.clamp(value, minValue, maxValue)
-            local displayValue = precise and string.format("%.2f", currentValue) or tostring(math.floor(currentValue + 0.5))
-            ValueLabel.Text = displayValue
-
-            local fillWidth = getPositionFromValue(currentValue)
-            SliderFill.Size = UDim2.new(0, fillWidth, 1, 0)
-            SliderThumb.Position = UDim2.new(0, fillWidth - 8, 0.5, -8)
-
-            if save and self._saveConfig.enabled then
-                saveSliderState(self, sliderName, currentValue)
-            end
-
-            callback(currentValue)
-        end
-
-        -- Initialize slider
-        updateSlider(defaultValue)
-
-        -- Mouse down on thumb
-        SliderThumb.MouseButton1Down:Connect(function()
-            isDragging = true
-        end)
-
-        -- Mouse down on track (jump to position)
-        SliderTrack.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                isDragging = true
-                local mousePos = input.Position
-                local newValue = getValueFromPosition(mousePos.X)
-                updateSlider(newValue)
-            end
-        end)
-
-        -- Mouse movement while dragging
-        local mouseMoveConnection
-        mouseMoveConnection = UserInputService.InputChanged:Connect(function(input)
-            if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                local newValue = getValueFromPosition(input.Position.X)
-                updateSlider(newValue)
-            end
-        end)
-
-        -- Mouse up to stop dragging
-        local mouseUpConnection
-        mouseUpConnection = UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                isDragging = false
-            end
-        end)
-
-        -- Clean up connections when slider is destroyed
-        SliderContainer.Destroying:Connect(function()
-            if mouseMoveConnection then
-                mouseMoveConnection:Disconnect()
-            end
-            if mouseUpConnection then
-                mouseUpConnection:Disconnect()
-            end
-        end)
-
-        table.insert(self._sliderElements, SliderContainer)
-
-        -- Функция для обновления позиций всех элементов в секции
-        local function updateSectionLayout()
-            local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
-            local container = sectionsList == self._leftSections and LeftContainer or RightContainer
-
-            local allElements = {}
-            for _, child in ipairs(ContentFrame:GetChildren()) do
-                if child:IsA("Frame") and (child.Name:match("^Toggle_") or child.Name:match("^Dropdown_") or
-                   child.Name:match("^Input_") or child.Name:match("^Bind_") or child.Name:match("^Slider_") or child.Name:match("^Button_")) then
-                    table.insert(allElements, child)
-                end
-            end
-
-            table.sort(allElements, function(a, b)
-                return a.Position.Y.Offset < b.Position.Y.Offset
-            end)
-
-            local currentY = 5
-            for i, element in ipairs(allElements) do
-                local spacing = 5
-
-                if i > 1 then
-                    local prevElement = allElements[i-1]
-                    local prevType = prevElement.Name:match("^Toggle_") and "toggle" or
-                                   prevElement.Name:match("^Dropdown_") and "dropdown" or
-                                   prevElement.Name:match("^Input_") and "input" or
-                                   prevElement.Name:match("^Bind_") and "bind" or
-                                   prevElement.Name:match("^Slider_") and "slider" or
-                                   prevElement.Name:match("^Button_") and "button"
-
-                    local elementType = element.Name:match("^Toggle_") and "toggle" or
-                                      element.Name:match("^Dropdown_") and "dropdown" or
-                                      element.Name:match("^Input_") and "input" or
-                                      element.Name:match("^Bind_") and "bind" or
-                                      element.Name:match("^Slider_") and "slider" or
-                                      element.Name:match("^Button_") and "button"
-
-                    if prevType == "slider" and elementType == "dropdown" then
-                        spacing = 0
-                    elseif prevType == "slider" then
-                        spacing = 5
-                    elseif prevType == "toggle" and elementType == "dropdown" then
-                        spacing = 3
-                    elseif prevType == "dropdown" and elementType == "toggle" then
-                        spacing = 5
-                    elseif prevType == "button" and elementType == "slider" then
-                        spacing = 2
-                    else
-                        spacing = 2
-                    end
-                end
-
-                element.Position = UDim2.new(0, 0, 0, currentY)
-                currentY = currentY + element.Size.Y.Offset + spacing
-            end
-
-            local totalContentHeight = 0
-            local previousElementType = nil
-
-            for _, element in ipairs(allElements) do
-                local elementType = element.Name:match("^Toggle_") and "toggle" or
-                                  element.Name:match("^Dropdown_") and "dropdown" or
-                                  element.Name:match("^Input_") and "input" or
-                                  element.Name:match("^Bind_") and "bind" or
-                                  element.Name:mark("^Slider_") and "slider" or
-                                  element.Name:match("^Button_") and "button"
-
-                local elementSpacing = 5
-
-                if previousElementType == "slider" and elementType == "dropdown" then
-                    elementSpacing = 0
-                elseif previousElementType == "slider" then
-                    elementSpacing = 5
-                elseif previousElementType == "toggle" and elementType == "dropdown" then
-                    elementSpacing = 3
-                elseif previousElementType == "dropdown" and elementType == "toggle" then
-                    elementSpacing = 5
-                elseif previousElementType == "button" and elementType == "slider" then
-                    elementSpacing = 2
-                else
-                    elementSpacing = 2
-                end
-
-                totalContentHeight = totalContentHeight + elementSpacing + element.Size.Y.Offset
-                previousElementType = elementType
-            end
-
-            if self._sectionStates[section] then
-                local bottom_padding = get_bottom_padding(ContentFrame)
-                ContentFrame.Size = UDim2.new(1, 0, 0, totalContentHeight)
-                section.Size = UDim2.new(1, 0, 0, 30 + totalContentHeight + bottom_padding)
-            end
-
-            updateSectionPositions(container, sectionsList)
-
-            local totalSectionsHeight = 0
-            for _, sec in ipairs(sectionsList) do
-                if sec.Visible then
-                    if self._sectionStates[sec] == false then
-                        totalSectionsHeight = totalSectionsHeight + 30 + 20
-                    else
-                        totalSectionsHeight = totalSectionsHeight + sec.Size.Y.Offset + 20
-                    end
-                end
-            end
-                        self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
-        end
-
-        -- Немедленное обновление после создания слайдера
-        task.defer(updateSectionLayout)
-
-        return {
-            Set = function(self, value)
-                updateSlider(value)
-            end,
-            Get = function(self)
-                return currentValue
-            end,
-            SetRange = function(self, newMin, newMax)
-                if newMin and newMax then
-                    if newMin > newMax then
-                        newMin, newMax = newMax, newMin
-                    end
-                    minValue = newMin
-                    maxValue = newMax
-                    updateSlider(math.clamp(currentValue, minValue, maxValue))
-                end
-            end
-        }
+    local function getValueFromPosition(x)
+        local trackWidth = SliderTrack.AbsoluteSize.X
+        local relativePos = math.clamp(x - SliderTrack.AbsolutePosition.X, 0, trackWidth)
+        local normalized = relativePos / trackWidth
+        local value = minValue + (maxValue - minValue) * normalized
+        return precise and value or math.floor(value + 0.5)
     end
+
+    local function getPositionFromValue(value)
+        local normalized = (value - minValue) / (maxValue - minValue)
+        return normalized * SliderTrack.AbsoluteSize.X
+    end
+
+    local currentValue = initialValue
+    local isDragging = false
+
+    local function updateSlider(value)
+        currentValue = math.clamp(value, minValue, maxValue)
+        local displayValue = precise and string.format("%.2f", currentValue) or tostring(math.floor(currentValue + 0.5))
+        ValueLabel.Text = displayValue
+
+        local fillWidth = getPositionFromValue(currentValue)
+        SliderFill.Size = UDim2.new(0, fillWidth, 1, 0)
+        SliderThumb.Position = UDim2.new(0, fillWidth - 8, 0.5, -8)
+
+        if save and self._saveConfig.enabled then
+            pcall(function()
+                saveSliderState(self, getCallingVariableName() or sliderName, currentValue)
+            end)
+        end
+
+        pcall(callback, currentValue)
+    end
+
+    -- Инициализируем UI с начальным значением ПОСЛЕ создания всех элементов
+    task.spawn(function()
+        task.wait()  -- Ждем рендеринга UI
+        updateSlider(initialValue)
+    end)
+
+    SliderThumb.MouseButton1Down:Connect(function()
+        isDragging = true
+    end)
+
+    SliderTrack.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = true
+            local mousePos = input.Position
+            local newValue = getValueFromPosition(mousePos.X)
+            updateSlider(newValue)
+        end
+    end)
+
+    local mouseMoveConnection
+    mouseMoveConnection = UserInputService.InputChanged:Connect(function(input)
+        if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local newValue = getValueFromPosition(input.Position.X)
+            updateSlider(newValue)
+        end
+    end)
+
+    local mouseUpConnection
+    mouseUpConnection = UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = false
+        end
+    end)
+
+    SliderContainer.Destroying:Connect(function()
+        if mouseMoveConnection then
+            mouseMoveConnection:Disconnect()
+        end
+        if mouseUpConnection then
+            mouseUpConnection:Disconnect()
+        end
+    end)
+
+    table.insert(self._sliderElements, SliderContainer)
+
+    task.defer(function()
+        local sectionsList = table.find(self._leftSections, section) and self._leftSections or self._rightSections
+        local container = sectionsList == self._leftSections and LeftContainer or RightContainer
+        updateSectionPositions(container, sectionsList)
+    end)
+
+    return {
+        Set = function(self, value)
+            updateSlider(value)
+        end,
+        Get = function(self)
+            return currentValue
+        end,
+        SetRange = function(self, newMin, newMax)
+            if newMin and newMax then
+                if newMin > newMax then
+                    newMin, newMax = newMax, newMin
+                end
+                minValue = newMin
+                maxValue = newMax
+                updateSlider(math.clamp(currentValue, minValue, maxValue))
+            end
+        end
+    }
+end
 
     -- New input creation function with original style
     function windowInstance:CreateInput(params)
@@ -2169,7 +2077,7 @@ end
         -- Загрузка сохраненного значения
         if save and self._saveConfig.enabled then
             local success, savedState = pcall(function()
-                return loadInputState(self, inputName)
+                return loadInputState(self, getCallingVariableName() or inputName)
             end)
             if success and savedState ~= nil then
                 defaultText = savedState
@@ -2286,7 +2194,7 @@ end
 
             if save and self._saveConfig.enabled then
                 pcall(function()
-                    saveInputState(self, inputName, currentText)
+                    saveInputState(self, getCallingVariableName() or inputName, currentText)
                 end)
             end
 
@@ -2392,7 +2300,7 @@ end
         -- Load saved value
         if save and self._saveConfig.enabled then
             local success, savedState = pcall(function()
-                return loadBindState(self, bindName)
+                return loadBindState(self, getCallingVariableName() or bindName)
             end)
             if success and savedState ~= nil then
                 if type(savedState) == "string" then
@@ -2496,7 +2404,7 @@ end
         BindNameLabel.Name = "BindName"
         BindNameLabel.Parent = BindContainer
         BindNameLabel.BackgroundTransparency = 1
-        BindNameLabel.Position = UDim2.new(0.085, 70, 0, 15)
+        BindNameLabel.Position = UDim2.new(0.085, 70, 0, 15) -- 60 (ширина) + 10 (отступ)
         BindNameLabel.Size = UDim2.new(0, 100, 0, 30)
         BindNameLabel.Font = Enum.Font.SourceSansBold
         BindNameLabel.Text = bindName
@@ -2515,7 +2423,7 @@ end
 
             if save and self._saveConfig.enabled then
                 pcall(function()
-                    saveBindState(self, bindName, currentKey and currentKey.Name or nil)
+                    saveBindState(self, getCallingVariableName() or bindName, currentKey and currentKey.Name or nil)
                 end)
             end
         end
