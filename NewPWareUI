@@ -239,7 +239,8 @@ if windowInstance._saveConfig.enabled and HttpService and isFileAvailable and wr
         if not isfile(windowInstance._saveConfig.fileName..".json") then
             return {}
         end
-        local data = HttpService:JSONEncode(readfile(windowInstance._saveConfig.fileName..".json")) or {}
+        local jsonString = readfile(windowInstance._saveConfig.fileName..".json")
+        local data = HttpService:JSONDecode(jsonString) or {}
         return data
     end)
 
@@ -255,10 +256,10 @@ if windowInstance._saveConfig.enabled and HttpService and isFileAvailable and wr
 end
 
     -- Function to save toggle state
-    local function saveToggleState(window, toggleName, state)
+    local function saveToggleState(window, toggleKey, state)
         if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
 
-        window._savedToggles[toggleName] = state
+        window._savedToggles[toggleKey] = state
 
         pcall(function()
             local data = {
@@ -273,16 +274,16 @@ end
     end
 
     -- Function to load toggle state
-    local function loadToggleState(window, toggleName)
+    local function loadToggleState(window, toggleKey)
         if not window._saveConfig.enabled or not window._savedToggles then return nil end
-        return window._savedToggles[toggleName]
+        return window._savedToggles[toggleKey]
     end
 
     -- Function to save dropdown state
-    local function saveDropdownState(window, dropdownName, value)
+    local function saveDropdownState(window, dropdownKey, value)
         if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
 
-        window._savedDropdowns[dropdownName] = value
+        window._savedDropdowns[dropdownKey] = value
 
         pcall(function()
             local data = {
@@ -297,17 +298,16 @@ end
     end
 
     -- Function to load dropdown state
-    local function loadDropdownState(window, dropdownName)
+    local function loadDropdownState(window, dropdownKey)
         if not window._saveConfig.enabled or not window._savedDropdowns then return nil end
-        return window._savedDropdowns[dropdownName]
+        return window._savedDropdowns[dropdownKey]
     end
 
     -- Function to save input state
-    -- Function to save input state
-    local function saveInputState(window, inputName, value)
+    local function saveInputState(window, inputKey, value)
         if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
 
-        window._savedInputs[inputName] = value
+        window._savedInputs[inputKey] = value
 
         pcall(function()
             local data = {
@@ -322,16 +322,16 @@ end
     end
 
     -- Function to load input state
-    local function loadInputState(window, inputName)
+    local function loadInputState(window, inputKey)
         if not window._saveConfig.enabled or not window._savedInputs then return nil end
-        return window._savedInputs[inputName]
+        return window._savedInputs[inputKey]
     end
 
     -- Function to save bind state
-    local function saveBindState(window, bindName, value)
+    local function saveBindState(window, bindKey, value)
         if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
 
-        window._savedBinds[bindName] = value
+        window._savedBinds[bindKey] = value
 
         pcall(function()
             local data = {
@@ -346,16 +346,16 @@ end
     end
 
     -- Function to load bind state
-    local function loadBindState(window, bindName)
+    local function loadBindState(window, bindKey)
         if not window._saveConfig.enabled or not window._savedBinds then return nil end
-        return window._savedBinds[bindName]
+        return window._savedBinds[bindKey]
     end
 
     -- Function to save slider state
-    local function saveSliderState(window, sliderName, value)
+    local function saveSliderState(window, sliderKey, value)
         if not window._saveConfig.enabled or not HttpService or not writeFileAvailable then return end
 
-        window._savedSliders[sliderName] = value
+        window._savedSliders[sliderKey] = value
 
         pcall(function()
             local data = {
@@ -370,9 +370,9 @@ end
     end
 
     -- Function to load slider state
-    local function loadSliderState(window, sliderName)
+    local function loadSliderState(window, sliderKey)
         if not window._saveConfig.enabled or not window._savedSliders then return nil end
-        return window._savedSliders[sliderName]
+        return window._savedSliders[sliderKey]
     end
 
 local function getSortedElements(contentFrame)
@@ -558,7 +558,7 @@ function windowInstance:CreateTab(visualName, imageId)
     imageContainer.BackgroundTransparency = 1
     imageContainer.Position = UDim2.new(-0.3, 0, 0, 0)
     imageContainer.Size = UDim2.new(0, 26, 0, 26)
-    imageContainer.ZIndex = 5
+    imageContainer.ZIndex = 4 -- Уменьшен ZIndex, чтобы не перекрывать текст
 
     local image = Instance.new("ImageLabel")
     image.Name = "TabImage"
@@ -566,40 +566,74 @@ function windowInstance:CreateTab(visualName, imageId)
     image.BackgroundTransparency = 1
     image.Position = UDim2.new(0, 0, 0, 0)
     image.Size = UDim2.new(1, 0, 1, 0)
-    image.ZIndex = 6
-    image.Image = "rbxassetid://" .. imageId
+    image.ZIndex = 4 -- Уменьшен ZIndex для согласованности
     image.ImageColor3 = Color3.fromRGB(255, 255, 255)
-    image.ImageTransparency = 1
+    image.ImageTransparency = 1 -- Начальная прозрачность
     image.ScaleType = Enum.ScaleType.Fit
-    image.BackgroundTransparency = 1
 
-    -- Немедленная попытка загрузки с обработкой ошибок
-    local success, loadError = pcall(function()
-        image.Image = "rbxassetid://" .. imageId
-        if game:GetService("ContentProvider") then
-            game:GetService("ContentProvider"):PreloadAsync({image})
+    -- Проверка и асинхронная загрузка изображения
+    local function loadImage()
+        if not imageId or not tostring(imageId):match("^%d+$") then
+            warn("Invalid imageId for tab " .. visualName .. ": " .. tostring(imageId))
+            image.Image = ""
+            image.BackgroundTransparency = 0
+            image.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+            return false
         end
-        if image.Image == "" then
-            error("Empty image")
-        end
-    end)
 
-    if not success then
-        warn("Failed to load tab image with ID: " .. imageId .. " - Error: " .. tostring(loadError))
-        image.Image = ""
-        image.BackgroundTransparency = 0
-        image.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-        image.ImageTransparency = 1
+        local assetUrl = "rbxassetid://" .. imageId
+        image.Image = assetUrl
+
+        local contentProvider = game:GetService("ContentProvider")
+        local success, loadError = pcall(function()
+            contentProvider:PreloadAsync({image})
+        end)
+
+        if not success then
+            image.Image = ""
+            image.BackgroundTransparency = 0
+            image.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+            return false
+        end
+
+        -- Ожидание события Loaded
+        local loaded = image.Loaded:Wait()
+        if not loaded then
+            warn("Image load timed out or failed for tab: " .. visualName .. " (ID: " .. imageId .. ")")
+            image.Image = ""
+            image.BackgroundTransparency = 0
+            image.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+            return false
+        end
+
+        print("Image successfully loaded for tab: " .. visualName .. " (ID: " .. imageId .. "), isLoaded: " .. tostring(image.IsLoaded))
+        return true
     end
 
-    -- Анимация появления
-    delay(0.5, function()
-        if image and image.Parent then
-            local tweenInfo = TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            local tween = TweenService:Create(image, tweenInfo, {ImageTransparency = 0})
-            tween:Play()
+    -- Запускаем загрузку изображения и анимацию после успешной загрузки
+    coroutine.wrap(function()
+        local imageLoaded = loadImage()
+        if imageLoaded then
+            if image and image.Parent then
+                local tweenInfo = TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+                local tween = TweenService:Create(image, tweenInfo, {ImageTransparency = 0})
+                tween:Play()
+            end
+        else
+            -- Если изображение не загрузилось, показываем текст как запасной вариант
+            local placeholderText = Instance.new("TextLabel")
+            placeholderText.Name = "PlaceholderText"
+            placeholderText.Parent = imageContainer
+            placeholderText.BackgroundTransparency = 1
+            placeholderText.Size = UDim2.new(1, 0, 1, 0)
+            placeholderText.Text = "X"
+            placeholderText.TextColor3 = Color3.fromRGB(147, 152, 156)
+            placeholderText.TextSize = 14
+            placeholderText.TextTransparency = 1
+            placeholderText.ZIndex = 4
+            fadeIn(placeholderText)
         end
-    end)
+    end)()
 
     -- Остальная логика выбора таба...
     local function selectTab()
@@ -850,7 +884,7 @@ end
                 local elements = getSortedElements(ContentFrame)
                 local previous_type = nil
                 for j, element in ipairs(elements) do
-                    local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
+                    local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or element.Name:match("^Slider_") and "slider" or element.Name:match("^Button_") and "button"
                     local spacing
                     if previous_type == nil then
                         spacing = 5
@@ -951,7 +985,7 @@ end
         if not params.section then return nil end
 
         local section = params.section
-        local toggleName = params.name or ""
+        local toggleKey = params.id or params.name or ""
         local defaultValue = params.enable or false
         local save = params.save or false
         local callback = params.callback or function() end
@@ -960,7 +994,7 @@ end
         if not ContentFrame then return nil end
 
         if save and self._saveConfig.enabled then
-            local savedState = loadToggleState(self, toggleName)
+            local savedState = loadToggleState(self, toggleKey)
             if savedState ~= nil then
                 defaultValue = savedState
             end
@@ -999,7 +1033,7 @@ end
         end
 
         local ToggleContainer = Instance.new("Frame")
-        ToggleContainer.Name = "Toggle_" .. toggleName
+        ToggleContainer.Name = "Toggle_" .. toggleKey
         ToggleContainer.Parent = ContentFrame
         ToggleContainer.BackgroundTransparency = 1
         ToggleContainer.Size = UDim2.new(1, 0, 0, 30)
@@ -1039,7 +1073,7 @@ end
         ToggleText.Position = UDim2.new(0.15, 20, 0.1, 0)
         ToggleText.Size = UDim2.new(0.85, -20, 0, 20)
         ToggleText.Font = Enum.Font.SourceSansBold
-        ToggleText.Text = toggleName
+        ToggleText.Text = params.name or toggleKey
         ToggleText.TextColor3 = Color3.fromRGB(147, 152, 156)
         ToggleText.TextSize = 17
         ToggleText.TextXAlignment = Enum.TextXAlignment.Left
@@ -1059,7 +1093,7 @@ end
             end
 
             if save and self._saveConfig.enabled then
-                saveToggleState(self, toggleName, isToggled)
+                saveToggleState(self, toggleKey, isToggled)
             end
 
             callback(isToggled)
@@ -1110,7 +1144,7 @@ end
                 end
 
                 if save and windowInstance._saveConfig.enabled then
-                    saveToggleState(windowInstance, toggleName, isToggled)
+                    saveToggleState(windowInstance, toggleKey, isToggled)
                 end
 
                 callback(isToggled)
@@ -1134,7 +1168,7 @@ end
             return nil
         end
 
-        local dropdownName = params.name or "Dropdown_"..tostring(math.random(1000,9999))
+        local dropdownKey = params.id or params.name or "Dropdown_"..tostring(math.random(1000,9999))
         local options = params.options or {}
         local defaultOption = params.default or nil
         local multi = params.multi or false
@@ -1149,7 +1183,7 @@ end
 
         if save and self._saveConfig and self._saveConfig.enabled then
             local success, savedState = pcall(function()
-                return loadDropdownState(self, dropdownName)
+                return loadDropdownState(self, dropdownKey)
             end)
             if success and savedState ~= nil then
                 if multi then
@@ -1214,7 +1248,7 @@ end
 
         -- Создание контейнера дропдауна
         local DropdownContainer = Instance.new("Frame")
-        DropdownContainer.Name = "Dropdown_"..dropdownName
+        DropdownContainer.Name = "Dropdown_"..dropdownKey
         DropdownContainer.Parent = ContentFrame
         DropdownContainer.BackgroundTransparency = 1
         DropdownContainer.Size = UDim2.new(1, 0, 0, 50)
@@ -1230,7 +1264,7 @@ end
         DropdownLabel.Position = UDim2.new(0.085, 0, 0, 0)
         DropdownLabel.Size = UDim2.new(0, 165, 0, 20)
         DropdownLabel.Font = Enum.Font.SourceSansBold
-        DropdownLabel.Text = dropdownName
+        DropdownLabel.Text = params.name or dropdownKey
         DropdownLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
         DropdownLabel.TextSize = 15
         DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -1270,7 +1304,7 @@ end
 
         -- Список дропдауна
         local DropdownList = Instance.new("Frame")
-        DropdownList.Name = "DropdownList_"..dropdownName
+        DropdownList.Name = "DropdownList_"..dropdownKey
         DropdownList.Parent = self._screenGui
         DropdownList.BackgroundColor3 = Color3.fromRGB(25, 28, 34)
         DropdownList.BorderSizePixel = 0
@@ -1391,10 +1425,10 @@ end
                             for opt in pairs(selectedOptions) do
                                 table.insert(selected, opt)
                             end
-                            saveDropdownState(self, dropdownName, selected)
+                            saveDropdownState(self, dropdownKey, selected)
                         else
                             for opt in pairs(selectedOptions) do
-                                saveDropdownState(self, dropdownName, opt)
+                                saveDropdownState(self, dropdownKey, opt)
                                 break
                             end
                         end
@@ -1707,10 +1741,10 @@ end
                         for opt in pairs(selectedOptions) do
                             table.insert(selected, opt)
                         end
-                        self:saveDropdownState(dropdownName, selected)
+                        saveDropdownState(self, dropdownKey, selected)
                     else
                         for opt in pairs(selectedOptions) do
-                            saveDropdownState(self, dropdownName, opt)
+                            saveDropdownState(self, dropdownKey, opt)
                             break
                         end
                     end
@@ -1769,7 +1803,7 @@ end
             return nil
         end
 
-        local sliderName = params.name or "Slider"
+        local sliderKey = params.id or params.name or "Slider"
         local minValue = params.min or 0
         local maxValue = params.max or 100
         local defaultValue = params.default or math.floor((minValue + maxValue) / 2)
@@ -1794,7 +1828,7 @@ end
         -- Load saved value
         if save and self._saveConfig.enabled then
             local success, savedState = pcall(function()
-                return loadSliderState(self, sliderName)
+                return loadSliderState(self, sliderKey)
             end)
             if success and savedState ~= nil then
                 defaultValue = tonumber(savedState) or defaultValue
@@ -1838,7 +1872,7 @@ end
 
         -- Create container for Slider (30px height)
         local SliderContainer = Instance.new("Frame")
-        SliderContainer.Name = "Slider_" .. sliderName
+        SliderContainer.Name = "Slider_" .. sliderKey
         SliderContainer.Parent = ContentFrame
         SliderContainer.BackgroundTransparency = 1
         SliderContainer.Size = UDim2.new(1, 0, 0, 42)
@@ -1854,7 +1888,7 @@ end
         SliderLabel.Position = UDim2.new(0.085, 0, 0, -2)
         SliderLabel.Size = UDim2.new(0, 165, 0, 22)
         SliderLabel.Font = Enum.Font.SourceSansBold
-        SliderLabel.Text = sliderName
+        SliderLabel.Text = params.name or sliderKey
         SliderLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
         SliderLabel.TextSize = 15
         SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -1957,7 +1991,7 @@ end
             SliderThumb.Position = UDim2.new(0, fillWidth - 8, 0.5, -8)
 
             if save and self._saveConfig.enabled then
-                saveSliderState(self, sliderName, currentValue)
+                saveSliderState(self, sliderKey, currentValue)
             end
 
             callback(currentValue)
@@ -2074,7 +2108,7 @@ end
                                   element.Name:match("^Dropdown_") and "dropdown" or
                                   element.Name:match("^Input_") and "input" or
                                   element.Name:match("^Bind_") and "bind" or
-                                  element.Name:mark("^Slider_") and "slider" or
+                                  element.Name:match("^Slider_") and "slider" or
                                   element.Name:match("^Button_") and "button"
 
                 local elementSpacing = 5
@@ -2115,7 +2149,7 @@ end
                     end
                 end
             end
-                        self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
+            self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
         end
 
         -- Немедленное обновление после создания слайдера
@@ -2155,7 +2189,7 @@ end
             return nil
         end
 
-        local inputName = params.name or "Input"
+        local inputKey = params.id or params.name or "Input"
         local defaultText = params.default or ""
         local save = params.save or false
         local callback = params.callback or function() end
@@ -2169,7 +2203,7 @@ end
         -- Загрузка сохраненного значения
         if save and self._saveConfig.enabled then
             local success, savedState = pcall(function()
-                return loadInputState(self, inputName)
+                return loadInputState(self, inputKey)
             end)
             if success and savedState ~= nil then
                 defaultText = savedState
@@ -2212,7 +2246,7 @@ end
 
         -- Создаем контейнер для Input
         local InputContainer = Instance.new("Frame")
-        InputContainer.Name = "Input_" .. inputName
+        InputContainer.Name = "Input_" .. inputKey
         InputContainer.Parent = ContentFrame
         InputContainer.BackgroundTransparency = 1
         InputContainer.Size = UDim2.new(1, 0, 0, 50)
@@ -2272,7 +2306,7 @@ end
         InputNameLabel.Position = UDim2.new(0.085, 60, 0, 15) -- 50 (ширина) + 10 (отступ)
         InputNameLabel.Size = UDim2.new(0, 100, 0, 30)
         InputNameLabel.Font = Enum.Font.SourceSansBold
-        InputNameLabel.Text = inputName
+        InputNameLabel.Text = params.name or inputKey
         InputNameLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
         InputNameLabel.TextTransparency = 0
         InputNameLabel.TextSize = 15
@@ -2286,7 +2320,7 @@ end
 
             if save and self._saveConfig.enabled then
                 pcall(function()
-                    saveInputState(self, inputName, currentText)
+                    saveInputState(self, inputKey, currentText)
                 end)
             end
 
@@ -2373,7 +2407,7 @@ end
             return nil
         end
 
-        local bindName = params.name or "Bind"
+        local bindKey = params.id or params.name or "Bind"
         local defaultKey = params.default or nil
         local save = params.save or false
         local callback = params.callback or function() end
@@ -2392,7 +2426,7 @@ end
         -- Load saved value
         if save and self._saveConfig.enabled then
             local success, savedState = pcall(function()
-                return loadBindState(self, bindName)
+                return loadBindState(self, bindKey)
             end)
             if success and savedState ~= nil then
                 if type(savedState) == "string" then
@@ -2439,7 +2473,7 @@ end
 
         -- Create container for Bind
         local BindContainer = Instance.new("Frame")
-        BindContainer.Name = "Bind_" .. bindName
+        BindContainer.Name = "Bind_" .. bindKey
         BindContainer.Parent = ContentFrame
         BindContainer.BackgroundTransparency = 1
         BindContainer.Size = UDim2.new(1, 0, 0, 50)
@@ -2499,7 +2533,7 @@ end
         BindNameLabel.Position = UDim2.new(0.085, 70, 0, 15)
         BindNameLabel.Size = UDim2.new(0, 100, 0, 30)
         BindNameLabel.Font = Enum.Font.SourceSansBold
-        BindNameLabel.Text = bindName
+        BindNameLabel.Text = params.name or bindKey
         BindNameLabel.TextColor3 = Color3.fromRGB(147, 152, 156)
         BindNameLabel.TextTransparency = 0
         BindNameLabel.TextSize = 15
@@ -2515,7 +2549,7 @@ end
 
             if save and self._saveConfig.enabled then
                 pcall(function()
-                    saveBindState(self, bindName, currentKey and currentKey.Name or nil)
+                    saveBindState(self, bindKey, currentKey and currentKey.Name or nil)
                 end)
             end
         end
@@ -2900,7 +2934,8 @@ function PizdecWare:LoadDropdownStates()
         if not isfile(self._saveConfig.fileName..".json") then
             return {}
         end
-        return HttpService:JSONDecode(readfile(self._saveConfig.fileName..".json"))
+        local jsonString = readfile(self._saveConfig.fileName..".json")
+        return HttpService:JSONDecode(jsonString) or {}
     end)
 
     if success and savedData then
