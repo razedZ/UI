@@ -13,7 +13,7 @@ local RunService = game:GetService("RunService")
 local isFileAvailable = pcall(function() return isfile end)
 local writeFileAvailable = pcall(function() return writefile end)
 
-local PizdecWare = {}
+local PizdecWare = {}   
 PizdecWare.__index = PizdecWare
 
 function PizdecWare:CreateWindow(guiName, infoText, saveConfig)
@@ -558,7 +558,7 @@ function windowInstance:CreateTab(visualName, imageId)
     imageContainer.BackgroundTransparency = 1
     imageContainer.Position = UDim2.new(-0.3, 0, 0, 0)
     imageContainer.Size = UDim2.new(0, 26, 0, 26)
-    imageContainer.ZIndex = 4 -- Уменьшен ZIndex, чтобы не перекрывать текст
+    imageContainer.ZIndex = 5
 
     local image = Instance.new("ImageLabel")
     image.Name = "TabImage"
@@ -566,12 +566,13 @@ function windowInstance:CreateTab(visualName, imageId)
     image.BackgroundTransparency = 1
     image.Position = UDim2.new(0, 0, 0, 0)
     image.Size = UDim2.new(1, 0, 1, 0)
-    image.ZIndex = 4 -- Уменьшен ZIndex для согласованности
+    image.ZIndex = 6
     image.ImageColor3 = Color3.fromRGB(255, 255, 255)
-    image.ImageTransparency = 1 -- Начальная прозрачность
+    image.ImageTransparency = 1
     image.ScaleType = Enum.ScaleType.Fit
+    image.BackgroundTransparency = 1
 
-    -- Проверка и асинхронная загрузка изображения
+    -- Проверка и загрузка изображения
     local function loadImage()
         if not imageId or not tostring(imageId):match("^%d+$") then
             warn("Invalid imageId for tab " .. visualName .. ": " .. tostring(imageId))
@@ -586,60 +587,56 @@ function windowInstance:CreateTab(visualName, imageId)
 
         local contentProvider = game:GetService("ContentProvider")
         local success, loadError = pcall(function()
-            contentProvider:PreloadAsync({image})
+            contentProvider:PreloadAsync({image}, function(_, status)
+                if status == Enum.AssetFetchStatus.Success then
+                    print("Image loaded successfully for tab: " .. visualName .. " (ID: " .. imageId .. ")")
+                else
+                    warn("Image preload failed for tab: " .. visualName .. " (ID: " .. imageId .. "), status: " .. tostring(status))
+                end
+            end)
         end)
 
-        if not success then
+        if not success or image.Image == "" then
+            warn("Failed to load tab image with ID: " .. imageId .. " - Error: " .. tostring(loadError))
             image.Image = ""
             image.BackgroundTransparency = 0
             image.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
             return false
         end
 
-        -- Ожидание события Loaded
-        local loaded = image.Loaded:Wait()
-        if not loaded then
-            warn("Image load timed out or failed for tab: " .. visualName .. " (ID: " .. imageId .. ")")
-            image.Image = ""
-            image.BackgroundTransparency = 0
-            image.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
-            return false
-        end
-
-        print("Image successfully loaded for tab: " .. visualName .. " (ID: " .. imageId .. "), isLoaded: " .. tostring(image.IsLoaded))
         return true
     end
 
     -- Запускаем загрузку изображения и анимацию после успешной загрузки
-    coroutine.wrap(function()
-        local imageLoaded = loadImage()
-        if imageLoaded then
+    local imageLoaded = loadImage()
+    if imageLoaded then
+        delay(0.5, function()
             if image and image.Parent then
                 local tweenInfo = TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
                 local tween = TweenService:Create(image, tweenInfo, {ImageTransparency = 0})
                 tween:Play()
             end
-        else
-            -- Если изображение не загрузилось, показываем текст как запасной вариант
-            local placeholderText = Instance.new("TextLabel")
-            placeholderText.Name = "PlaceholderText"
-            placeholderText.Parent = imageContainer
-            placeholderText.BackgroundTransparency = 1
-            placeholderText.Size = UDim2.new(1, 0, 1, 0)
-            placeholderText.Text = "X"
-            placeholderText.TextColor3 = Color3.fromRGB(147, 152, 156)
-            placeholderText.TextSize = 14
-            placeholderText.TextTransparency = 1
-            placeholderText.ZIndex = 4
-            fadeIn(placeholderText)
-        end
-    end)()
+        end)
+    else
+        -- Если изображение не загрузилось, показываем текст как запасной вариант
+        local placeholderText = Instance.new("TextLabel")
+        placeholderText.Name = "PlaceholderText"
+        placeholderText.Parent = imageContainer
+        placeholderText.BackgroundTransparency = 1
+        placeholderText.Size = UDim2.new(1, 0, 1, 0)
+        placeholderText.Text = "X"
+        placeholderText.TextColor3 = Color3.fromRGB(147, 152, 156)
+        placeholderText.TextSize = 14
+        placeholderText.TextTransparency = 1
+        placeholderText.ZIndex = 6
+        fadeIn(placeholderText)
+    end
 
     -- Остальная логика выбора таба...
     local function selectTab()
         if not TweenService or not self._selectedTab then return end
 
-        -- Close all open dropdowns when switching tabs
+        -- Закрываем все открытые дропдауны при переключении таба
         for container, list in pairs(self._openDropdowns) do
             list.Visible = false
             list.Size = UDim2.new(0, 165, 0, 0)
@@ -884,7 +881,7 @@ end
                 local elements = getSortedElements(ContentFrame)
                 local previous_type = nil
                 for j, element in ipairs(elements) do
-                    local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or element.Name:match("^Slider_") and "slider" or element.Name:match("^Button_") and "button"
+                    local elem_type = element.Name:match("^Toggle_") and "toggle" or element.Name:match("^Dropdown_") and "dropdown" or element.Name:match("^Input_") and "input" or element.Name:match("^Bind_") and "bind" or "slider"
                     local spacing
                     if previous_type == nil then
                         spacing = 5
@@ -2149,7 +2146,7 @@ end
                     end
                 end
             end
-            self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
+                        self._elementContainer.CanvasSize = UDim2.new(0, 0, 0, totalSectionsHeight + 40)
         end
 
         -- Немедленное обновление после создания слайдера
