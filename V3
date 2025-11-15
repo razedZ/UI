@@ -1342,6 +1342,11 @@ function UILibrary.new(config)
                     local saveKey = saveId or name
                     local shouldSave = saveId ~= nil
                     local currentValue = shouldSave and (settings[saveKey] or default) or default
+                    
+                    -- Проверка на nil
+                    if currentValue == nil then
+                        currentValue = default or ""
+                    end
                     local inputZone = Instance.new("Frame")
                     inputZone.Name = "InputZone"
                     inputZone.Parent = sectionFrame
@@ -1358,7 +1363,7 @@ function UILibrary.new(config)
                     InputBox.Font = Enum.Font.SourceSans
                     InputBox.PlaceholderText = placeholder
                     InputBox.PlaceholderColor3 = Color3.fromRGB(113, 113, 123)
-                    InputBox.Text = currentValue
+                    InputBox.Text = tostring(currentValue or "")
                     InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
                     InputBox.TextSize = 14
                     InputBox.TextXAlignment = Enum.TextXAlignment.Left
