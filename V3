@@ -1419,7 +1419,8 @@ function UILibrary.new(config)
         end
         return tabSection
     end
-    return ui
+    -- Возвращаем nil вместо ui
+    return nil
 end
 -- Экспорт глобальных функций
 _G.CreateToggle = CreateToggle
