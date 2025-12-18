@@ -1,5 +1,5 @@
--- UI Library – точная копия ва-- UI Library – точная копия ва
-local UILibrary = {}
+-- UI Library
+local UILibrаry = {}
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
