@@ -1359,14 +1359,13 @@ function UILibrary.new(config)
                 -- Функциональность поиска
                 searchInput:GetPropertyChangedSignal("Text"):Connect(function()
                     local searchText = searchInput.Text:lower()
+                    print("Search text:", searchText) -- Отладка
                     
                     for option, button in pairs(optionButtons) do
                         local buttonText = button.Text:lower()
-                        if searchText == "" or buttonText:find(searchText, 1, true) then
-                            button.Visible = true
-                        else
-                            button.Visible = false
-                        end
+                        local shouldShow = searchText == "" or buttonText:find(searchText, 1, true)
+                        button.Visible = shouldShow
+                        print("Option:", option, "Visible:", shouldShow) -- Отладка
                     end
                 end)
                 
