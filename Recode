@@ -1356,25 +1356,20 @@ function UILibrary.new(config)
                     local searchText = searchInput.Text:lower()
                     local visibleButtons = {}
                     
-                    -- Собираем видимые кнопки
+                    -- Сначала скрываем все кнопки
+                    for option, button in pairs(optionButtons) do
+                        button.Visible = false
+                    end
+                    
+                    -- Показываем только подходящие
                     for option, button in pairs(optionButtons) do
                         if searchText == "" or option:lower():find(searchText, 1, true) then
                             button.Visible = true
                             table.insert(visibleButtons, button)
-                        else
-                            button.Visible = false
                         end
                     end
                     
-                    -- Если нет совпадений, показываем все
-                    if #visibleButtons == 0 and searchText ~= "" then
-                        for option, button in pairs(optionButtons) do
-                            button.Visible = true
-                            table.insert(visibleButtons, button)
-                        end
-                    end
-                    
-                    -- Пересчитываем позиции только видимых кнопок
+                    -- Пересчитываем позиции видимых кнопок
                     for i, button in ipairs(visibleButtons) do
                         button.Position = UDim2.new(0, 0, 0, (i-1) * 20)
                     end
