@@ -1357,20 +1357,63 @@ function UILibrary.new(config)
                 end
                 
                 -- Функциональность поиска
-                searchInput.Changed:Connect(function()
+                local function updateSearch()
                     local searchText = searchInput.Text:lower()
                     
                     for _, child in pairs(optionsContainer:GetChildren()) do
                         if child:IsA("TextButton") then
-                            local optionText = child.Text:lower()
-                            if searchText == "" or optionText:find(searchText, 1, true) then
-                                child.Visible = true
-                            else
-                                child.Visible = false
-                            end
+                            child:Destroy()
                         end
                     end
-                end)
+                    
+                    for i, option in ipairs(options) do
+                        if searchText == "" or option:lower():find(searchText, 1, true) then
+                            local newButton = Instance.new("TextButton")
+                            newButton.Parent = optionsContainer
+                            newButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                            newButton.BackgroundTransparency = 1
+                            newButton.Size = UDim2.new(1, 0, 0, 20)
+                            newButton.Font = Enum.Font.SourceSans
+                            newButton.Text = option
+                            newButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
+                            newButton.TextSize = 12
+                            newButton.ZIndex = 2001
+                            newButton.LayoutOrder = i
+                            
+                            newButton.MouseEnter:Connect(function()
+                                newButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                                newButton.BackgroundTransparency = 0.95
+                            end)
+                            
+                            newButton.MouseLeave:Connect(function()
+                                newButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                                newButton.BackgroundTransparency = 1
+                            end)
+                            
+                            newButton.MouseButton1Click:Connect(function()
+                                for opt, btn in pairs(optionButtons) do
+                                    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                                end
+                                
+                                currentValue = option
+                                Selected.Text = option
+                                newButton.TextColor3 = Color3.fromRGB(150, 17, 255)
+                                
+                                if optionSaveEnabled then
+                                    settings[saveKey] = currentValue
+                                    saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                                end
+                                if callback then callback(currentValue) end
+                                
+                                dropdownData.isOpen = false
+                                Arrow.Rotation = 0
+                                optionsList.Visible = false
+                            end)
+                        end
+                    end
+                end
+                
+                searchInput:GetPropertyChangedSignal("Text"):Connect(updateSearch)
                 
 
                 
