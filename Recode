@@ -1314,7 +1314,7 @@ function UILibrary.new(config)
                     optionButton.Text = option
                     optionButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
                     optionButton.TextSize = 12
-                    optionButton.ZIndex = 1001
+                    optionButton.ZIndex = 2001
                     
                     optionButtons[option] = optionButton
                     
@@ -1354,20 +1354,25 @@ function UILibrary.new(config)
                 -- Функциональность поиска
                 searchInput:GetPropertyChangedSignal("Text"):Connect(function()
                     local searchText = searchInput.Text:lower()
-                    local visibleCount = 0
+                    local visibleButtons = {}
                     
+                    -- Собираем видимые кнопки
                     for option, button in pairs(optionButtons) do
                         if searchText == "" or option:lower():find(searchText, 1, true) then
                             button.Visible = true
-                            button.Position = UDim2.new(0, 0, 0, visibleCount * 20)
-                            visibleCount = visibleCount + 1
+                            table.insert(visibleButtons, button)
                         else
                             button.Visible = false
                         end
                     end
                     
-                    optionsContainer.Size = UDim2.new(1, 0, 0, visibleCount * 20)
-                    optionsList.Size = UDim2.new(0, 111, 0, math.min(visibleCount * 20 + 25, 105))
+                    -- Пересчитываем позиции только видимых кнопок
+                    for i, button in ipairs(visibleButtons) do
+                        button.Position = UDim2.new(0, 0, 0, (i-1) * 20)
+                    end
+                    
+                    optionsContainer.Size = UDim2.new(1, 0, 0, #visibleButtons * 20)
+                    optionsList.Size = UDim2.new(0, 111, 0, math.min(#visibleButtons * 20 + 25, 105))
                 end)
                 
 
