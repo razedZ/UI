@@ -1357,7 +1357,7 @@ function UILibrary.new(config)
                 end
                 
                 -- Функциональность поиска
-                local function updateSearch()
+                searchInput:GetPropertyChangedSignal("Text"):Connect(function()
                     local searchText = searchInput.Text:lower()
                     
                     for _, child in pairs(optionsContainer:GetChildren()) do
@@ -1391,14 +1391,8 @@ function UILibrary.new(config)
                             end)
                             
                             newButton.MouseButton1Click:Connect(function()
-                                for opt, btn in pairs(optionButtons) do
-                                    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-                                end
-                                
                                 currentValue = option
                                 Selected.Text = option
-                                newButton.TextColor3 = Color3.fromRGB(150, 17, 255)
-                                
                                 if optionSaveEnabled then
                                     settings[saveKey] = currentValue
                                     saveSettings(config.FileName or "pizdecware_settings.json", settings)
@@ -1411,9 +1405,7 @@ function UILibrary.new(config)
                             end)
                         end
                     end
-                end
-                
-                searchInput:GetPropertyChangedSignal("Text"):Connect(updateSearch)
+                end)
                 
 
                 
