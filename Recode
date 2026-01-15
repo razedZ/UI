@@ -1356,16 +1356,21 @@ function UILibrary.new(config)
                     local searchText = searchInput.Text:lower()
                     local visibleButtons = {}
                     
-                    -- Сначала скрываем все кнопки
-                    for option, button in pairs(optionButtons) do
-                        button.Visible = false
-                    end
-                    
-                    -- Показываем только подходящие
-                    for option, button in pairs(optionButtons) do
-                        if searchText == "" or option:lower():find(searchText, 1, true) then
+                    if searchText == "" then
+                        -- Поле пустое - показываем все
+                        for option, button in pairs(optionButtons) do
                             button.Visible = true
                             table.insert(visibleButtons, button)
+                        end
+                    else
+                        -- Есть поиск - показываем только совпадения
+                        for option, button in pairs(optionButtons) do
+                            if option:lower():find(searchText, 1, true) then
+                                button.Visible = true
+                                table.insert(visibleButtons, button)
+                            else
+                                button.Visible = false
+                            end
                         end
                     end
                     
