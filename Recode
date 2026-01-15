@@ -192,6 +192,18 @@ function UILibrary.new(config)
         end
     end)
     
+    -- Функция для пересчета позиций элементов
+    local function repositionElements()
+        local yOffset = 10
+        for _, child in pairs(ElementZone:GetChildren()) do
+            if child:IsA("Frame") and child.Visible then
+                child.Position = UDim2.new(0, 10, 0, yOffset)
+                yOffset = yOffset + child.Size.Y.Offset + 5
+            end
+        end
+        ElementZone.CanvasSize = UDim2.new(0, 0, 0, math.max(yOffset, 309))
+    end
+    
 
     
 
@@ -447,6 +459,12 @@ function UILibrary.new(config)
             tabContainer.Visible = true
             currentTab = name
             OpenedTab.Text = name
+            
+            -- Пересчитываем позиции элементов после переключения вкладки
+            spawn(function()
+                wait(0.1)
+                repositionElements()
+            end)
         end
         
         TabButton.MouseButton1Click:Connect(switchToTab)
@@ -554,6 +572,12 @@ function UILibrary.new(config)
                 end
                 
                 ElementZone.CanvasSize = UDim2.new(0, 0, 0, math.max(maxHeight + 100, 800))
+                
+                -- Пересчитываем позиции элементов
+                spawn(function()
+                    wait(0.05)
+                    repositionElements()
+                end)
             end
             
             local function hideLastElementLine()
@@ -1308,25 +1332,7 @@ function UILibrary.new(config)
                     end)
                 end
                 
-                -- Search functionality
-                searchInput:GetPropertyChangedSignal("Text"):Connect(function()
-                    local searchText = searchInput.Text:lower()
-                    local visibleCount = 0
-                    
-                    for option, button in pairs(optionButtons) do
-                        if searchText == "" or option:lower():find(searchText, 1, true) then
-                            button.Visible = true
-                            button.Position = UDim2.new(0, 0, 0, visibleCount * 20)
-                            visibleCount = visibleCount + 1
-                        else
-                            button.Visible = false
-                        end
-                    end
-                    
-                    -- Update container size based on visible options
-                    optionsContainer.Size = UDim2.new(1, 0, 0, visibleCount * 20)
-                    optionsList.Size = UDim2.new(0, 111, 0, math.min(visibleCount * 20 + 25, 105))
-                end)
+
                 
                 local updatePosition
                 updatePosition = RunService.Heartbeat:Connect(function()
