@@ -1278,8 +1278,13 @@ function UILibrary.new(config)
                 local optionsContainer = Instance.new("Frame")
                 optionsContainer.Parent = optionsList
                 optionsContainer.BackgroundTransparency = 1
-                optionsContainer.Size = UDim2.new(1, 0, 0, #options * 20)
+                optionsContainer.Size = UDim2.new(1, 0, 1, -25)
                 optionsContainer.Position = UDim2.new(0, 0, 0, 25)
+                
+                local listLayout = Instance.new("UIListLayout")
+                listLayout.Parent = optionsContainer
+                listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                listLayout.FillDirection = Enum.FillDirection.Vertical
                 
 
                 
@@ -1308,13 +1313,13 @@ function UILibrary.new(config)
                     optionButton.Parent = optionsContainer
                     optionButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
                     optionButton.BackgroundTransparency = 1
-                    optionButton.Position = UDim2.new(0, 0, 0, (i-1) * 20)
                     optionButton.Size = UDim2.new(1, 0, 0, 20)
                     optionButton.Font = Enum.Font.SourceSans
                     optionButton.Text = option
                     optionButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
                     optionButton.TextSize = 12
                     optionButton.ZIndex = 2001
+                    optionButton.LayoutOrder = i
                     
                     optionButtons[option] = optionButton
                     
@@ -1354,33 +1359,14 @@ function UILibrary.new(config)
                 -- Функциональность поиска
                 searchInput:GetPropertyChangedSignal("Text"):Connect(function()
                     local searchText = searchInput.Text:lower()
-                    local visibleButtons = {}
                     
-                    if searchText == "" then
-                        -- Поле пустое - показываем все
-                        for option, button in pairs(optionButtons) do
+                    for option, button in pairs(optionButtons) do
+                        if searchText == "" or option:lower():find(searchText, 1, true) then
                             button.Visible = true
-                            table.insert(visibleButtons, button)
-                        end
-                    else
-                        -- Есть поиск - показываем только совпадения
-                        for option, button in pairs(optionButtons) do
-                            if option:lower():find(searchText, 1, true) then
-                                button.Visible = true
-                                table.insert(visibleButtons, button)
-                            else
-                                button.Visible = false
-                            end
+                        else
+                            button.Visible = false
                         end
                     end
-                    
-                    -- Пересчитываем позиции видимых кнопок
-                    for i, button in ipairs(visibleButtons) do
-                        button.Position = UDim2.new(0, 0, 0, (i-1) * 20)
-                    end
-                    
-                    optionsContainer.Size = UDim2.new(1, 0, 0, #visibleButtons * 20)
-                    optionsList.Size = UDim2.new(0, 111, 0, math.min(#visibleButtons * 20 + 25, 105))
                 end)
                 
 
