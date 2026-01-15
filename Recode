@@ -1366,6 +1366,14 @@ function UILibrary.new(config)
                         end
                     end
                     
+                    -- Если нет совпадений, показываем все
+                    if #visibleButtons == 0 and searchText ~= "" then
+                        for option, button in pairs(optionButtons) do
+                            button.Visible = true
+                            table.insert(visibleButtons, button)
+                        end
+                    end
+                    
                     -- Пересчитываем позиции только видимых кнопок
                     for i, button in ipairs(visibleButtons) do
                         button.Position = UDim2.new(0, 0, 0, (i-1) * 20)
