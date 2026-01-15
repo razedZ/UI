@@ -1227,35 +1227,16 @@ function UILibrary.new(config)
                 optionsList.Parent = UI
                 optionsList.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
                 optionsList.BorderSizePixel = 0
-                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + 25, 105))
+                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20, 80))
                 optionsList.ClipsDescendants = true
                 optionsList.Visible = false
                 optionsList.ZIndex = 2000
-                
-                -- Search input at the top
-                local searchInput = Instance.new("TextBox")
-                searchInput.Parent = optionsList
-                searchInput.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
-                searchInput.BorderSizePixel = 0
-                searchInput.Position = UDim2.new(0, 2, 0, 2)
-                searchInput.Size = UDim2.new(1, -4, 0, 20)
-                searchInput.Font = Enum.Font.SourceSans
-                searchInput.PlaceholderText = "Search..."
-                searchInput.PlaceholderColor3 = Color3.fromRGB(104, 104, 104)
-                searchInput.Text = ""
-                searchInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-                searchInput.TextSize = 11
-                searchInput.ZIndex = 2001
-                
-                local searchCorner = Instance.new("UICorner")
-                searchCorner.CornerRadius = UDim.new(0, 3)
-                searchCorner.Parent = searchInput
                 
                 local optionsContainer = Instance.new("Frame")
                 optionsContainer.Parent = optionsList
                 optionsContainer.BackgroundTransparency = 1
                 optionsContainer.Size = UDim2.new(1, 0, 0, #options * 20)
-                optionsContainer.Position = UDim2.new(0, 0, 0, 25)
+                optionsContainer.Position = UDim2.new(0, 0, 0, 0)
                 
 
                 
@@ -1291,7 +1272,6 @@ function UILibrary.new(config)
                     optionButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
                     optionButton.TextSize = 12
                     optionButton.ZIndex = 1001
-                    optionButton.Visible = true
                     
                     optionButtons[option] = optionButton
                     
@@ -1448,16 +1428,6 @@ function UILibrary.new(config)
                         Arrow.Rotation = 180
                         scrollOffset = 0
                         optionsContainer.Position = UDim2.new(0, 0, 0, #options > 4 and 10 or 0)
-                        -- Clear search and reset visibility
-                        searchInput.Text = ""
-                        local visibleCount = 0
-                        for option, button in pairs(optionButtons) do
-                            button.Visible = true
-                            button.Position = UDim2.new(0, 0, 0, visibleCount * 20)
-                            visibleCount = visibleCount + 1
-                        end
-                        optionsContainer.Size = UDim2.new(1, 0, 0, #options * 20)
-                        optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + 25, 105))
                     else
                         Arrow.Rotation = 0
                     end
