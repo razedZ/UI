@@ -1357,15 +1357,18 @@ function UILibrary.new(config)
                 end
                 
                 -- Функциональность поиска
-                searchInput:GetPropertyChangedSignal("Text"):Connect(function()
+                searchInput.Changed:Connect(function()
                     local searchText = searchInput.Text:lower()
-                    print("Search text:", searchText) -- Отладка
                     
-                    for option, button in pairs(optionButtons) do
-                        local buttonText = button.Text:lower()
-                        local shouldShow = searchText == "" or buttonText:find(searchText, 1, true)
-                        button.Visible = shouldShow
-                        print("Option:", option, "Visible:", shouldShow) -- Отладка
+                    for _, child in pairs(optionsContainer:GetChildren()) do
+                        if child:IsA("TextButton") then
+                            local optionText = child.Text:lower()
+                            if searchText == "" or optionText:find(searchText, 1, true) then
+                                child.Visible = true
+                            else
+                                child.Visible = false
+                            end
+                        end
                     end
                 end)
                 
