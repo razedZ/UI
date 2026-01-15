@@ -1361,7 +1361,8 @@ function UILibrary.new(config)
                     local searchText = searchInput.Text:lower()
                     
                     for option, button in pairs(optionButtons) do
-                        if searchText == "" or option:lower():find(searchText, 1, true) then
+                        local buttonText = button.Text:lower()
+                        if searchText == "" or buttonText:find(searchText, 1, true) then
                             button.Visible = true
                         else
                             button.Visible = false
