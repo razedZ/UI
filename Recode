@@ -353,33 +353,24 @@ function UILibrary.new(config)
     Line_10.Position = UDim2.new(0.229452059, 0, 0.110757448, 0)
     Line_10.Size = UDim2.new(0, 450, 0, 1)
 
+    -- Создание TabSection Main один раз
+    local TabSectionName = Instance.new("TextLabel")
+    TabSectionName.Name = "TabSectionMain"
+    TabSectionName.Parent = TabZone
+    TabSectionName.BackgroundTransparency = 1.000
+    TabSectionName.Position = UDim2.new(0.0642857179, 0, 0, 0)
+    TabSectionName.Size = UDim2.new(0, 125, 0, 21)
+    TabSectionName.Font = Enum.Font.SourceSansBold
+    TabSectionName.Text = "Main"
+    TabSectionName.TextColor3 = Color3.fromRGB(161, 161, 161)
+    TabSectionName.TextSize = 12.000
+    TabSectionName.TextXAlignment = Enum.TextXAlignment.Left
+
     -- Создание вкладок
     function ui:CreateTab(name, imageId)
         local tab = {}
         local tabIndex = #tabs + 1
-
-        local sectionIndex = 1
-        local tabInSection = tabIndex
-        
-        local yPos = 0
-        if tabIndex == 1 then
-            local TabSectionName = Instance.new("TextLabel")
-            TabSectionName.Name = "TabSectionName1"
-            TabSectionName.Parent = TabZone
-            TabSectionName.BackgroundTransparency = 1.000
-            TabSectionName.Position = UDim2.new(0.0642857179, 0, 0, yPos)
-            TabSectionName.Size = UDim2.new(0, 125, 0, 21)
-            TabSectionName.Font = Enum.Font.SourceSansBold
-            TabSectionName.Text = "Main"
-            TabSectionName.TextColor3 = Color3.fromRGB(161, 161, 161)
-            TabSectionName.TextSize = 12.000
-            TabSectionName.TextXAlignment = Enum.TextXAlignment.Left
-            yPos = yPos + 22
-        else
-            yPos = 22
-        end
-        
-        yPos = yPos + (tabIndex - 1) * 25
+        local yPos = 22 + (tabIndex - 1) * 25
 
         local TabButton = Instance.new("TextButton")
         TabButton.Name = "Tab" .. tabIndex
