@@ -1459,7 +1459,7 @@ function UILibrary.new(config)
                                 
                                 if maxScroll > 0 and maxY > 0 then
                                     scrollOffset = (clampedY / maxY) * maxScroll
-                                    optionsContainer.Position = UDim2.new(0, 0, 0, -scrollOffset)
+                                    optionsContainer.Position = UDim2.new(0, 0, 0, 25 - scrollOffset)
                                 end
                             end
                         end)
@@ -1480,7 +1480,7 @@ function UILibrary.new(config)
                     if input.UserInputType == Enum.UserInputType.MouseWheel and optionsList.Visible then
                         local scrollDirection = input.Position.Z > 0 and -1 or 1
                         scrollOffset = math.clamp(scrollOffset + scrollDirection * 20, 0, maxScroll)
-                        optionsContainer.Position = UDim2.new(0, 0, 0, -scrollOffset)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, 25 - scrollOffset)
                         
                         if maxScroll > 0 then
                             local thumbPos = (scrollOffset / maxScroll) * (1 - thumbHeight)
