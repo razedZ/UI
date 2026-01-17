@@ -459,12 +459,6 @@ function UILibrary.new(config)
             tabContainer.Visible = true
             currentTab = name
             OpenedTab.Text = name
-            
-            -- Пересчитываем позиции элементов после переключения вкладки
-            spawn(function()
-                wait(0.1)
-                repositionElements()
-            end)
         end
         
         TabButton.MouseButton1Click:Connect(switchToTab)
@@ -572,12 +566,6 @@ function UILibrary.new(config)
                 end
                 
                 ElementZone.CanvasSize = UDim2.new(0, 0, 0, math.max(maxHeight + 100, 800))
-                
-                -- Пересчитываем позиции элементов
-                spawn(function()
-                    wait(0.05)
-                    repositionElements()
-                end)
             end
             
             local function hideLastElementLine()
