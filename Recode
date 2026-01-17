@@ -1419,8 +1419,8 @@ function UILibrary.new(config)
                 scrollBar.Parent = optionsList
                 scrollBar.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
                 scrollBar.BorderSizePixel = 0
-                scrollBar.Position = UDim2.new(1, -4, 0, 0)
-                scrollBar.Size = UDim2.new(0, 4, 1, 0)
+                scrollBar.Position = UDim2.new(1, -4, 0, 25)
+                scrollBar.Size = UDim2.new(0, 4, 0, 80)
                 scrollBar.ClipsDescendants = true
                 scrollBar.ZIndex = 1002
                 
