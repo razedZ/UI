@@ -1283,9 +1283,9 @@ function UILibrary.new(config)
                 listCorner.Parent = optionsList
                 
                 local scrollOffset = 0
-                local maxScroll = math.max(0, (#options - 4) * 20)
+                local maxScroll = math.max(0, (#options - 5) * 20)
                 
-                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20, 80))
+                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20, 100))
                 local connections = {}
                 
                 optionsList.InputBegan:Connect(function(input)
@@ -1424,7 +1424,7 @@ function UILibrary.new(config)
                 scrollBar.ClipsDescendants = true
                 scrollBar.ZIndex = 1002
                 
-                local thumbHeight = math.min(0.8, math.max(0.1, 80 / (#options * 20)))
+                local thumbHeight = math.min(0.8, math.max(0.1, 100 / (#options * 20)))
                 
                 local scrollThumb = Instance.new("Frame")
                 scrollThumb.Parent = scrollBar
@@ -1496,7 +1496,7 @@ function UILibrary.new(config)
                     if dropdownData.isOpen then
                         Arrow.Rotation = 180
                         scrollOffset = 0
-                        optionsContainer.Position = UDim2.new(0, 0, 0, 25)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, 5)
                     else
                         Arrow.Rotation = 0
                     end
