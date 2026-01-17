@@ -1508,7 +1508,7 @@ function UILibrary.new(config)
                     if dropdownData.isOpen then
                         Arrow.Rotation = 180
                         scrollOffset = 0
-                        optionsContainer.Position = UDim2.new(0, 0, 0, #options > 4 and 10 or 0)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, #options > 4 and -10 or 0)
                     else
                         Arrow.Rotation = 0
                     end
