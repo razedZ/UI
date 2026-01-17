@@ -353,44 +353,58 @@ function UILibrary.new(config)
     Line_10.Position = UDim2.new(0.229452059, 0, 0.110757448, 0)
     Line_10.Size = UDim2.new(0, 450, 0, 1)
 
-    -- Создание вкладок
-    function ui:CreateTab(name, imageId)
-        local tab = {}
-        local tabIndex = #tabs + 1
+    -- Создание TabSection
+    local tabSections = {}
+    local currentSectionY = 0
+    
+    function ui:CreateTabSection(name)
+        local tabSection = {
+            name = name,
+            tabs = {},
+            yPosition = currentSectionY
+        }
+        
+        local TabSectionName = Instance.new("TextLabel")
+        TabSectionName.Name = "TabSectionName_" .. name
+        TabSectionName.Parent = TabZone
+        TabSectionName.BackgroundTransparency = 1.000
+        TabSectionName.Position = UDim2.new(0.0642857179, 0, 0, currentSectionY)
+        TabSectionName.Size = UDim2.new(0, 125, 0, 21)
+        TabSectionName.Font = Enum.Font.SourceSansBold
+        TabSectionName.Text = name
+        TabSectionName.TextColor3 = Color3.fromRGB(161, 161, 161)
+        TabSectionName.TextSize = 12.000
+        TabSectionName.TextXAlignment = Enum.TextXAlignment.Left
+        
+        tabSection.label = TabSectionName
+        tabSections[name] = tabSection
+        currentSectionY = currentSectionY + 26
+        
+        return tabSection
+    end
 
-        local sectionIndex = math.ceil(tabIndex / 3)
-        local tabInSection = ((tabIndex - 1) % 3) + 1
-        
-        local yPos = 0
-        for i = 1, sectionIndex - 1 do
-            local tabsInPrevSection = math.min(3, #tabs - (i - 1) * 3)
-            yPos = yPos + 21 + tabsInPrevSection * 25 + 5
+    -- Создание вкладок
+    function ui:CreateTab(name, imageId, tabSectionName)
+        local tab = {}
+        local tabSection = tabSections[tabSectionName]
+        if not tabSection then
+            error("TabSection '" .. tostring(tabSectionName) .. "' not found. Create it first with ui:CreateTabSection()")
         end
         
-        local TabSectionName
-        if tabInSection == 1 then
-            TabSectionName = Instance.new("TextLabel")
-            TabSectionName.Name = "TabSectionName" .. sectionIndex
-            TabSectionName.Parent = TabZone
-            TabSectionName.BackgroundTransparency = 1.000
-            TabSectionName.Position = UDim2.new(0.0642857179, 0, 0, yPos)
-            TabSectionName.Size = UDim2.new(0, 125, 0, 21)
-            TabSectionName.Font = Enum.Font.SourceSansBold
-            local sectionNames = {"Main", "Render"}
-            TabSectionName.Text = sectionNames[sectionIndex] or "Section " .. sectionIndex
-            TabSectionName.TextColor3 = Color3.fromRGB(161, 161, 161)
-            TabSectionName.TextSize = 12.000
-            TabSectionName.TextXAlignment = Enum.TextXAlignment.Left
-            yPos = yPos + 21 + 1
-        else
-            yPos = yPos + 21 + 1 + (tabInSection - 1) * 25
+        local tabIndex = #tabSection.tabs + 1
+        local globalTabIndex = 0
+        for _, section in pairs(tabSections) do
+            globalTabIndex = globalTabIndex + #section.tabs
         end
+        globalTabIndex = globalTabIndex + 1
+        
+        local yPos = tabSection.yPosition + (tabIndex - 1) * 25
 
         local TabButton = Instance.new("TextButton")
-        TabButton.Name = "Tab" .. tabIndex
+        TabButton.Name = "Tab" .. globalTabIndex
         TabButton.Parent = TabZone
         TabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        TabButton.BackgroundTransparency = tabIndex == 1 and 0.900 or 1.000
+        TabButton.BackgroundTransparency = globalTabIndex == 1 and 0.900 or 1.000
         TabButton.BorderSizePixel = 0
         TabButton.Position = UDim2.new(0.0642857179, 0, 0, yPos)
         TabButton.Size = UDim2.new(0, 120, 0, 25)
@@ -407,7 +421,7 @@ function UILibrary.new(config)
         TabLogo.Position = UDim2.new(0.0666666701, 0, 0.200000003, 0)
         TabLogo.Size = UDim2.new(0, 14, 0, 14)
         TabLogo.Image = imageId or "rbxassetid://12614416478"
-        TabLogo.ImageColor3 = tabIndex == 1 and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(161, 161, 161)
+        TabLogo.ImageColor3 = globalTabIndex == 1 and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(161, 161, 161)
 
         local TabName = Instance.new("TextLabel")
         TabName.Name = "TabName"
@@ -417,7 +431,7 @@ function UILibrary.new(config)
         TabName.Size = UDim2.new(0, 89, 0, 23)
         TabName.Font = Enum.Font.SourceSansBold
         TabName.Text = name
-        TabName.TextColor3 = tabIndex == 1 and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(161, 161, 161)
+        TabName.TextColor3 = globalTabIndex == 1 and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(161, 161, 161)
         TabName.TextSize = 14.000
         TabName.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -426,19 +440,18 @@ function UILibrary.new(config)
         tabContainer.Parent = ElementZone
         tabContainer.BackgroundTransparency = 1
         tabContainer.Size = UDim2.new(1, -10, 0, 10000)
-        tabContainer.Visible = tabIndex == 1
+        tabContainer.Visible = globalTabIndex == 1
         
-
-
-        tabs[tabIndex] = {
+        table.insert(tabSection.tabs, {
             button = TabButton,
             image = TabLogo,
             name = TabName,
             container = tabContainer,
-            tabName = name
-        }
+            tabName = name,
+            globalIndex = globalTabIndex
+        })
         
-        if tabIndex == 1 then
+        if globalTabIndex == 1 then
             currentTab = name
             OpenedTab.Text = name
         end
@@ -446,11 +459,13 @@ function UILibrary.new(config)
         local function switchToTab()
             closeAllOptionWindows()
             closeAllDropdowns()
-            for i, t in pairs(tabs) do
-                t.button.BackgroundTransparency = 1.000
-                t.image.ImageColor3 = Color3.fromRGB(161, 161, 161)
-                t.name.TextColor3 = Color3.fromRGB(161, 161, 161)
-                t.container.Visible = false
+            for _, section in pairs(tabSections) do
+                for _, t in pairs(section.tabs) do
+                    t.button.BackgroundTransparency = 1.000
+                    t.image.ImageColor3 = Color3.fromRGB(161, 161, 161)
+                    t.name.TextColor3 = Color3.fromRGB(161, 161, 161)
+                    t.container.Visible = false
+                end
             end
             
             TabButton.BackgroundTransparency = 0.900
@@ -1249,8 +1264,8 @@ function UILibrary.new(config)
                 searchInput.Parent = optionsList
                 searchInput.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
                 searchInput.BorderSizePixel = 0
-                searchInput.Position = UDim2.new(0, 2, 0, 2)
-                searchInput.Size = UDim2.new(1, -4, 0, 20)
+                searchInput.Position = UDim2.new(0, 0, 0, 0)
+                searchInput.Size = UDim2.new(1, 0, 0, 20)
                 searchInput.Font = Enum.Font.SourceSans
                 searchInput.PlaceholderText = "Search..."
                 searchInput.PlaceholderColor3 = Color3.fromRGB(104, 104, 104)
@@ -1267,7 +1282,7 @@ function UILibrary.new(config)
                 optionsContainer.Parent = optionsList
                 optionsContainer.BackgroundTransparency = 1
                 optionsContainer.Size = UDim2.new(1, 0, 0, 80)
-                optionsContainer.Position = UDim2.new(0, 0, 0, 25)
+                optionsContainer.Position = UDim2.new(0, 0, 0, 20)
                 
                 local listLayout = Instance.new("UIListLayout")
                 listLayout.Parent = optionsContainer
@@ -1419,7 +1434,7 @@ function UILibrary.new(config)
                 scrollBar.Parent = optionsList
                 scrollBar.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
                 scrollBar.BorderSizePixel = 0
-                scrollBar.Position = UDim2.new(1, -4, 0, 25)
+                scrollBar.Position = UDim2.new(1, -4, 0, 20)
                 scrollBar.Size = UDim2.new(0, 4, 0, 80)
                 scrollBar.ClipsDescendants = true
                 scrollBar.ZIndex = 1002
@@ -1459,7 +1474,7 @@ function UILibrary.new(config)
                                 
                                 if maxScroll > 0 and maxY > 0 then
                                     scrollOffset = (clampedY / maxY) * maxScroll
-                                    optionsContainer.Position = UDim2.new(0, 0, 0, 25 - scrollOffset)
+                                    optionsContainer.Position = UDim2.new(0, 0, 0, 20 - scrollOffset)
                                 end
                             end
                         end)
@@ -1480,7 +1495,7 @@ function UILibrary.new(config)
                     if input.UserInputType == Enum.UserInputType.MouseWheel and optionsList.Visible then
                         local scrollDirection = input.Position.Z > 0 and -1 or 1
                         scrollOffset = math.clamp(scrollOffset + scrollDirection * 20, 0, maxScroll)
-                        optionsContainer.Position = UDim2.new(0, 0, 0, 25 - scrollOffset)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, 20 - scrollOffset)
                         
                         if maxScroll > 0 then
                             local thumbPos = (scrollOffset / maxScroll) * (1 - thumbHeight)
@@ -1496,7 +1511,7 @@ function UILibrary.new(config)
                     if dropdownData.isOpen then
                         Arrow.Rotation = 180
                         scrollOffset = 0
-                        optionsContainer.Position = UDim2.new(0, 0, 0, 25)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, 20)
                     else
                         Arrow.Rotation = 0
                     end
