@@ -358,19 +358,13 @@ function UILibrary.new(config)
         local tab = {}
         local tabIndex = #tabs + 1
 
-        local sectionIndex = math.ceil(tabIndex / 3)
-        local tabInSection = ((tabIndex - 1) % 3) + 1
+        local sectionIndex = 1
+        local tabInSection = tabIndex
         
         local yPos = 0
-        for i = 1, sectionIndex - 1 do
-            local tabsInPrevSection = math.min(3, #tabs - (i - 1) * 3)
-            yPos = yPos + 21 + tabsInPrevSection * 25 + 5
-        end
-        
-        local TabSectionName
-        if tabInSection == 1 then
-            TabSectionName = Instance.new("TextLabel")
-            TabSectionName.Name = "TabSectionName" .. sectionIndex
+        if tabIndex == 1 then
+            local TabSectionName = Instance.new("TextLabel")
+            TabSectionName.Name = "TabSectionName1"
             TabSectionName.Parent = TabZone
             TabSectionName.BackgroundTransparency = 1.000
             TabSectionName.Position = UDim2.new(0.0642857179, 0, 0, yPos)
@@ -380,10 +374,12 @@ function UILibrary.new(config)
             TabSectionName.TextColor3 = Color3.fromRGB(161, 161, 161)
             TabSectionName.TextSize = 12.000
             TabSectionName.TextXAlignment = Enum.TextXAlignment.Left
-            yPos = yPos + 21 + 1
+            yPos = yPos + 22
         else
-            yPos = yPos + 21 + 1 + (tabInSection - 1) * 25
+            yPos = 22
         end
+        
+        yPos = yPos + (tabIndex - 1) * 25
 
         local TabButton = Instance.new("TextButton")
         TabButton.Name = "Tab" .. tabIndex
