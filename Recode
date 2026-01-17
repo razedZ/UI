@@ -1266,7 +1266,7 @@ function UILibrary.new(config)
                 local optionsContainer = Instance.new("Frame")
                 optionsContainer.Parent = optionsList
                 optionsContainer.BackgroundTransparency = 1
-                optionsContainer.Size = UDim2.new(1, 0, 1, -25)
+                optionsContainer.Size = UDim2.new(1, 0, 0, 80)
                 optionsContainer.Position = UDim2.new(0, 0, 0, 25)
                 
                 local listLayout = Instance.new("UIListLayout")
@@ -1496,7 +1496,7 @@ function UILibrary.new(config)
                     if dropdownData.isOpen then
                         Arrow.Rotation = 180
                         scrollOffset = 0
-                        optionsContainer.Position = UDim2.new(0, 0, 0, 45)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, 25)
                     else
                         Arrow.Rotation = 0
                     end
