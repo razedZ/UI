@@ -1302,12 +1302,16 @@ function UILibrary.new(config)
                     optionButton.Size = UDim2.new(1, 0, 0, 20)
                     optionButton.Font = Enum.Font.SourceSans
                     optionButton.Text = option
-                    optionButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
+                    optionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
                     optionButton.TextSize = 12
                     optionButton.ZIndex = 2001
                     optionButton.LayoutOrder = i
                     
                     optionButtons[option] = optionButton
+                    
+                    if option == currentValue then
+                        optionButton.TextColor3 = Color3.fromRGB(150, 17, 255)
+                    end
                     
                     optionButton.MouseEnter:Connect(function()
                         optionButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -1367,11 +1371,15 @@ function UILibrary.new(config)
                             newButton.Size = UDim2.new(1, 0, 0, 20)
                             newButton.Font = Enum.Font.SourceSans
                             newButton.Text = option
-                            newButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
+                            newButton.TextColor3 = Color3.fromRGB(255, 255, 255)
                             newButton.TextSize = 12
                             newButton.ZIndex = 2001
                             newButton.LayoutOrder = i
                             optionButtons[option] = newButton
+                            
+                            if option == currentValue then
+                                newButton.TextColor3 = Color3.fromRGB(150, 17, 255)
+                            end
                             
                             newButton.MouseEnter:Connect(function()
                                 newButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
