@@ -737,6 +737,7 @@ function UILibrary.new(config)
                 end)
 
                 if currentValue and callback then
+                    task.wait(0.1)
                     spawn(function() callback(currentValue) end)
                 end
 
@@ -1101,6 +1102,7 @@ function UILibrary.new(config)
                 end)
 
                 if callback then
+                    task.wait(0.1)
                     spawn(function() callback(currentValue) end)
                 end
 
