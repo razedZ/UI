@@ -1227,7 +1227,7 @@ function UILibrary.new(config)
                 optionsList.Parent = UI
                 optionsList.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
                 optionsList.BorderSizePixel = 0
-                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + searchHeight + 5, 105))
+                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + (searchHeight or 0) + 5, 105))
                 optionsList.ClipsDescendants = true
                 optionsList.Visible = false
                 optionsList.ZIndex = 2000
@@ -1259,7 +1259,7 @@ function UILibrary.new(config)
                 optionsContainer.Parent = optionsList
                 optionsContainer.BackgroundTransparency = 1
                 optionsContainer.Size = UDim2.new(1, 0, 0, 80)
-                optionsContainer.Position = UDim2.new(0, 0, 0, searchHeight)
+                optionsContainer.Position = UDim2.new(0, 0, 0, searchHeight or 0)
                 
                 local listLayout = Instance.new("UIListLayout")
                 listLayout.Parent = optionsContainer
@@ -1277,7 +1277,7 @@ function UILibrary.new(config)
                 local scrollOffset = 0
                 local maxScroll = math.max(0, (#options - 4) * 20)
                 
-                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + 25, 105))
+                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + (searchHeight or 0) + 5, 105))
                 local connections = {}
                 
                 optionsList.InputBegan:Connect(function(input)
@@ -1413,7 +1413,7 @@ function UILibrary.new(config)
                 scrollBar.Parent = optionsList
                 scrollBar.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
                 scrollBar.BorderSizePixel = 0
-                scrollBar.Position = UDim2.new(1, -4, 0, searchHeight)
+                scrollBar.Position = UDim2.new(1, -4, 0, searchHeight or 0)
                 scrollBar.Size = UDim2.new(0, 4, 0, 80)
                 scrollBar.ClipsDescendants = true
                 scrollBar.ZIndex = 1002
@@ -1454,7 +1454,7 @@ function UILibrary.new(config)
                                 
                                 if maxScroll > 0 and maxY > 0 then
                                     scrollOffset = (clampedY / maxY) * maxScroll
-                                    optionsContainer.Position = UDim2.new(0, 0, 0, searchHeight - scrollOffset)
+                                    optionsContainer.Position = UDim2.new(0, 0, 0, (searchHeight or 0) - scrollOffset)
                                 end
                             end
                         end)
@@ -1475,7 +1475,7 @@ function UILibrary.new(config)
                     if input.UserInputType == Enum.UserInputType.MouseWheel and optionsList.Visible then
                         local scrollDirection = input.Position.Z > 0 and -1 or 1
                         scrollOffset = math.clamp(scrollOffset + scrollDirection * 20, 0, maxScroll)
-                        optionsContainer.Position = UDim2.new(0, 0, 0, searchHeight - scrollOffset)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, (searchHeight or 0) - scrollOffset)
                         
                         if maxScroll > 0 then
                             local thumbPos = (scrollOffset / maxScroll) * (1 - thumbHeight)
@@ -1491,7 +1491,7 @@ function UILibrary.new(config)
                     if dropdownData.isOpen then
                         Arrow.Rotation = 180
                         scrollOffset = 0
-                        optionsContainer.Position = UDim2.new(0, 0, 0, searchHeight)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, searchHeight or 0)
                     else
                         Arrow.Rotation = 0
                     end
