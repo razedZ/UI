@@ -737,8 +737,10 @@ function UILibrary.new(config)
                 end)
 
                 if currentValue and callback then
-                    task.wait(0.1)
-                    spawn(function() callback(currentValue) end)
+                    spawn(function() 
+                        task.wait(0.1)
+                        callback(currentValue) 
+                    end)
                 end
 
                 elementCount = elementCount + 1
@@ -1102,8 +1104,10 @@ function UILibrary.new(config)
                 end)
 
                 if callback then
-                    task.wait(0.1)
-                    spawn(function() callback(currentValue) end)
+                    spawn(function() 
+                        task.wait(0.1)
+                        callback(currentValue) 
+                    end)
                 end
 
                 elementCount = elementCount + 1
@@ -1335,6 +1339,11 @@ function UILibrary.new(config)
                             saveSettings(config.FileName or "pizdecware_settings.json", settings)
                         end
                         if callback then callback(currentValue) end
+                        
+                        -- Закрываем дропдаун
+                        dropdownData.isOpen = false
+                        Arrow.Rotation = 0
+                        optionsList.Visible = false
                     end)
                 end
                 
