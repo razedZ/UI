@@ -1313,6 +1313,10 @@ function UILibrary.new(config)
                         optionButton.TextColor3 = Color3.fromRGB(150, 17, 255)
                     end
                     
+                    if option == currentValue then
+                        optionButton.TextColor3 = Color3.fromRGB(150, 17, 255)
+                    end
+                    
                     optionButton.MouseEnter:Connect(function()
                         optionButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                         optionButton.BackgroundTransparency = 0.95
