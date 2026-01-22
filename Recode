@@ -1391,13 +1391,8 @@ function UILibrary.new(config)
                             end)
                             
                             newButton.MouseButton1Click:Connect(function()
-                                for opt, btn in pairs(optionButtons) do
+                                for _, btn in pairs(optionButtons) do
                                     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-                                end
-                                for _, child in pairs(optionsContainer:GetChildren()) do
-                                    if child:IsA("TextButton") then
-                                        child.TextColor3 = Color3.fromRGB(255, 255, 255)
-                                    end
                                 end
                                 
                                 currentValue = option
