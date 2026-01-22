@@ -1109,7 +1109,8 @@ function UILibrary.new(config)
                 hideLastElementLine()
             end
 
-            function section:CreateDropdown(name, options, default, callback, saveId)
+            function section:CreateDropdown(name, options, default, callback, saveId, search)
+                search = search ~= false -- по умолчанию true, если не указано false
                 local saveKey = saveId or name
                 local optionSaveEnabled
                 if settings["_option_save_" .. name] ~= nil then
@@ -1225,35 +1226,40 @@ function UILibrary.new(config)
                 optionsList.Parent = UI
                 optionsList.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
                 optionsList.BorderSizePixel = 0
-                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + 25, 105))
+                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + searchHeight + 5, 105))
                 optionsList.ClipsDescendants = true
                 optionsList.Visible = false
                 optionsList.ZIndex = 2000
                 
                 -- Поле поиска
-                local searchInput = Instance.new("TextBox")
-                searchInput.Parent = optionsList
-                searchInput.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
-                searchInput.BorderSizePixel = 0
-                searchInput.Position = UDim2.new(0, 0, 0, 0)
-                searchInput.Size = UDim2.new(1, 0, 0, 20)
-                searchInput.Font = Enum.Font.SourceSans
-                searchInput.PlaceholderText = "Search..."
-                searchInput.PlaceholderColor3 = Color3.fromRGB(104, 104, 104)
-                searchInput.Text = ""
-                searchInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-                searchInput.TextSize = 11
-                searchInput.ZIndex = 2001
-                
-                local searchCorner = Instance.new("UICorner")
-                searchCorner.CornerRadius = UDim.new(0, 3)
-                searchCorner.Parent = searchInput
+                local searchInput = nil
+                local searchHeight = 0
+                if search then
+                    searchHeight = 20
+                    searchInput = Instance.new("TextBox")
+                    searchInput.Parent = optionsList
+                    searchInput.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                    searchInput.BorderSizePixel = 0
+                    searchInput.Position = UDim2.new(0, 0, 0, 0)
+                    searchInput.Size = UDim2.new(1, 0, 0, 20)
+                    searchInput.Font = Enum.Font.SourceSans
+                    searchInput.PlaceholderText = "Search..."
+                    searchInput.PlaceholderColor3 = Color3.fromRGB(104, 104, 104)
+                    searchInput.Text = ""
+                    searchInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    searchInput.TextSize = 11
+                    searchInput.ZIndex = 2001
+                    
+                    local searchCorner = Instance.new("UICorner")
+                    searchCorner.CornerRadius = UDim.new(0, 3)
+                    searchCorner.Parent = searchInput
+                end
                 
                 local optionsContainer = Instance.new("Frame")
                 optionsContainer.Parent = optionsList
                 optionsContainer.BackgroundTransparency = 1
                 optionsContainer.Size = UDim2.new(1, 0, 0, 80)
-                optionsContainer.Position = UDim2.new(0, 0, 0, 20)
+                optionsContainer.Position = UDim2.new(0, 0, 0, searchHeight)
                 
                 local listLayout = Instance.new("UIListLayout")
                 listLayout.Parent = optionsContainer
@@ -1331,55 +1337,57 @@ function UILibrary.new(config)
                 end
                 
                 -- Функциональность поиска
-                searchInput:GetPropertyChangedSignal("Text"):Connect(function()
-                    local searchText = searchInput.Text:lower()
-                    
-                    for _, child in pairs(optionsContainer:GetChildren()) do
-                        if child:IsA("TextButton") then
-                            child:Destroy()
+                if search and searchInput then
+                    searchInput:GetPropertyChangedSignal("Text"):Connect(function()
+                        local searchText = searchInput.Text:lower()
+                        
+                        for _, child in pairs(optionsContainer:GetChildren()) do
+                            if child:IsA("TextButton") then
+                                child:Destroy()
+                            end
                         end
-                    end
-                    
-                    for i, option in ipairs(options) do
-                        if searchText == "" or option:lower():find(searchText, 1, true) then
-                            local newButton = Instance.new("TextButton")
-                            newButton.Parent = optionsContainer
-                            newButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
-                            newButton.BackgroundTransparency = 1
-                            newButton.Size = UDim2.new(1, 0, 0, 20)
-                            newButton.Font = Enum.Font.SourceSans
-                            newButton.Text = option
-                            newButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
-                            newButton.TextSize = 12
-                            newButton.ZIndex = 2001
-                            newButton.LayoutOrder = i
-                            
-                            newButton.MouseEnter:Connect(function()
-                                newButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                                newButton.BackgroundTransparency = 0.95
-                            end)
-                            
-                            newButton.MouseLeave:Connect(function()
+                        
+                        for i, option in ipairs(options) do
+                            if searchText == "" or option:lower():find(searchText, 1, true) then
+                                local newButton = Instance.new("TextButton")
+                                newButton.Parent = optionsContainer
                                 newButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
                                 newButton.BackgroundTransparency = 1
-                            end)
-                            
-                            newButton.MouseButton1Click:Connect(function()
-                                currentValue = option
-                                Selected.Text = option
-                                if optionSaveEnabled then
-                                    settings[saveKey] = currentValue
-                                    saveSettings(config.FileName or "pizdecware_settings.json", settings)
-                                end
-                                if callback then callback(currentValue) end
+                                newButton.Size = UDim2.new(1, 0, 0, 20)
+                                newButton.Font = Enum.Font.SourceSans
+                                newButton.Text = option
+                                newButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
+                                newButton.TextSize = 12
+                                newButton.ZIndex = 2001
+                                newButton.LayoutOrder = i
                                 
-                                dropdownData.isOpen = false
-                                Arrow.Rotation = 0
-                                optionsList.Visible = false
-                            end)
+                                newButton.MouseEnter:Connect(function()
+                                    newButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                                    newButton.BackgroundTransparency = 0.95
+                                end)
+                                
+                                newButton.MouseLeave:Connect(function()
+                                    newButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                                    newButton.BackgroundTransparency = 1
+                                end)
+                                
+                                newButton.MouseButton1Click:Connect(function()
+                                    currentValue = option
+                                    Selected.Text = option
+                                    if optionSaveEnabled then
+                                        settings[saveKey] = currentValue
+                                        saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                                    end
+                                    if callback then callback(currentValue) end
+                                    
+                                    dropdownData.isOpen = false
+                                    Arrow.Rotation = 0
+                                    optionsList.Visible = false
+                                end)
+                            end
                         end
-                    end
-                end)
+                    end)
+                end
                 
 
                 
@@ -1405,7 +1413,7 @@ function UILibrary.new(config)
                 scrollBar.Parent = optionsList
                 scrollBar.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
                 scrollBar.BorderSizePixel = 0
-                scrollBar.Position = UDim2.new(1, -4, 0, 20)
+                scrollBar.Position = UDim2.new(1, -4, 0, searchHeight)
                 scrollBar.Size = UDim2.new(0, 4, 0, 80)
                 scrollBar.ClipsDescendants = true
                 scrollBar.ZIndex = 1002
@@ -1446,7 +1454,7 @@ function UILibrary.new(config)
                                 
                                 if maxScroll > 0 and maxY > 0 then
                                     scrollOffset = (clampedY / maxY) * maxScroll
-                                    optionsContainer.Position = UDim2.new(0, 0, 0, 20 - scrollOffset)
+                                    optionsContainer.Position = UDim2.new(0, 0, 0, searchHeight - scrollOffset)
                                 end
                             end
                         end)
@@ -1467,7 +1475,7 @@ function UILibrary.new(config)
                     if input.UserInputType == Enum.UserInputType.MouseWheel and optionsList.Visible then
                         local scrollDirection = input.Position.Z > 0 and -1 or 1
                         scrollOffset = math.clamp(scrollOffset + scrollDirection * 20, 0, maxScroll)
-                        optionsContainer.Position = UDim2.new(0, 0, 0, 20 - scrollOffset)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, searchHeight - scrollOffset)
                         
                         if maxScroll > 0 then
                             local thumbPos = (scrollOffset / maxScroll) * (1 - thumbHeight)
@@ -1483,7 +1491,7 @@ function UILibrary.new(config)
                     if dropdownData.isOpen then
                         Arrow.Rotation = 180
                         scrollOffset = 0
-                        optionsContainer.Position = UDim2.new(0, 0, 0, 20)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, searchHeight)
                     else
                         Arrow.Rotation = 0
                     end
