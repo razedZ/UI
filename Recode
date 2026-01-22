@@ -1109,9 +1109,8 @@ function UILibrary.new(config)
                 hideLastElementLine()
             end
 
-            function section:CreateDropdown(name, options, default, callback, saveId, config)
-                config = config or {}
-                local search = config.search ~= false -- по умолчанию true
+            function section:CreateDropdown(name, options, default, callback, saveId, search)
+                search = search ~= false -- по умолчанию true, если не указано false
                 local saveKey = saveId or name
                 local optionSaveEnabled
                 if settings["_option_save_" .. name] ~= nil then
