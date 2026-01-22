@@ -1124,6 +1124,11 @@ function UILibrary.new(config)
                 else
                     currentValue = default or options[1]
                 end
+                
+                -- Вызываем callback сразу с загруженным значением
+                if callback then
+                    spawn(function() callback(currentValue) end)
+                end
 
                 local DropdownZone = Instance.new("Frame")
                 DropdownZone.Parent = sectionFrame
@@ -1565,10 +1570,6 @@ function UILibrary.new(config)
                         end
                     end)
                 end)
-
-                if callback then
-                    spawn(function() callback(currentValue) end)
-                end
 
                 elementCount = elementCount + 1
                 updateSectionSize()
