@@ -1314,6 +1314,11 @@ function UILibrary.new(config)
                     end)
                     
                     optionButton.MouseButton1Click:Connect(function()
+                        -- Если сохранение включено, игнорируем выбор новой опции
+                        if optionSaveEnabled then
+                            return
+                        end
+                        
                         for opt, btn in pairs(optionButtons) do
                             btn.TextColor3 = Color3.fromRGB(255, 255, 255)
                         end
@@ -1322,10 +1327,6 @@ function UILibrary.new(config)
                         Selected.Text = option
                         optionButton.TextColor3 = Color3.fromRGB(150, 17, 255)
                         
-                        if optionSaveEnabled then
-                            settings[saveKey] = currentValue
-                            saveSettings(config.FileName or "pizdecware_settings.json", settings)
-                        end
                         if callback then callback(currentValue) end
                     end)
                 end
@@ -1365,12 +1366,13 @@ function UILibrary.new(config)
                             end)
                             
                             newButton.MouseButton1Click:Connect(function()
+                                -- Если сохранение включено, игнорируем выбор новой опции
+                                if optionSaveEnabled then
+                                    return
+                                end
+                                
                                 currentValue = option
                                 Selected.Text = option
-                                if optionSaveEnabled then
-                                    settings[saveKey] = currentValue
-                                    saveSettings(config.FileName or "pizdecware_settings.json", settings)
-                                end
                                 if callback then callback(currentValue) end
                                 
                                 dropdownData.isOpen = false
