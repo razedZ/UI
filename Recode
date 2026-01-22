@@ -1127,6 +1127,7 @@ function UILibrary.new(config)
                 
                 -- Вызываем callback сразу с загруженным значением
                 if callback then
+                    task.wait(0.1) -- Небольшая задержка для инициализации переменных
                     spawn(function() callback(currentValue) end)
                 end
 
