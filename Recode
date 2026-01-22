@@ -1294,17 +1294,6 @@ function UILibrary.new(config)
                 
                 local optionButtons = {}
                 
-                -- Функция для обновления цветов всех кнопок
-                local function updateButtonColors()
-                    for option, btn in pairs(optionButtons) do
-                        if option == currentValue then
-                            btn.TextColor3 = Color3.fromRGB(150, 17, 255)
-                        else
-                            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-                        end
-                    end
-                end
-                
                 for i, option in ipairs(options) do
                     local optionButton = Instance.new("TextButton")
                     optionButton.Parent = optionsContainer
@@ -1341,9 +1330,13 @@ function UILibrary.new(config)
                     end)
                     
                     optionButton.MouseButton1Click:Connect(function()
+                        for _, btn in pairs(optionButtons) do
+                            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        end
+                        
                         currentValue = option
                         Selected.Text = option
-                        updateButtonColors()
+                        optionButton.TextColor3 = Color3.fromRGB(150, 17, 255)
                         
                         if optionSaveEnabled then
                             settings[saveKey] = currentValue
@@ -1385,8 +1378,11 @@ function UILibrary.new(config)
                             newButton.ZIndex = 2001
                             newButton.LayoutOrder = i
                             
-                            -- Добавляем в таблицу кнопок
                             optionButtons[option] = newButton
+                            
+                            if option == currentValue then
+                                newButton.TextColor3 = Color3.fromRGB(150, 17, 255)
+                            end
                             
                             newButton.MouseEnter:Connect(function()
                                 newButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -1399,9 +1395,13 @@ function UILibrary.new(config)
                             end)
                             
                             newButton.MouseButton1Click:Connect(function()
+                                for _, btn in pairs(optionButtons) do
+                                    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                                end
+                                
                                 currentValue = option
                                 Selected.Text = option
-                                updateButtonColors()
+                                newButton.TextColor3 = Color3.fromRGB(150, 17, 255)
                                 
                                 if optionSaveEnabled then
                                     settings[saveKey] = currentValue
@@ -1413,11 +1413,6 @@ function UILibrary.new(config)
                                 Arrow.Rotation = 0
                                 optionsList.Visible = false
                             end)
-                        end
-                    end
-                    
-                    -- Обновляем цвета после пересоздания кнопок
-                    updateButtonColors()
                 end)
                 
 
