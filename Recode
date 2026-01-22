@@ -1409,6 +1409,7 @@ function UILibrary.new(config)
                 scrollBar.Size = UDim2.new(0, 4, 0, 80)
                 scrollBar.ClipsDescendants = true
                 scrollBar.ZIndex = 1002
+                scrollBar.Visible = #options >= 4
                 
                 local thumbHeight = math.min(0.8, math.max(0.1, 80 / (#options * 20)))
                 
