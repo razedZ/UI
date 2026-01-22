@@ -1350,6 +1350,7 @@ function UILibrary.new(config)
                 -- Функциональность поиска
                 searchInput:GetPropertyChangedSignal("Text"):Connect(function()
                     local searchText = searchInput.Text:lower()
+                    optionButtons = {}
                     
                     for _, child in pairs(optionsContainer:GetChildren()) do
                         if child:IsA("TextButton") then
@@ -1370,6 +1371,7 @@ function UILibrary.new(config)
                             newButton.TextSize = 12
                             newButton.ZIndex = 2001
                             newButton.LayoutOrder = i
+                            optionButtons[option] = newButton
                             
                             newButton.MouseEnter:Connect(function()
                                 newButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
