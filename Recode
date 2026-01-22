@@ -288,8 +288,15 @@ function UILibrary.new(config)
     
     -- Try to load custom avatar from _G.PWareAvatarPath, fallback to default
     local avatarImage = "rbxassetid://7074334150"
-    if _G.PWareAvatarPath and getcustomasset and isfile and isfile(_G.PWareAvatarPath) then
-        avatarImage = getcustomasset(_G.PWareAvatarPath)
+    if _G.PWareAvatarPath and getcustomasset and isfile then
+        if isfile(_G.PWareAvatarPath) then
+            local success, customImage = pcall(function()
+                return getcustomasset(_G.PWareAvatarPath)
+            end)
+            if success and customImage then
+                avatarImage = customImage
+            end
+        end
     end
     ImageLabel.Image = avatarImage
 
