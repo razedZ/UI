@@ -1313,10 +1313,6 @@ function UILibrary.new(config)
                         optionButton.TextColor3 = Color3.fromRGB(150, 17, 255)
                     end
                     
-                    if option == currentValue then
-                        optionButton.TextColor3 = Color3.fromRGB(150, 17, 255)
-                    end
-                    
                     optionButton.MouseEnter:Connect(function()
                         optionButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                         optionButton.BackgroundTransparency = 0.95
@@ -1357,13 +1353,16 @@ function UILibrary.new(config)
                 -- Функциональность поиска
                 searchInput:GetPropertyChangedSignal("Text"):Connect(function()
                     local searchText = searchInput.Text:lower()
-                    optionButtons = {}
                     
+                    -- Очищаем старые кнопки
                     for _, child in pairs(optionsContainer:GetChildren()) do
                         if child:IsA("TextButton") then
                             child:Destroy()
                         end
                     end
+                    
+                    -- Очищаем таблицу кнопок
+                    optionButtons = {}
                     
                     for i, option in ipairs(options) do
                         if searchText == "" or option:lower():find(searchText, 1, true) then
@@ -1378,8 +1377,11 @@ function UILibrary.new(config)
                             newButton.TextSize = 12
                             newButton.ZIndex = 2001
                             newButton.LayoutOrder = i
+                            
+                            -- Добавляем в таблицу кнопок
                             optionButtons[option] = newButton
                             
+                            -- Устанавливаем фиолетовый цвет только для текущего выбранного значения
                             if option == currentValue then
                                 newButton.TextColor3 = Color3.fromRGB(150, 17, 255)
                             end
@@ -1395,12 +1397,16 @@ function UILibrary.new(config)
                             end)
                             
                             newButton.MouseButton1Click:Connect(function()
+                                -- Сбрасываем цвет всех кнопок в белый
                                 for _, btn in pairs(optionButtons) do
                                     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
                                 end
                                 
+                                -- Обновляем текущее значение
                                 currentValue = option
                                 Selected.Text = option
+                                
+                                -- Устанавливаем фиолетовый цвет только для выбранной кнопки
                                 newButton.TextColor3 = Color3.fromRGB(150, 17, 255)
                                 
                                 if optionSaveEnabled then
