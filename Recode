@@ -254,6 +254,9 @@ function UILibrary.new(config)
             end)
         end
     end)
+            end)
+        end
+    end)
     
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 and uiDragging then
