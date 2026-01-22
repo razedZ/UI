@@ -1330,12 +1330,16 @@ function UILibrary.new(config)
                     end)
                     
                     optionButton.MouseButton1Click:Connect(function()
+                        -- Сбрасываем цвет всех кнопок в белый
                         for _, btn in pairs(optionButtons) do
                             btn.TextColor3 = Color3.fromRGB(255, 255, 255)
                         end
                         
+                        -- Обновляем текущее значение
                         currentValue = option
                         Selected.Text = option
+                        
+                        -- Устанавливаем фиолетовый цвет только для выбранной кнопки
                         optionButton.TextColor3 = Color3.fromRGB(150, 17, 255)
                         
                         if optionSaveEnabled then
