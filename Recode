@@ -1421,6 +1421,8 @@ function UILibrary.new(config)
                                 Arrow.Rotation = 0
                                 optionsList.Visible = false
                             end)
+                        end
+                    end
                 end)
                 
 
