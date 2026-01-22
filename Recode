@@ -28,6 +28,7 @@ local function loadSettings(fileName)
 end
 
 function UILibrary.new(config)
+    config = config or {}
     local ui = {}
     _G.PizdecWareUI = ui
     local settings = loadSettings(config.FileName or "pizdecware_settings.json")
