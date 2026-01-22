@@ -1590,6 +1590,15 @@ function UILibrary.new(config)
                 else
                     currentBind = default or "None"
                 end
+                
+                -- Преобразуем строку в KeyCode если нужно
+                if type(currentBind) == "string" and currentBind ~= "None" then
+                    if not currentBind:find("Enum%.KeyCode%.") then
+                        currentBind = currentBind
+                    else
+                        currentBind = currentBind:gsub("Enum%.KeyCode%.", "")
+                    end
+                end
 
                 local BindZone = Instance.new("Frame")
                 BindZone.Parent = sectionFrame
