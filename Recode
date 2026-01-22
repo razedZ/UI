@@ -28,7 +28,6 @@ local function loadSettings(fileName)
 end
 
 function UILibrary.new(config)
-    config = config or {}
     local ui = {}
     _G.PizdecWareUI = ui
     local settings = loadSettings(config.FileName or "pizdecware_settings.json")
@@ -289,15 +288,8 @@ function UILibrary.new(config)
     
     -- Try to load custom avatar from _G.PWareAvatarPath, fallback to default
     local avatarImage = "rbxassetid://7074334150"
-    if _G.PWareAvatarPath and getcustomasset and isfile then
-        if isfile(_G.PWareAvatarPath) then
-            local success, customImage = pcall(function()
-                return getcustomasset(_G.PWareAvatarPath)
-            end)
-            if success and customImage then
-                avatarImage = customImage
-            end
-        end
+    if _G.PWareAvatarPath and getcustomasset and isfile and isfile(_G.PWareAvatarPath) then
+        avatarImage = getcustomasset(_G.PWareAvatarPath)
     end
     ImageLabel.Image = avatarImage
 
@@ -745,10 +737,7 @@ function UILibrary.new(config)
                 end)
 
                 if currentValue and callback then
-                    spawn(function() 
-                        task.wait(0.1)
-                        callback(currentValue) 
-                    end)
+                    spawn(function() callback(currentValue) end)
                 end
 
                 elementCount = elementCount + 1
@@ -1112,10 +1101,7 @@ function UILibrary.new(config)
                 end)
 
                 if callback then
-                    spawn(function() 
-                        task.wait(0.1)
-                        callback(currentValue) 
-                    end)
+                    spawn(function() callback(currentValue) end)
                 end
 
                 elementCount = elementCount + 1
@@ -1125,19 +1111,23 @@ function UILibrary.new(config)
 
             function section:CreateDropdown(name, options, default, callback, saveId)
                 local saveKey = saveId or name
-                local optionSaveEnabled = settings["_option_save_" .. name] or false
-                local currentValue = (optionSaveEnabled and settings[saveKey]) or default or options[1]
+                local optionSaveEnabled
+                if settings["_option_save_" .. name] ~= nil then
+                    optionSaveEnabled = settings["_option_save_" .. name]
+                else
+                    optionSaveEnabled = false
+                end
                 
-                if callback then
-                    spawn(function() 
-                        task.wait(0.1)
-                        callback(currentValue) 
-                    end)
+                local currentValue
+                if optionSaveEnabled and settings[saveKey] then
+                    currentValue = settings[saveKey]
+                else
+                    currentValue = default or options[1]
                 end
 
                 local DropdownZone = Instance.new("Frame")
                 DropdownZone.Parent = sectionFrame
-                DropdownZone.BackgroundTransparency = 1
+                DropdownZone.BackgroundTransparency = 1.000
                 local yPos = 0
                 for i = 1, elementCount do
                     yPos = yPos + (elementHeights[i] or 30)
@@ -1150,55 +1140,60 @@ function UILibrary.new(config)
                 Line_9.Name = "Line"
                 Line_9.Parent = DropdownZone
                 Line_9.BackgroundColor3 = Color3.fromRGB(161, 161, 161)
-                Line_9.BackgroundTransparency = 0.95
+                Line_9.BackgroundTransparency = 0.950
                 Line_9.BorderSizePixel = 0
-                Line_9.Position = UDim2.new(0.054, 0, 0.994, 0)
+                Line_9.Position = UDim2.new(0.0540540554, 0, 0.993768334, 0)
                 Line_9.Size = UDim2.new(0, 190, 0, 1)
 
                 local DropdownName = Instance.new("TextLabel")
                 DropdownName.Parent = DropdownZone
-                DropdownName.BackgroundTransparency = 1
-                DropdownName.Position = UDim2.new(0.054, 0, 0.011, 0)
+                DropdownName.BackgroundTransparency = 1.000
+                DropdownName.Position = UDim2.new(0.0540540405, 0, 0.0114222933, 0)
                 DropdownName.Size = UDim2.new(0, 76, 0, 34)
                 DropdownName.Font = Enum.Font.SourceSansBold
                 DropdownName.Text = name
                 DropdownName.TextColor3 = Color3.fromRGB(255, 255, 255)
-                DropdownName.TextSize = 12
+                DropdownName.TextSize = 12.000
                 DropdownName.TextXAlignment = Enum.TextXAlignment.Left
 
                 local DropdownButton = Instance.new("Frame")
+                DropdownButton.Name = "DropdownButton"
                 DropdownButton.Parent = DropdownZone
                 DropdownButton.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
                 DropdownButton.BorderSizePixel = 0
-                DropdownButton.Position = UDim2.new(0.38, 0, 0.134, 0)
+                DropdownButton.ClipsDescendants = true
+                DropdownButton.Position = UDim2.new(0.38, 0, 0.134209335, 0)
                 DropdownButton.Size = UDim2.new(0, 111, 0, 24)
                 
-                local UICorner_23 = Instance.new("UICorner")
-                UICorner_23.CornerRadius = UDim.new(0, 4)
-                UICorner_23.Parent = DropdownButton
-                
-                local UIStroke_Dropdown = Instance.new("UIStroke")
-                UIStroke_Dropdown.Color = Color3.fromRGB(161, 161, 161)
-                UIStroke_Dropdown.Thickness = 1
-                UIStroke_Dropdown.Transparency = 0.9
-                UIStroke_Dropdown.Parent = DropdownButton
-                
                 local Selected = Instance.new("TextLabel")
+                Selected.Name = "Selected"
                 Selected.Parent = DropdownButton
-                Selected.BackgroundTransparency = 1
-                Selected.Position = UDim2.new(0.056, 0, 0.208, 0)
-                Selected.Size = UDim2.new(0, 75, 0, 13)
+                Selected.BackgroundTransparency = 1.000
+                Selected.Position = UDim2.new(0.0558559671, 0, 0.208333328, 0)
+                Selected.Size = UDim2.new(0, 104, 0, 13)
                 Selected.Font = Enum.Font.SourceSansBold
                 Selected.Text = currentValue
                 Selected.TextColor3 = Color3.fromRGB(255, 255, 255)
-                Selected.TextSize = 12
+                Selected.TextSize = 12.000
                 Selected.TextXAlignment = Enum.TextXAlignment.Left
-                Selected.ClipsDescendants = true
+                
+                local Blur = Instance.new("Frame")
+                Blur.Name = "Blur"
+                Blur.Parent = DropdownButton
+                Blur.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                Blur.BorderSizePixel = 0
+                Blur.Position = UDim2.new(0.641831398, 0, 0.208333328, 0)
+                Blur.Size = UDim2.new(0, 41, 0, 14)
+                
+                local UIGradient_2 = Instance.new("UIGradient")
+                UIGradient_2.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0.00, 1.00), NumberSequenceKeypoint.new(0.10, 0.75), NumberSequenceKeypoint.new(0.38, 0.19), NumberSequenceKeypoint.new(0.61, 0.00), NumberSequenceKeypoint.new(0.80, 0.02), NumberSequenceKeypoint.new(1.00, 0.00)}
+                UIGradient_2.Parent = Blur
                 
                 local Arrow = Instance.new("ImageButton")
+                Arrow.Name = "Arrow"
                 Arrow.Parent = DropdownButton
-                Arrow.BackgroundTransparency = 1
-                Arrow.Position = UDim2.new(0.867, 0, 0.265, 0)
+                Arrow.BackgroundTransparency = 1.000
+                Arrow.Position = UDim2.new(0.867056608, 0, 0.265472412, 0)
                 Arrow.Size = UDim2.new(0, 10, 0, 10)
                 Arrow.Image = "rbxassetid://13116390649"
                 
@@ -1208,52 +1203,118 @@ function UILibrary.new(config)
                 ClickDetector.Size = UDim2.new(1, 0, 1, 0)
                 ClickDetector.Text = ""
 
-                local isOpen = false
-                local optionsList = Instance.new("ScrollingFrame")
+                local UICorner_23 = Instance.new("UICorner")
+                UICorner_23.CornerRadius = UDim.new(0, 4)
+                UICorner_23.Parent = DropdownButton
+                
+                local UIStroke_Dropdown = Instance.new("UIStroke")
+                UIStroke_Dropdown.Color = Color3.fromRGB(161, 161, 161)
+                UIStroke_Dropdown.Thickness = 1
+                UIStroke_Dropdown.Transparency = 0.9
+                UIStroke_Dropdown.Parent = DropdownButton
+
+                local dropdownData = {
+                    isOpen = false,
+                    list = nil,
+                    arrow = Arrow
+                }
+                
+                local maxHeight = math.min(#options, 4) * 20
+                
+                local optionsList = Instance.new("Frame")
                 optionsList.Parent = UI
                 optionsList.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
                 optionsList.BorderSizePixel = 0
-                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20, 80))
-                optionsList.CanvasSize = UDim2.new(0, 0, 0, #options * 20)
-                optionsList.ScrollBarThickness = 4
-                optionsList.ScrollBarImageColor3 = Color3.fromRGB(150, 17, 255)
+                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + 25, 105))
+                optionsList.ClipsDescendants = true
                 optionsList.Visible = false
                 optionsList.ZIndex = 2000
+                
+                -- Поле поиска
+                local searchInput = Instance.new("TextBox")
+                searchInput.Parent = optionsList
+                searchInput.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                searchInput.BorderSizePixel = 0
+                searchInput.Position = UDim2.new(0, 0, 0, 0)
+                searchInput.Size = UDim2.new(1, 0, 0, 20)
+                searchInput.Font = Enum.Font.SourceSans
+                searchInput.PlaceholderText = "Search..."
+                searchInput.PlaceholderColor3 = Color3.fromRGB(104, 104, 104)
+                searchInput.Text = ""
+                searchInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+                searchInput.TextSize = 11
+                searchInput.ZIndex = 2001
+                
+                local searchCorner = Instance.new("UICorner")
+                searchCorner.CornerRadius = UDim.new(0, 3)
+                searchCorner.Parent = searchInput
+                
+                local optionsContainer = Instance.new("Frame")
+                optionsContainer.Parent = optionsList
+                optionsContainer.BackgroundTransparency = 1
+                optionsContainer.Size = UDim2.new(1, 0, 0, 80)
+                optionsContainer.Position = UDim2.new(0, 0, 0, 20)
+                
+                local listLayout = Instance.new("UIListLayout")
+                listLayout.Parent = optionsContainer
+                listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                listLayout.FillDirection = Enum.FillDirection.Vertical
+                
+
+                
+                dropdownData.list = optionsList
+                table.insert(_G.PizdecWareDropdownLists, dropdownData)
                 
                 local listCorner = Instance.new("UICorner")
                 listCorner.Parent = optionsList
                 
+                local scrollOffset = 0
+                local maxScroll = math.max(0, (#options - 4) * 20)
+                
+                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + 25, 105))
+                local connections = {}
+                
+                optionsList.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dropdownClicking = true
+                    end
+                end)
+                
                 local optionButtons = {}
                 
-                -- Создаем кнопки один раз
                 for i, option in ipairs(options) do
                     local optionButton = Instance.new("TextButton")
-                    optionButton.Parent = optionsList
+                    optionButton.Parent = optionsContainer
+                    optionButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
                     optionButton.BackgroundTransparency = 1
-                    optionButton.Position = UDim2.new(0, 0, 0, (i-1) * 20)
                     optionButton.Size = UDim2.new(1, 0, 0, 20)
                     optionButton.Font = Enum.Font.SourceSans
                     optionButton.Text = option
                     optionButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
                     optionButton.TextSize = 12
                     optionButton.ZIndex = 2001
+                    optionButton.LayoutOrder = i
                     
                     optionButtons[option] = optionButton
                     
                     optionButton.MouseEnter:Connect(function()
-                        if option ~= currentValue then
-                            optionButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                            optionButton.BackgroundTransparency = 0.95
-                        end
+                        optionButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                        optionButton.BackgroundTransparency = 0.95
                     end)
                     
                     optionButton.MouseLeave:Connect(function()
+                        optionButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
                         optionButton.BackgroundTransparency = 1
                     end)
                     
+                    optionButton.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            dropdownClicking = true
+                        end
+                    end)
+                    
                     optionButton.MouseButton1Click:Connect(function()
-                        -- Сбрасываем цвет всех кнопок
-                        for _, btn in pairs(optionButtons) do
+                        for opt, btn in pairs(optionButtons) do
                             btn.TextColor3 = Color3.fromRGB(255, 255, 255)
                         end
                         
@@ -1266,76 +1327,182 @@ function UILibrary.new(config)
                             saveSettings(config.FileName or "pizdecware_settings.json", settings)
                         end
                         if callback then callback(currentValue) end
-                        
-                        isOpen = false
-                        Arrow.Rotation = 0
-                        optionsList.Visible = false
                     end)
                 end
                 
-                -- Обновляем позицию только когда открыт
-                local positionConnection
-                
-                ClickDetector.MouseButton1Click:Connect(function()
-                    isOpen = not isOpen
-                    optionsList.Visible = isOpen
-                    Arrow.Rotation = isOpen and 180 or 0
+                -- Функциональность поиска
+                searchInput:GetPropertyChangedSignal("Text"):Connect(function()
+                    local searchText = searchInput.Text:lower()
                     
-                    if isOpen then
-                        local buttonPos = ClickDetector.AbsolutePosition
-                        optionsList.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + 24)
-                        
-                        positionConnection = RunService.Heartbeat:Connect(function()
-                            if isOpen and ClickDetector.Parent then
-                                local newPos = ClickDetector.AbsolutePosition
-                                optionsList.Position = UDim2.new(0, newPos.X, 0, newPos.Y + 24)
-                            end
-                        end)
-                    else
-                        if positionConnection then
-                            positionConnection:Disconnect()
-                            positionConnection = nil
+                    for _, child in pairs(optionsContainer:GetChildren()) do
+                        if child:IsA("TextButton") then
+                            child:Destroy()
+                        end
+                    end
+                    
+                    for i, option in ipairs(options) do
+                        if searchText == "" or option:lower():find(searchText, 1, true) then
+                            local newButton = Instance.new("TextButton")
+                            newButton.Parent = optionsContainer
+                            newButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                            newButton.BackgroundTransparency = 1
+                            newButton.Size = UDim2.new(1, 0, 0, 20)
+                            newButton.Font = Enum.Font.SourceSans
+                            newButton.Text = option
+                            newButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
+                            newButton.TextSize = 12
+                            newButton.ZIndex = 2001
+                            newButton.LayoutOrder = i
+                            
+                            newButton.MouseEnter:Connect(function()
+                                newButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                                newButton.BackgroundTransparency = 0.95
+                            end)
+                            
+                            newButton.MouseLeave:Connect(function()
+                                newButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                                newButton.BackgroundTransparency = 1
+                            end)
+                            
+                            newButton.MouseButton1Click:Connect(function()
+                                currentValue = option
+                                Selected.Text = option
+                                if optionSaveEnabled then
+                                    settings[saveKey] = currentValue
+                                    saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                                end
+                                if callback then callback(currentValue) end
+                                
+                                dropdownData.isOpen = false
+                                Arrow.Rotation = 0
+                                optionsList.Visible = false
+                            end)
                         end
                     end
                 end)
                 
-                -- Закрытие при клике вне dropdown
-                UserInputService.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 and isOpen then
-                        local mouse = UserInputService:GetMouseLocation()
-                        local listPos = optionsList.AbsolutePosition
-                        local listSize = optionsList.AbsoluteSize
+
+                
+                local updatePosition
+                updatePosition = RunService.Heartbeat:Connect(function()
+                    if optionsList and optionsList.Parent and ClickDetector and ClickDetector.Parent and dropdownData.isOpen then
                         local buttonPos = ClickDetector.AbsolutePosition
-                        local buttonSize = ClickDetector.AbsoluteSize
+                        optionsList.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + 24)
+                    elseif not optionsList or not optionsList.Parent then
+                        updatePosition:Disconnect()
+                    end
+                end)
+                
+                optionsList.MouseEnter:Connect(function()
+                    ElementZone.ScrollingEnabled = false
+                end)
+                
+                optionsList.MouseLeave:Connect(function()
+                    ElementZone.ScrollingEnabled = true
+                end)
+                
+                local scrollBar = Instance.new("Frame")
+                scrollBar.Parent = optionsList
+                scrollBar.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                scrollBar.BorderSizePixel = 0
+                scrollBar.Position = UDim2.new(1, -4, 0, 20)
+                scrollBar.Size = UDim2.new(0, 4, 0, 80)
+                scrollBar.ClipsDescendants = true
+                scrollBar.ZIndex = 1002
+                
+                local thumbHeight = math.min(0.8, math.max(0.1, 80 / (#options * 20)))
+                
+                local scrollThumb = Instance.new("Frame")
+                scrollThumb.Parent = scrollBar
+                scrollThumb.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+                scrollThumb.BorderSizePixel = 0
+                scrollThumb.Size = UDim2.new(1, 0, thumbHeight, 0)
+                scrollThumb.Position = UDim2.new(0, 0, 0, 0)
+                scrollThumb.ZIndex = 1003
+                
+                local thumbDragging = false
+                local dragStartOffset = 0
+                local dragConnection = nil
+                
+                scrollThumb.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        thumbDragging = true
+                        local mouseY = UserInputService:GetMouseLocation().Y
+                        dragStartOffset = mouseY - scrollThumb.AbsolutePosition.Y
                         
-                        local inList = mouse.X >= listPos.X and mouse.X <= listPos.X + listSize.X and
-                                      mouse.Y >= listPos.Y and mouse.Y <= listPos.Y + listSize.Y
-                        local inButton = mouse.X >= buttonPos.X and mouse.X <= buttonPos.X + buttonSize.X and
-                                        mouse.Y >= buttonPos.Y and mouse.Y <= buttonPos.Y + buttonSize.Y
-                        
-                        if not inList and not inButton then
-                            isOpen = false
-                            optionsList.Visible = false
-                            Arrow.Rotation = 0
-                            if positionConnection then
-                                positionConnection:Disconnect()
-                                positionConnection = nil
+                        dragConnection = UserInputService.InputChanged:Connect(function(input)
+                            if thumbDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                                local mouseY = UserInputService:GetMouseLocation().Y
+                                local barY = scrollBar.AbsolutePosition.Y
+                                local barHeight = scrollBar.AbsoluteSize.Y
+                                local thumbHeightPixels = scrollThumb.AbsoluteSize.Y
+                                
+                                local targetY = mouseY - dragStartOffset - barY
+                                local maxY = barHeight - thumbHeightPixels
+                                local clampedY = math.clamp(targetY, 0, maxY)
+                                
+                                scrollThumb.Position = UDim2.new(0, 0, 0, clampedY)
+                                
+                                if maxScroll > 0 and maxY > 0 then
+                                    scrollOffset = (clampedY / maxY) * maxScroll
+                                    optionsContainer.Position = UDim2.new(0, 0, 0, 20 - scrollOffset)
+                                end
                             end
+                        end)
+                    end
+                end)
+                
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 and thumbDragging then
+                        thumbDragging = false
+                        if dragConnection then
+                            dragConnection:Disconnect()
+                            dragConnection = nil
                         end
                     end
+                end)
+                
+                optionsList.InputChanged:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseWheel and optionsList.Visible then
+                        local scrollDirection = input.Position.Z > 0 and -1 or 1
+                        scrollOffset = math.clamp(scrollOffset + scrollDirection * 20, 0, maxScroll)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, 20 - scrollOffset)
+                        
+                        if maxScroll > 0 then
+                            local thumbPos = (scrollOffset / maxScroll) * (1 - thumbHeight)
+                            scrollThumb.Position = UDim2.new(0, 0, thumbPos, 0)
+                        end
+                    end
+                end)
+                
+
+                
+                ClickDetector.MouseButton1Click:Connect(function()
+                    dropdownData.isOpen = not dropdownData.isOpen
+                    if dropdownData.isOpen then
+                        Arrow.Rotation = 180
+                        scrollOffset = 0
+                        optionsContainer.Position = UDim2.new(0, 0, 0, 20)
+                    else
+                        Arrow.Rotation = 0
+                    end
+                    optionsList.Visible = dropdownData.isOpen
                 end)
 
                 local Option_Dropdown = Instance.new("ImageButton")
                 Option_Dropdown.Name = "Option"
                 Option_Dropdown.Parent = DropdownZone
-                Option_Dropdown.BackgroundTransparency = 1
+                Option_Dropdown.BackgroundTransparency = 1.000
                 Option_Dropdown.BorderSizePixel = 0
-                Option_Dropdown.Position = UDim2.new(0.906, 0, 0.4, -2)
-                Option_Dropdown.Rotation = 90
+                Option_Dropdown.Position = UDim2.new(0.905565798, 0, 0.4, -2)
+                Option_Dropdown.Rotation = 90.000
                 Option_Dropdown.Size = UDim2.new(0, 14, 0, 13)
                 Option_Dropdown.Image = "rbxassetid://136882854117051"
 
                 local optionWindow = nil
+                if not _G.PizdecWareOptionWindows then
+                    _G.PizdecWareOptionWindows = {}
+                end
                 Option_Dropdown.MouseButton1Click:Connect(function()
                     if optionWindow and optionWindow.Visible then
                         optionWindow.Visible = false
@@ -1389,6 +1556,7 @@ function UILibrary.new(config)
                         if optionSaveEnabled then
                             saveToggle.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
                             saveToggle.Text = "✔"
+
                             settings[saveKey] = currentValue
                             saveSettings(config.FileName or "pizdecware_settings.json", settings)
                         else
@@ -1397,6 +1565,10 @@ function UILibrary.new(config)
                         end
                     end)
                 end)
+
+                if callback then
+                    spawn(function() callback(currentValue) end)
+                end
 
                 elementCount = elementCount + 1
                 updateSectionSize()
@@ -1417,15 +1589,6 @@ function UILibrary.new(config)
                     currentBind = settings[saveKey]
                 else
                     currentBind = default or "None"
-                end
-                
-                -- Преобразуем строку в KeyCode если нужно
-                if type(currentBind) == "string" and currentBind ~= "None" then
-                    if not currentBind:find("Enum%.KeyCode%.") then
-                        currentBind = currentBind
-                    else
-                        currentBind = currentBind:gsub("Enum%.KeyCode%.", "")
-                    end
                 end
 
                 local BindZone = Instance.new("Frame")
