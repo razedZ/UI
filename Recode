@@ -1233,9 +1233,8 @@ function UILibrary.new(config)
                 
                 -- Поле поиска
                 local searchInput = nil
-                local searchHeight = 0
+                local searchHeight = search and 20 or 0
                 if search then
-                    searchHeight = 20
                     searchInput = Instance.new("TextBox")
                     searchInput.Parent = optionsList
                     searchInput.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
