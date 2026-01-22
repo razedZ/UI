@@ -1,0 +1,2304 @@
+local UILibrary = {}
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
+local function saveSettings(fileName, settings)
+    if writefile then
+        local folder = fileName:match("(.+)/[^/]+$")
+        if folder and makefolder and isfolder and not isfolder(folder) then
+            makefolder(folder)
+        end
+        writefile(fileName, HttpService:JSONEncode(settings))
+    end
+end
+
+local function loadSettings(fileName)
+    if readfile and isfile then
+        if isfile(fileName) then
+            local success, result = pcall(function()
+                return HttpService:JSONDecode(readfile(fileName))
+            end)
+            if success then return result end
+        end
+    end
+    return {}
+end
+
+function UILibrary.new(config)
+    local ui = {}
+    _G.PizdecWareUI = ui
+    local settings = loadSettings(config.FileName or "pizdecware_settings.json")
+    local tabs = {}
+    local currentTab = nil
+    local uiVisible = true
+    
+    if not _G.PizdecWareOptionWindows then
+        _G.PizdecWareOptionWindows = {}
+    end
+    
+    if not _G.PizdecWareDropdownLists then
+        _G.PizdecWareDropdownLists = {}
+    end
+    
+    local function closeAllOptionWindows()
+        if _G.PizdecWareOptionWindows then
+            for i, window in pairs(_G.PizdecWareOptionWindows) do
+                if window and window.Parent then
+                    window.Visible = false
+                end
+            end
+        end
+    end
+    
+    local function closeAllDropdowns()
+        if _G.PizdecWareDropdownLists then
+            for i, dropdown in pairs(_G.PizdecWareDropdownLists) do
+                if dropdown and dropdown.list and dropdown.list.Parent then
+                    dropdown.list.Visible = false
+                    dropdown.isOpen = false
+                    if dropdown.arrow then
+                        dropdown.arrow.Rotation = 0
+                    end
+                end
+            end
+        end
+    end
+
+    -- Создаем основной UI
+    local UI = Instance.new("ScreenGui")
+    UI.Name = "UI"
+    UI.Parent = game:GetService("CoreGui")
+    UI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    -- Система уведомлений
+    local NotifiList = Instance.new("Frame")
+    NotifiList.Name = "NotifiList"
+    NotifiList.Parent = UI
+    NotifiList.BackgroundTransparency = 1
+    NotifiList.BorderSizePixel = 0
+    NotifiList.Position = UDim2.new(1, -260, 0.742, 0)
+    NotifiList.Size = UDim2.new(0, 250, 0, 150)
+    NotifiList.ZIndex = 3000
+
+    local notifications = {}
+    local notificationCount = 0
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = UI
+    MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    MainFrame.BackgroundTransparency = 0.200
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Position = UDim2.new(0.155007944, 0, 0.331683159, 0)
+    MainFrame.Size = UDim2.new(0, 584, 0, 360)
+
+    local UICorner = Instance.new("UICorner")
+    UICorner.Parent = MainFrame
+
+    -- Логотип
+    local LogoZone = Instance.new("Frame")
+    LogoZone.Name = "LogoZone"
+    LogoZone.Parent = MainFrame
+    LogoZone.BackgroundTransparency = 1.000
+    LogoZone.Position = UDim2.new(-0.00185185182, 0, 0, 0)
+    LogoZone.Size = UDim2.new(0, 140, 0, 40)
+
+    local Logo = Instance.new("ImageLabel")
+    Logo.Name = "Logo"
+    Logo.Parent = LogoZone
+    Logo.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Logo.BorderSizePixel = 0
+    Logo.Position = UDim2.new(0.0642857179, 0, 0.155555561, 0)
+    Logo.Size = UDim2.new(0, 30, 0, 30)
+    Logo.Image = "rbxassetid://125196888175857"
+
+    local PizdecWare = Instance.new("TextLabel")
+    PizdecWare.Name = "PizdecWare"
+    PizdecWare.Parent = Logo
+    PizdecWare.BackgroundTransparency = 1.000
+    PizdecWare.Position = UDim2.new(1, 0, 0, 0)
+    PizdecWare.Size = UDim2.new(0, 87, 0, 21)
+    PizdecWare.Font = Enum.Font.SourceSansBold
+    PizdecWare.Text = "PizdecWare"
+    PizdecWare.TextColor3 = Color3.fromRGB(255, 255, 255)
+    PizdecWare.TextSize = 16.000
+
+    local Game = Instance.new("TextLabel")
+    Game.Name = "Game"
+    Game.Parent = Logo
+    Game.BackgroundTransparency = 1.000
+    Game.Position = UDim2.new(1.29999995, 0, 0.366666675, 0)
+    Game.Size = UDim2.new(0, 78, 0, 19)
+    Game.Font = Enum.Font.SourceSansBold
+    Game.Text = config.Game or "Multicrew Tank"
+    Game.TextColor3 = Color3.fromRGB(161, 161, 161)
+    Game.TextSize = 10.000
+    Game.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Зона вкладок
+    local TabZone = Instance.new("Frame")
+    TabZone.Name = "TabZone"
+    TabZone.Parent = MainFrame
+    TabZone.BackgroundTransparency = 1.000
+    TabZone.Position = UDim2.new(0, 0, 0.128571406, 0)
+    TabZone.Size = UDim2.new(0, 140, 0, 280)
+
+    -- Контейнер элементов
+    local ElementContainer = Instance.new("Frame")
+    ElementContainer.Name = "ElementContainer"
+    ElementContainer.Parent = MainFrame
+    ElementContainer.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+    ElementContainer.BackgroundTransparency = 0.200
+    ElementContainer.BorderSizePixel = 0
+    ElementContainer.Position = UDim2.new(0.228658706, 0, 0, 0)
+    ElementContainer.Size = UDim2.new(0, 450, 0, 360)
+    ElementContainer.ClipsDescendants = true
+
+    local UICorner_7 = Instance.new("UICorner")
+    UICorner_7.Parent = ElementContainer
+    
+    local UIStroke_ElementContainer = Instance.new("UIStroke")
+    UIStroke_ElementContainer.Color = Color3.fromRGB(161, 161, 161)
+    UIStroke_ElementContainer.Thickness = 1
+    UIStroke_ElementContainer.Transparency = 0.8
+    UIStroke_ElementContainer.Parent = ElementContainer
+
+    local ElementZone = Instance.new("ScrollingFrame")
+    ElementZone.Name = "ElementZone"
+    ElementZone.Parent = ElementContainer
+    ElementZone.BackgroundTransparency = 1.000
+    ElementZone.Position = UDim2.new(-1.35633684e-07, 0, 0.113534883, 0)
+    ElementZone.Size = UDim2.new(0, 437, 0, 309)
+    ElementZone.ClipsDescendants = true
+    ElementZone.CanvasSize = UDim2.new(0, 0, 0, 1000)
+    ElementZone.ScrollBarThickness = 0
+    ElementZone.BorderSizePixel = 0
+    ElementZone.ScrollingDirection = Enum.ScrollingDirection.Y
+    ElementZone.ScrollingEnabled = true
+    ElementZone.Active = true
+    
+    local lastElementZonePosition = ElementZone.CanvasPosition.Y
+    
+
+    
+    ElementZone:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+        if ElementZone.CanvasPosition.Y ~= lastElementZonePosition then
+            closeAllOptionWindows()
+            closeAllDropdowns()
+            lastElementZonePosition = ElementZone.CanvasPosition.Y
+        end
+    end)
+    
+    -- Функция для пересчета позиций элементов
+    local function repositionElements()
+        local yOffset = 10
+        for _, child in pairs(ElementZone:GetChildren()) do
+            if child:IsA("Frame") and child.Visible then
+                child.Position = UDim2.new(0, 10, 0, yOffset)
+                yOffset = yOffset + child.Size.Y.Offset + 5
+            end
+        end
+        ElementZone.CanvasSize = UDim2.new(0, 0, 0, math.max(yOffset, 309))
+    end
+    
+
+    
+
+
+    local OpenedTab = Instance.new("TextLabel")
+    OpenedTab.Name = "OpenedTab"
+    OpenedTab.Parent = ElementContainer
+    OpenedTab.BackgroundTransparency = 1.000
+    OpenedTab.Position = UDim2.new(0.0213814285, 0, 0.0166666675, 0)
+    OpenedTab.Size = UDim2.new(0, 79, 0, 30)
+    OpenedTab.Font = Enum.Font.SourceSansBold
+    OpenedTab.Text = "Tab 1"
+    OpenedTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+    OpenedTab.TextSize = 16.000
+    OpenedTab.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Перетаскивание
+    local uiDragging = false
+    local dragStart = nil
+    local startPos = nil
+    local dragConnection = nil
+    
+    local sliderDragging = false
+    local dropdownClicking = false
+    
+    local function isMouseOverElement(element)
+        local mouse = UserInputService:GetMouseLocation()
+        local pos = element.AbsolutePosition
+        local size = element.AbsoluteSize
+        return mouse.X >= pos.X and mouse.X <= pos.X + size.X and mouse.Y >= pos.Y and mouse.Y <= pos.Y + size.Y
+    end
+    
+
+    
+    MainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and not sliderDragging then
+            closeAllOptionWindows()
+            uiDragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            
+            dragConnection = UserInputService.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement and uiDragging and not sliderDragging then
+                    local delta = input.Position - dragStart
+                    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                end
+            end)
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and uiDragging then
+            uiDragging = false
+            if dragConnection then
+                dragConnection:Disconnect()
+                dragConnection = nil
+            end
+        end
+    end)
+
+    -- Скрытие UI
+    UserInputService.InputBegan:Connect(function(input, processed)
+        if not processed and input.KeyCode.Name == (settings["hide_ui_bind"] or "RightShift") then
+            uiVisible = not uiVisible
+            UI.Enabled = uiVisible
+        end
+    end)
+
+    -- Профиль пользователя
+    local ProfileZone = Instance.new("Frame")
+    ProfileZone.Name = "ProfileZone"
+    ProfileZone.Parent = MainFrame
+    ProfileZone.BackgroundTransparency = 1.000
+    ProfileZone.Position = UDim2.new(0.00740763359, 0, 0.903205335, 0)
+    ProfileZone.Size = UDim2.new(0, 130, 0, 30)
+
+    local ImageLabel = Instance.new("ImageLabel")
+    ImageLabel.Parent = ProfileZone
+    ImageLabel.BackgroundTransparency = 1.000
+    ImageLabel.Position = UDim2.new(0.0307692308, 0, 0.13333334, 0)
+    ImageLabel.Size = UDim2.new(0, 22, 0, 22)
+    
+    -- Try to load custom avatar from _G.PWareAvatarPath, fallback to default
+    local avatarImage = "rbxassetid://7074334150"
+    if _G.PWareAvatarPath and getcustomasset and isfile and isfile(_G.PWareAvatarPath) then
+        avatarImage = getcustomasset(_G.PWareAvatarPath)
+    end
+    ImageLabel.Image = avatarImage
+
+    local UICorner_6 = Instance.new("UICorner")
+    UICorner_6.CornerRadius = UDim.new(1, 0)
+    UICorner_6.Parent = ImageLabel
+
+    local DiscordName = Instance.new("TextLabel")
+    DiscordName.Name = "DiscordName"
+    DiscordName.Parent = ImageLabel
+    DiscordName.BackgroundTransparency = 1.000
+    DiscordName.Position = UDim2.new(1.40908539, 0, -0.221815631, 0)
+    DiscordName.Size = UDim2.new(0, 88, 0, 23)
+    DiscordName.Font = Enum.Font.SourceSansBold
+    DiscordName.Text = _G.PWareDiscordName or config.DiscordName or "Unknown"
+    DiscordName.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DiscordName.TextSize = 12.000
+    DiscordName.TextXAlignment = Enum.TextXAlignment.Left
+
+    local UIGradient = Instance.new("UIGradient")
+    UIGradient.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0.00, 0.00), NumberSequenceKeypoint.new(0.50, 0.06), NumberSequenceKeypoint.new(1.00, 0.98)}
+    UIGradient.Parent = DiscordName
+
+    local LicenseTime = Instance.new("TextLabel")
+    LicenseTime.Name = "LicenseTime"
+    LicenseTime.Parent = ImageLabel
+    LicenseTime.BackgroundTransparency = 1.000
+    LicenseTime.Position = UDim2.new(1.40908539, 0, 0.363636374, 0)
+    LicenseTime.Size = UDim2.new(0, 63, 0, 18)
+    LicenseTime.Font = Enum.Font.SourceSansBold
+    LicenseTime.Text = _G.PWareLicenseTime or config.LicenseTime or "N/A"
+    LicenseTime.TextColor3 = Color3.fromRGB(161, 161, 161)
+    LicenseTime.TextSize = 10.000
+    LicenseTime.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Линии разделения
+    local Line = Instance.new("Frame")
+    Line.Name = "Line"
+    Line.Parent = MainFrame
+    Line.BackgroundColor3 = Color3.fromRGB(161, 161, 161)
+    Line.BackgroundTransparency = 0.700
+    Line.BorderSizePixel = 0
+    Line.Position = UDim2.new(0.0166666675, 0, 0.110757194, 0)
+    Line.Size = UDim2.new(0, 120, 0, 1)
+
+    local Line_2 = Instance.new("Frame")
+    Line_2.Name = "Line"
+    Line_2.Parent = MainFrame
+    Line_2.BackgroundColor3 = Color3.fromRGB(161, 161, 161)
+    Line_2.BackgroundTransparency = 0.700
+    Line_2.BorderSizePixel = 0
+    Line_2.Position = UDim2.new(0.0166666675, 0, 0.900767982, 0)
+    Line_2.Size = UDim2.new(0, 120, 0, 1)
+
+    local Line_10 = Instance.new("Frame")
+    Line_10.Name = "Line"
+    Line_10.Parent = MainFrame
+    Line_10.BackgroundColor3 = Color3.fromRGB(161, 161, 161)
+    Line_10.BackgroundTransparency = 0.700
+    Line_10.BorderSizePixel = 0
+    Line_10.Position = UDim2.new(0.229452059, 0, 0.110757448, 0)
+    Line_10.Size = UDim2.new(0, 450, 0, 1)
+
+    -- Создание TabSection Main один раз
+    local TabSectionName = Instance.new("TextLabel")
+    TabSectionName.Name = "TabSectionMain"
+    TabSectionName.Parent = TabZone
+    TabSectionName.BackgroundTransparency = 1.000
+    TabSectionName.Position = UDim2.new(0.0642857179, 0, 0, 0)
+    TabSectionName.Size = UDim2.new(0, 125, 0, 21)
+    TabSectionName.Font = Enum.Font.SourceSansBold
+    TabSectionName.Text = "Main"
+    TabSectionName.TextColor3 = Color3.fromRGB(161, 161, 161)
+    TabSectionName.TextSize = 12.000
+    TabSectionName.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Создание вкладок
+    function ui:CreateTab(name, imageId)
+        local tab = {}
+        local tabIndex = #tabs + 1
+        local yPos = 22 + (tabIndex - 1) * 25
+
+        local TabButton = Instance.new("TextButton")
+        TabButton.Name = "Tab" .. tabIndex
+        TabButton.Parent = TabZone
+        TabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        TabButton.BackgroundTransparency = tabIndex == 1 and 0.900 or 1.000
+        TabButton.BorderSizePixel = 0
+        TabButton.Position = UDim2.new(0.0642857179, 0, 0, yPos)
+        TabButton.Size = UDim2.new(0, 120, 0, 25)
+        TabButton.Font = Enum.Font.SourceSans
+        TabButton.Text = ""
+
+        local UICorner_3 = Instance.new("UICorner")
+        UICorner_3.Parent = TabButton
+
+        local TabLogo = Instance.new("ImageLabel")
+        TabLogo.Name = "TabLogo"
+        TabLogo.Parent = TabButton
+        TabLogo.BackgroundTransparency = 1.000
+        TabLogo.Position = UDim2.new(0.0666666701, 0, 0.200000003, 0)
+        TabLogo.Size = UDim2.new(0, 14, 0, 14)
+        TabLogo.Image = imageId or "rbxassetid://12614416478"
+        TabLogo.ImageColor3 = tabIndex == 1 and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(161, 161, 161)
+
+        local TabName = Instance.new("TextLabel")
+        TabName.Name = "TabName"
+        TabName.Parent = TabButton
+        TabName.BackgroundTransparency = 1.000
+        TabName.Position = UDim2.new(0.25, 0, -0.0399987809, 0)
+        TabName.Size = UDim2.new(0, 89, 0, 23)
+        TabName.Font = Enum.Font.SourceSansBold
+        TabName.Text = name
+        TabName.TextColor3 = tabIndex == 1 and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(161, 161, 161)
+        TabName.TextSize = 14.000
+        TabName.TextXAlignment = Enum.TextXAlignment.Left
+
+        local tabContainer = Instance.new("Frame")
+        tabContainer.Name = name .. "Container"
+        tabContainer.Parent = ElementZone
+        tabContainer.BackgroundTransparency = 1
+        tabContainer.Size = UDim2.new(1, -10, 0, 10000)
+        tabContainer.Visible = tabIndex == 1
+        
+
+
+        tabs[tabIndex] = {
+            button = TabButton,
+            image = TabLogo,
+            name = TabName,
+            container = tabContainer,
+            tabName = name
+        }
+        
+        if tabIndex == 1 then
+            currentTab = name
+            OpenedTab.Text = name
+        end
+
+        local function switchToTab()
+            closeAllOptionWindows()
+            closeAllDropdowns()
+            for i, t in pairs(tabs) do
+                t.button.BackgroundTransparency = 1.000
+                t.image.ImageColor3 = Color3.fromRGB(161, 161, 161)
+                t.name.TextColor3 = Color3.fromRGB(161, 161, 161)
+                t.container.Visible = false
+            end
+            
+            TabButton.BackgroundTransparency = 0.900
+            TabLogo.ImageColor3 = Color3.fromRGB(150, 17, 255)
+            TabName.TextColor3 = Color3.fromRGB(150, 17, 255)
+            tabContainer.Visible = true
+            currentTab = name
+            OpenedTab.Text = name
+        end
+        
+        TabButton.MouseButton1Click:Connect(switchToTab)
+        
+        TabButton.MouseEnter:Connect(function()
+            if currentTab ~= name then
+                TabButton.BackgroundTransparency = 0.950
+                TabLogo.ImageColor3 = Color3.fromRGB(255, 255, 255)
+                TabName.TextColor3 = Color3.fromRGB(255, 255, 255)
+            end
+        end)
+        
+        TabButton.MouseLeave:Connect(function()
+            if currentTab ~= name then
+                TabButton.BackgroundTransparency = 1.000
+                TabLogo.ImageColor3 = Color3.fromRGB(161, 161, 161)
+                TabName.TextColor3 = Color3.fromRGB(161, 161, 161)
+            end
+        end)
+
+        local leftSections = {}
+        local rightSections = {}
+        
+        local function updateSectionsPositions(side)
+            local sections = side == "left" and leftSections or rightSections
+            local yOffset = 0
+            
+            for i, sec in ipairs(sections) do
+                sec.sectionName.Position = UDim2.new(side == "left" and 0.0583 or 0.5712, 0, 0, yOffset)
+                sec.frame.Position = UDim2.new(side == "left" and 0.0205949657 or 0.533180773, 0, 0, yOffset + 20)
+                yOffset = yOffset + sec.frame.Size.Y.Offset + 30
+            end
+        end
+        
+        function tab:CreateSection(name, side)
+            local section = {}
+            side = side or (#leftSections <= #rightSections and "left" or "right")
+            
+            local yOffset = 0
+            local sections = side == "left" and leftSections or rightSections
+            for i, sec in ipairs(sections) do
+                yOffset = yOffset + sec.frame.Size.Y.Offset + 30
+            end
+            
+            local SectionName = Instance.new("TextLabel")
+            SectionName.Name = "SectionName"
+            SectionName.Parent = tabContainer
+            SectionName.BackgroundTransparency = 1.000
+            SectionName.Position = UDim2.new(side == "left" and 0.0583 or 0.5712, 0, 0, yOffset)
+            SectionName.Size = UDim2.new(0, 78, 0, 19)
+            SectionName.Font = Enum.Font.SourceSansBold
+            SectionName.Text = name
+            SectionName.TextColor3 = Color3.fromRGB(161, 161, 161)
+            SectionName.TextSize = 12.000
+            SectionName.TextXAlignment = Enum.TextXAlignment.Left
+            
+            local sectionFrame = Instance.new("Frame")
+            sectionFrame.Name = name
+            sectionFrame.Parent = tabContainer
+            sectionFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+            sectionFrame.BackgroundTransparency = 0.600
+            sectionFrame.BorderSizePixel = 0
+            sectionFrame.Size = UDim2.new(0, 210, 0, 25)
+            sectionFrame.Position = UDim2.new(side == "left" and 0.0205949657 or 0.533180773, 0, 0, yOffset + 20)
+            
+            section.frame = sectionFrame
+            section.side = side
+            section.sectionName = SectionName
+            
+            if side == "left" then
+                table.insert(leftSections, section)
+            else
+                table.insert(rightSections, section)
+            end
+
+            local UICorner_8 = Instance.new("UICorner")
+            UICorner_8.Parent = sectionFrame
+
+            local UIStroke_Section = Instance.new("UIStroke")
+            UIStroke_Section.Color = Color3.fromRGB(161, 161, 161)
+            UIStroke_Section.Thickness = 1
+            UIStroke_Section.Transparency = 0.9
+            UIStroke_Section.Parent = sectionFrame
+
+            local elementCount = 0
+
+            local elementHeights = {}
+            
+            local function updateSectionSize()
+                local totalHeight = 3
+                for i = 1, elementCount do
+                    totalHeight = totalHeight + (elementHeights[i] or 30)
+                end
+                sectionFrame.Size = UDim2.new(0, 210, 0, totalHeight)
+                updateSectionsPositions(side)
+                
+                local maxHeight = 0
+                for _, sec in ipairs(leftSections) do
+                    local bottom = sec.frame.Position.Y.Offset + sec.frame.Size.Y.Offset + 20
+                    if bottom > maxHeight then maxHeight = bottom end
+                end
+                for _, sec in ipairs(rightSections) do
+                    local bottom = sec.frame.Position.Y.Offset + sec.frame.Size.Y.Offset + 20
+                    if bottom > maxHeight then maxHeight = bottom end
+                end
+                
+                ElementZone.CanvasSize = UDim2.new(0, 0, 0, math.max(maxHeight + 100, 800))
+            end
+            
+            local function hideLastElementLine()
+                local zones = {}
+                for _, child in pairs(sectionFrame:GetChildren()) do
+                    if child.Name:find("Zone") then
+                        table.insert(zones, child)
+                    end
+                end
+                
+                for i, zone in ipairs(zones) do
+                    local line = zone:FindFirstChild("Line")
+                    if line then
+                        line.Visible = i < #zones
+                    end
+                end
+            end
+
+            function section:CreateToggle(name, default, callback, saveId)
+                local saveKey = saveId or name
+                local optionSaveEnabled
+                if settings["_option_save_" .. name] ~= nil then
+                    optionSaveEnabled = settings["_option_save_" .. name]
+                else
+                    optionSaveEnabled = false
+                end
+                
+                local currentValue
+                if optionSaveEnabled and settings[saveKey] ~= nil then
+                    currentValue = settings[saveKey]
+                else
+                    currentValue = default
+                end
+
+                local ToggleZone = Instance.new("Frame")
+                ToggleZone.Parent = sectionFrame
+                ToggleZone.BackgroundTransparency = 1.000
+                local yPos = 0
+                for i = 1, elementCount do
+                    yPos = yPos + (elementHeights[i] or 30)
+                end
+                ToggleZone.Position = UDim2.new(0, 0, 0, yPos)
+                elementHeights[elementCount + 1] = 30
+                ToggleZone.Size = UDim2.new(0, 210, 0, 30)
+
+                local ToggleName = Instance.new("TextLabel")
+                ToggleName.Parent = ToggleZone
+                ToggleName.BackgroundTransparency = 1.000
+                ToggleName.Position = UDim2.new(0.0512225926, 0, -0.0333333351, 0)
+                ToggleName.Size = UDim2.new(0, 79, 0, 30)
+                ToggleName.Font = Enum.Font.SourceSansBold
+                ToggleName.Text = name
+                ToggleName.TextColor3 = currentValue and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(161, 161, 161)
+                ToggleName.TextSize = 12.000
+                ToggleName.TextXAlignment = Enum.TextXAlignment.Left
+
+                local Line_3 = Instance.new("Frame")
+                Line_3.Name = "Line"
+                Line_3.Parent = ToggleZone
+                Line_3.BackgroundColor3 = Color3.fromRGB(161, 161, 161)
+                Line_3.BackgroundTransparency = 0.950
+                Line_3.BorderSizePixel = 0
+                Line_3.Position = UDim2.new(0.0540540554, 0, 0.993768334, 0)
+                Line_3.Size = UDim2.new(0, 190, 0, 1)
+
+                local Toggle = Instance.new("TextButton")
+                Toggle.Parent = ToggleZone
+                Toggle.BackgroundColor3 = currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(29, 29, 29)
+                Toggle.BorderSizePixel = 0
+                Toggle.Position = UDim2.new(0.761003792, 0, 0.233333334, 0)
+                Toggle.Size = UDim2.new(0, 30, 0, 16)
+                Toggle.Text = ""
+
+                local UICorner_9 = Instance.new("UICorner")
+                UICorner_9.CornerRadius = UDim.new(1, 0)
+                UICorner_9.Parent = Toggle
+
+                local ToggleMover = Instance.new("TextButton")
+                ToggleMover.Parent = Toggle
+                ToggleMover.BackgroundColor3 = currentValue and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(115, 115, 115)
+                ToggleMover.BorderSizePixel = 0
+                ToggleMover.Position = currentValue and UDim2.new(0.449999988, 2, 0.125, 0) or UDim2.new(0, 2, 0.125, 0)
+                ToggleMover.Size = UDim2.new(0, 12, 0, 12)
+                ToggleMover.Text = ""
+
+                local UICorner_10 = Instance.new("UICorner")
+                UICorner_10.CornerRadius = UDim.new(1, 0)
+                UICorner_10.Parent = ToggleMover
+
+                local Option = Instance.new("ImageButton")
+                Option.Name = "Option"
+                Option.Parent = ToggleZone
+                Option.BackgroundTransparency = 1.000
+                Option.BorderSizePixel = 0
+                Option.Position = UDim2.new(0.900803924, 0, 0.291727692, 0)
+                Option.Rotation = 90.000
+                Option.Size = UDim2.new(0, 14, 0, 13)
+                Option.Image = "rbxassetid://136882854117051"
+
+                local function toggleFunction()
+                    currentValue = not currentValue
+                    if optionSaveEnabled then
+                        settings[saveKey] = currentValue
+                        saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                    end
+                    
+                    Toggle.BackgroundColor3 = currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(29, 29, 29)
+                    ToggleMover.BackgroundColor3 = currentValue and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(115, 115, 115)
+                    ToggleMover.Position = currentValue and UDim2.new(0.449999988, 2, 0.125, 0) or UDim2.new(0, 2, 0.125, 0)
+                    ToggleName.TextColor3 = currentValue and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(161, 161, 161)
+                    
+                    if callback then callback(currentValue) end
+                end
+
+                Toggle.MouseButton1Click:Connect(toggleFunction)
+                ToggleMover.MouseButton1Click:Connect(toggleFunction)
+                
+                local optionWindow = nil
+                if not _G.PizdecWareOptionWindows then
+                    _G.PizdecWareOptionWindows = {}
+                end
+                Option.MouseButton1Click:Connect(function()
+                    if optionWindow and optionWindow.Visible then
+                        optionWindow.Visible = false
+                        return
+                    end
+                    
+                    optionWindow = Instance.new("Frame")
+                    optionWindow.Parent = UI
+                    table.insert(_G.PizdecWareOptionWindows, optionWindow)
+                    optionWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    optionWindow.BorderSizePixel = 0
+                    optionWindow.Position = UDim2.new(0, Option.AbsolutePosition.X + 14, 0, Option.AbsolutePosition.Y - 5)
+                    optionWindow.Size = UDim2.new(0, 68, 0, 23)
+                    optionWindow.ZIndex = 1000
+                    
+                    local windowCorner = Instance.new("UICorner")
+                    windowCorner.Parent = optionWindow
+                    
+                    local saveToggle = Instance.new("TextButton")
+                    saveToggle.Parent = optionWindow
+                    saveToggle.BackgroundColor3 = optionSaveEnabled and Color3.fromRGB(138, 43, 226) or Color3.fromRGB(89, 89, 89)
+                    saveToggle.BorderSizePixel = 0
+                    saveToggle.Position = UDim2.new(0, 8, 0, 4)
+                    saveToggle.Size = UDim2.new(0, 15, 0, 15)
+                    saveToggle.Font = Enum.Font.SourceSans
+                    saveToggle.Text = optionSaveEnabled and "✔" or ""
+                    saveToggle.TextColor3 = Color3.fromRGB(138, 43, 226)
+                    saveToggle.TextSize = 10
+                    saveToggle.ZIndex = 1001
+                    
+                    local saveLabel = Instance.new("TextLabel")
+                    saveLabel.Parent = optionWindow
+                    saveLabel.BackgroundTransparency = 1
+                    saveLabel.Position = UDim2.new(0, 30, 0, 2)
+                    saveLabel.Size = UDim2.new(0, 35, 0, 19)
+                    saveLabel.Font = Enum.Font.SourceSansBold
+                    saveLabel.Text = "Save"
+                    saveLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    saveLabel.TextSize = 13
+                    saveLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    saveLabel.ZIndex = 1001
+                    
+                    local toggleCorner = Instance.new("UICorner")
+                    toggleCorner.CornerRadius = UDim.new(0, 3)
+                    toggleCorner.Parent = saveToggle
+                    
+                    saveToggle.MouseButton1Click:Connect(function()
+                        optionSaveEnabled = not optionSaveEnabled
+                        settings["_option_save_" .. name] = optionSaveEnabled
+                        saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        if optionSaveEnabled then
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+                            saveToggle.Text = "✔"
+
+                            settings[saveKey] = currentValue
+                            saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        else
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
+                            saveToggle.Text = ""
+                        end
+                    end)
+                end)
+
+                if currentValue and callback then
+                    spawn(function() callback(currentValue) end)
+                end
+
+                elementCount = elementCount + 1
+                updateSectionSize()
+                hideLastElementLine()
+            end
+
+            function section:CreateButton(name, callback)
+                -- Проверяем, есть ли предыдущий элемент-кнопка для размещения в ряд
+                local lastElement = sectionFrame:GetChildren()[#sectionFrame:GetChildren()]
+                local canPlaceInRow = false
+                local buttonZone = nil
+                
+                if lastElement and lastElement.Name:find("ButtonZone") and lastElement:FindFirstChild("CanAddButton") then
+                    canPlaceInRow = true
+                    buttonZone = lastElement
+                end
+                
+                if not canPlaceInRow then
+                    -- Создаем новую зону для кнопок
+                    buttonZone = Instance.new("Frame")
+                    buttonZone.Name = "ButtonZone" .. (elementCount + 1)
+                    buttonZone.Parent = sectionFrame
+                    buttonZone.BackgroundTransparency = 1.000
+                    local yPos = 0
+                    for i = 1, elementCount do
+                        yPos = yPos + (elementHeights[i] or 30)
+                    end
+                    buttonZone.Position = UDim2.new(0, 0, 0, yPos)
+                    elementHeights[elementCount + 1] = 35
+                    buttonZone.Size = UDim2.new(0, 210, 0, 35)
+                    
+                    -- Маркер для возможности добавления второй кнопки
+                    local canAddButton = Instance.new("BoolValue")
+                    canAddButton.Name = "CanAddButton"
+                    canAddButton.Value = true
+                    canAddButton.Parent = buttonZone
+                    
+                    local Line_5 = Instance.new("Frame")
+                    Line_5.Name = "Line"
+                    Line_5.Parent = buttonZone
+                    Line_5.BackgroundColor3 = Color3.fromRGB(161, 161, 161)
+                    Line_5.BackgroundTransparency = 0.950
+                    Line_5.BorderSizePixel = 0
+                    Line_5.Position = UDim2.new(0.0540540554, 0, 0.993768334, 0)
+                    Line_5.Size = UDim2.new(0, 190, 0, 1)
+                    
+                    elementCount = elementCount + 1
+                end
+                
+                -- Определяем позицию кнопки
+                local buttonCount = 0
+                for _, child in pairs(buttonZone:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        buttonCount = buttonCount + 1
+                    end
+                end
+                
+                local xPos = buttonCount == 0 and 0.0666666701 or 0.528571427
+                local buttonWidth = 90
+                
+                local TextButton = Instance.new("TextButton")
+                TextButton.Parent = buttonZone
+                TextButton.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+                TextButton.BorderSizePixel = 0
+                TextButton.Position = UDim2.new(xPos, 0, 0.138095528, 0)
+                TextButton.Size = UDim2.new(0, buttonWidth, 0, 25)
+                TextButton.Font = Enum.Font.SourceSansBold
+                TextButton.Text = name
+                TextButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                TextButton.TextSize = 12.000
+
+                local UICorner_15 = Instance.new("UICorner")
+                UICorner_15.CornerRadius = UDim.new(0, 5)
+                UICorner_15.Parent = TextButton
+
+                TextButton.MouseButton1Click:Connect(function()
+                    if callback then callback() end
+                end)
+                
+                -- Убираем возможность добавления третьей кнопки
+                if buttonCount >= 1 then
+                    local canAddButton = buttonZone:FindFirstChild("CanAddButton")
+                    if canAddButton then
+                        canAddButton:Destroy()
+                    end
+                end
+
+                updateSectionSize()
+                hideLastElementLine()
+            end
+
+            function section:CreateSlider(name, min, max, default, callback, saveId)
+                local saveKey = saveId or name
+                local optionSaveEnabled
+                if settings["_option_save_" .. name] ~= nil then
+                    optionSaveEnabled = settings["_option_save_" .. name]
+                else
+                    optionSaveEnabled = false
+                end
+                
+                local currentValue
+                if optionSaveEnabled and settings[saveKey] ~= nil then
+                    currentValue = settings[saveKey]
+                else
+                    currentValue = default
+                end
+
+                local SliderZone = Instance.new("Frame")
+                SliderZone.Parent = sectionFrame
+                SliderZone.BackgroundTransparency = 1.000
+                local yPos = 0
+                for i = 1, elementCount do
+                    yPos = yPos + (elementHeights[i] or 30)
+                end
+                SliderZone.Position = UDim2.new(0, 0, 0, yPos)
+                elementHeights[elementCount + 1] = 30
+                SliderZone.Size = UDim2.new(0, 210, 0, 30)
+
+                local SliderName = Instance.new("TextLabel")
+                SliderName.Parent = SliderZone
+                SliderName.BackgroundTransparency = 1.000
+                SliderName.Position = UDim2.new(0.0512225926, 0, -0.0333333351, 0)
+                SliderName.Size = UDim2.new(0, 79, 0, 30)
+                SliderName.Font = Enum.Font.SourceSansBold
+                SliderName.Text = name
+                SliderName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                SliderName.TextSize = 12.000
+                SliderName.TextXAlignment = Enum.TextXAlignment.Left
+
+                local Line_6 = Instance.new("Frame")
+                Line_6.Name = "Line"
+                Line_6.Parent = SliderZone
+                Line_6.BackgroundColor3 = Color3.fromRGB(161, 161, 161)
+                Line_6.BackgroundTransparency = 0.950
+                Line_6.BorderSizePixel = 0
+                Line_6.Position = UDim2.new(0.0540540554, 0, 0.993768334, 0)
+                Line_6.Size = UDim2.new(0, 190, 0, 1)
+
+                local Option_4 = Instance.new("ImageButton")
+                Option_4.Name = "Option"
+                Option_4.Parent = SliderZone
+                Option_4.BackgroundTransparency = 1.000
+                Option_4.BorderSizePixel = 0
+                Option_4.Position = UDim2.new(0.905565798, 0, 0.258394361, 0)
+                Option_4.Rotation = 90.000
+                Option_4.Size = UDim2.new(0, 14, 0, 13)
+                Option_4.Image = "rbxassetid://136882854117051"
+
+                local SliderLine = Instance.new("Frame")
+                SliderLine.Parent = SliderZone
+                SliderLine.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                SliderLine.BorderSizePixel = 0
+                SliderLine.Position = UDim2.new(0.341698647, 0, 0.433333337, 0)
+                SliderLine.Size = UDim2.new(0, 80, 0, 4)
+
+                local UICorner_18 = Instance.new("UICorner")
+                UICorner_18.Parent = SliderLine
+                
+                local UIStroke_SliderLine = Instance.new("UIStroke")
+                UIStroke_SliderLine.Color = Color3.fromRGB(161, 161, 161)
+                UIStroke_SliderLine.Thickness = 1
+                UIStroke_SliderLine.Transparency = 0.9
+                UIStroke_SliderLine.Parent = SliderLine
+                
+                local SliderFill = Instance.new("Frame")
+                SliderFill.Parent = SliderLine
+                SliderFill.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+                SliderFill.BorderSizePixel = 0
+                SliderFill.Position = UDim2.new(0, 0, 0, 0)
+                SliderFill.Size = UDim2.new((currentValue - min) / (max - min), 0, 1, 0)
+                
+                local UICorner_Fill = Instance.new("UICorner")
+                UICorner_Fill.Parent = SliderFill
+
+                local Frame = Instance.new("Frame")
+                Frame.Parent = SliderLine
+                Frame.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+                Frame.BorderSizePixel = 0
+                Frame.Position = UDim2.new((currentValue - min) / (max - min) * 0.875, 0, -0.75, 0)
+                Frame.Size = UDim2.new(0, 10, 0, 10)
+
+                local UICorner_19 = Instance.new("UICorner")
+                UICorner_19.CornerRadius = UDim.new(1, 0)
+                UICorner_19.Parent = Frame
+
+                local SliderValue = Instance.new("Frame")
+                SliderValue.Name = "SliderValue"
+                SliderValue.Parent = SliderZone
+                SliderValue.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                SliderValue.BorderColor3 = Color3.fromRGB(161, 161, 161)
+                SliderValue.BorderSizePixel = 0
+                SliderValue.Position = UDim2.new(0.766666651, 0, 0.300000012, 0)
+                SliderValue.Size = UDim2.new(0, 30, 0, 12)
+                
+                local UIStroke_SliderValue = Instance.new("UIStroke")
+                UIStroke_SliderValue.Color = Color3.fromRGB(161, 161, 161)
+                UIStroke_SliderValue.Thickness = 1
+                UIStroke_SliderValue.Transparency = 0.9
+                UIStroke_SliderValue.Parent = SliderValue
+
+                local TextLabel = Instance.new("TextLabel")
+                TextLabel.Parent = SliderValue
+                TextLabel.BackgroundTransparency = 1.000
+                TextLabel.BorderSizePixel = 0
+                TextLabel.Position = UDim2.new(0.0270263664, 0, 0, 0)
+                TextLabel.Size = UDim2.new(0, 29, 0, 10)
+                TextLabel.Font = Enum.Font.SourceSans
+                TextLabel.Text = tostring(currentValue)
+                TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                TextLabel.TextSize = 10.000
+
+                local dragging = false
+                local connection
+                
+                local function updateSlider(input)
+                    local pos = math.clamp((input.Position.X - SliderLine.AbsolutePosition.X) / SliderLine.AbsoluteSize.X, 0, 1)
+                    currentValue = math.floor(min + (max - min) * pos)
+                    Frame.Position = UDim2.new(pos * 0.875, 0, -0.75, 0)
+                    SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+                    TextLabel.Text = tostring(currentValue)
+                    if optionSaveEnabled then
+                        settings[saveKey] = currentValue
+                        saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                    end
+                    if callback then callback(currentValue) end
+                end
+                
+                Frame.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dragging = true
+                        sliderDragging = true
+                        updateSlider(input)
+                        
+                        connection = UserInputService.InputChanged:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+                                updateSlider(input)
+                            end
+                        end)
+                    end
+                end)
+                
+                SliderLine.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dragging = true
+                        sliderDragging = true
+                        updateSlider(input)
+                        
+                        connection = UserInputService.InputChanged:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+                                updateSlider(input)
+                            end
+                        end)
+                    end
+                end)
+                
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dragging = false
+                        sliderDragging = false
+                        if connection then
+                            connection:Disconnect()
+                            connection = nil
+                        end
+                    end
+                end)
+                
+                -- Поддержка колесика мыши для слайдера
+                SliderZone.InputChanged:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseWheel then
+                        local mousePos = UserInputService:GetMouseLocation()
+                        local sliderPos = SliderZone.AbsolutePosition
+                        local sliderSize = SliderZone.AbsoluteSize
+                        
+                        if mousePos.X >= sliderPos.X and mousePos.X <= sliderPos.X + sliderSize.X and
+                           mousePos.Y >= sliderPos.Y and mousePos.Y <= sliderPos.Y + sliderSize.Y then
+                            local scrollDirection = input.Position.Z > 0 and 1 or -1
+                            local step = math.max(1, (max - min) / 100)
+                            currentValue = math.clamp(currentValue + scrollDirection * step, min, max)
+                            currentValue = math.floor(currentValue)
+                            
+                            local pos = (currentValue - min) / (max - min)
+                            Frame.Position = UDim2.new(pos * 0.875, 0, -0.75, 0)
+                            SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+                            TextLabel.Text = tostring(currentValue)
+                            
+                            if optionSaveEnabled then
+                                settings[saveKey] = currentValue
+                                saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                            end
+                            if callback then callback(currentValue) end
+                        end
+                    end
+                end)
+
+                local optionWindow = nil
+                if not _G.PizdecWareOptionWindows then
+                    _G.PizdecWareOptionWindows = {}
+                end
+                Option_4.MouseButton1Click:Connect(function()
+                    if optionWindow and optionWindow.Visible then
+                        optionWindow.Visible = false
+                        return
+                    end
+                    
+                    optionWindow = Instance.new("Frame")
+                    optionWindow.Parent = UI
+                    table.insert(_G.PizdecWareOptionWindows, optionWindow)
+                    optionWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    optionWindow.BorderSizePixel = 0
+                    optionWindow.Position = UDim2.new(0, Option_4.AbsolutePosition.X + 14, 0, Option_4.AbsolutePosition.Y - 5)
+                    optionWindow.Size = UDim2.new(0, 68, 0, 23)
+                    optionWindow.ZIndex = 1000
+                    
+                    local windowCorner = Instance.new("UICorner")
+                    windowCorner.Parent = optionWindow
+                    
+                    local saveToggle = Instance.new("TextButton")
+                    saveToggle.Parent = optionWindow
+                    saveToggle.BackgroundColor3 = optionSaveEnabled and Color3.fromRGB(138, 43, 226) or Color3.fromRGB(89, 89, 89)
+                    saveToggle.BorderSizePixel = 0
+                    saveToggle.Position = UDim2.new(0, 8, 0, 4)
+                    saveToggle.Size = UDim2.new(0, 15, 0, 15)
+                    saveToggle.Font = Enum.Font.SourceSans
+                    saveToggle.Text = optionSaveEnabled and "✔" or ""
+                    saveToggle.TextColor3 = Color3.fromRGB(138, 43, 226)
+                    saveToggle.TextSize = 10
+                    saveToggle.ZIndex = 1001
+                    
+                    local saveLabel = Instance.new("TextLabel")
+                    saveLabel.Parent = optionWindow
+                    saveLabel.BackgroundTransparency = 1
+                    saveLabel.Position = UDim2.new(0, 30, 0, 2)
+                    saveLabel.Size = UDim2.new(0, 35, 0, 19)
+                    saveLabel.Font = Enum.Font.SourceSansBold
+                    saveLabel.Text = "Save"
+                    saveLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    saveLabel.TextSize = 13
+                    saveLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    saveLabel.ZIndex = 1001
+                    
+                    local toggleCorner = Instance.new("UICorner")
+                    toggleCorner.CornerRadius = UDim.new(0, 3)
+                    toggleCorner.Parent = saveToggle
+                    
+                    saveToggle.MouseButton1Click:Connect(function()
+                        optionSaveEnabled = not optionSaveEnabled
+                        settings["_option_save_" .. name] = optionSaveEnabled
+                        saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        if optionSaveEnabled then
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+                            saveToggle.Text = "✔"
+
+                            settings[saveKey] = currentValue
+                            saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        else
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
+                            saveToggle.Text = ""
+                        end
+                    end)
+                end)
+
+                if callback then
+                    spawn(function() callback(currentValue) end)
+                end
+
+                elementCount = elementCount + 1
+                updateSectionSize()
+                hideLastElementLine()
+            end
+
+            function section:CreateDropdown(name, options, default, callback, saveId)
+                local saveKey = saveId or name
+                local optionSaveEnabled
+                if settings["_option_save_" .. name] ~= nil then
+                    optionSaveEnabled = settings["_option_save_" .. name]
+                else
+                    optionSaveEnabled = false
+                end
+                
+                local currentValue
+                if optionSaveEnabled and settings[saveKey] then
+                    currentValue = settings[saveKey]
+                else
+                    currentValue = default or options[1]
+                end
+
+                local DropdownZone = Instance.new("Frame")
+                DropdownZone.Parent = sectionFrame
+                DropdownZone.BackgroundTransparency = 1.000
+                local yPos = 0
+                for i = 1, elementCount do
+                    yPos = yPos + (elementHeights[i] or 30)
+                end
+                DropdownZone.Position = UDim2.new(0, 0, 0, yPos)
+                elementHeights[elementCount + 1] = 35
+                DropdownZone.Size = UDim2.new(0, 210, 0, 35)
+
+                local Line_9 = Instance.new("Frame")
+                Line_9.Name = "Line"
+                Line_9.Parent = DropdownZone
+                Line_9.BackgroundColor3 = Color3.fromRGB(161, 161, 161)
+                Line_9.BackgroundTransparency = 0.950
+                Line_9.BorderSizePixel = 0
+                Line_9.Position = UDim2.new(0.0540540554, 0, 0.993768334, 0)
+                Line_9.Size = UDim2.new(0, 190, 0, 1)
+
+                local DropdownName = Instance.new("TextLabel")
+                DropdownName.Parent = DropdownZone
+                DropdownName.BackgroundTransparency = 1.000
+                DropdownName.Position = UDim2.new(0.0540540405, 0, 0.0114222933, 0)
+                DropdownName.Size = UDim2.new(0, 76, 0, 34)
+                DropdownName.Font = Enum.Font.SourceSansBold
+                DropdownName.Text = name
+                DropdownName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                DropdownName.TextSize = 12.000
+                DropdownName.TextXAlignment = Enum.TextXAlignment.Left
+
+                local DropdownButton = Instance.new("Frame")
+                DropdownButton.Name = "DropdownButton"
+                DropdownButton.Parent = DropdownZone
+                DropdownButton.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                DropdownButton.BorderSizePixel = 0
+                DropdownButton.ClipsDescendants = true
+                DropdownButton.Position = UDim2.new(0.38, 0, 0.134209335, 0)
+                DropdownButton.Size = UDim2.new(0, 111, 0, 24)
+                
+                local Selected = Instance.new("TextLabel")
+                Selected.Name = "Selected"
+                Selected.Parent = DropdownButton
+                Selected.BackgroundTransparency = 1.000
+                Selected.Position = UDim2.new(0.0558559671, 0, 0.208333328, 0)
+                Selected.Size = UDim2.new(0, 104, 0, 13)
+                Selected.Font = Enum.Font.SourceSansBold
+                Selected.Text = currentValue
+                Selected.TextColor3 = Color3.fromRGB(255, 255, 255)
+                Selected.TextSize = 12.000
+                Selected.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local Blur = Instance.new("Frame")
+                Blur.Name = "Blur"
+                Blur.Parent = DropdownButton
+                Blur.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                Blur.BorderSizePixel = 0
+                Blur.Position = UDim2.new(0.641831398, 0, 0.208333328, 0)
+                Blur.Size = UDim2.new(0, 41, 0, 14)
+                
+                local UIGradient_2 = Instance.new("UIGradient")
+                UIGradient_2.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0.00, 1.00), NumberSequenceKeypoint.new(0.10, 0.75), NumberSequenceKeypoint.new(0.38, 0.19), NumberSequenceKeypoint.new(0.61, 0.00), NumberSequenceKeypoint.new(0.80, 0.02), NumberSequenceKeypoint.new(1.00, 0.00)}
+                UIGradient_2.Parent = Blur
+                
+                local Arrow = Instance.new("ImageButton")
+                Arrow.Name = "Arrow"
+                Arrow.Parent = DropdownButton
+                Arrow.BackgroundTransparency = 1.000
+                Arrow.Position = UDim2.new(0.867056608, 0, 0.265472412, 0)
+                Arrow.Size = UDim2.new(0, 10, 0, 10)
+                Arrow.Image = "rbxassetid://13116390649"
+                
+                local ClickDetector = Instance.new("TextButton")
+                ClickDetector.Parent = DropdownButton
+                ClickDetector.BackgroundTransparency = 1
+                ClickDetector.Size = UDim2.new(1, 0, 1, 0)
+                ClickDetector.Text = ""
+
+                local UICorner_23 = Instance.new("UICorner")
+                UICorner_23.CornerRadius = UDim.new(0, 4)
+                UICorner_23.Parent = DropdownButton
+                
+                local UIStroke_Dropdown = Instance.new("UIStroke")
+                UIStroke_Dropdown.Color = Color3.fromRGB(161, 161, 161)
+                UIStroke_Dropdown.Thickness = 1
+                UIStroke_Dropdown.Transparency = 0.9
+                UIStroke_Dropdown.Parent = DropdownButton
+
+                local dropdownData = {
+                    isOpen = false,
+                    list = nil,
+                    arrow = Arrow
+                }
+                
+                local maxHeight = math.min(#options, 4) * 20
+                
+                local optionsList = Instance.new("Frame")
+                optionsList.Parent = UI
+                optionsList.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                optionsList.BorderSizePixel = 0
+                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + 25, 105))
+                optionsList.ClipsDescendants = true
+                optionsList.Visible = false
+                optionsList.ZIndex = 2000
+                
+                -- Поле поиска
+                local searchInput = Instance.new("TextBox")
+                searchInput.Parent = optionsList
+                searchInput.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                searchInput.BorderSizePixel = 0
+                searchInput.Position = UDim2.new(0, 0, 0, 0)
+                searchInput.Size = UDim2.new(1, 0, 0, 20)
+                searchInput.Font = Enum.Font.SourceSans
+                searchInput.PlaceholderText = "Search..."
+                searchInput.PlaceholderColor3 = Color3.fromRGB(104, 104, 104)
+                searchInput.Text = ""
+                searchInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+                searchInput.TextSize = 11
+                searchInput.ZIndex = 2001
+                
+                local searchCorner = Instance.new("UICorner")
+                searchCorner.CornerRadius = UDim.new(0, 3)
+                searchCorner.Parent = searchInput
+                
+                local optionsContainer = Instance.new("Frame")
+                optionsContainer.Parent = optionsList
+                optionsContainer.BackgroundTransparency = 1
+                optionsContainer.Size = UDim2.new(1, 0, 0, 80)
+                optionsContainer.Position = UDim2.new(0, 0, 0, 20)
+                
+                local listLayout = Instance.new("UIListLayout")
+                listLayout.Parent = optionsContainer
+                listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                listLayout.FillDirection = Enum.FillDirection.Vertical
+                
+
+                
+                dropdownData.list = optionsList
+                table.insert(_G.PizdecWareDropdownLists, dropdownData)
+                
+                local listCorner = Instance.new("UICorner")
+                listCorner.Parent = optionsList
+                
+                local scrollOffset = 0
+                local maxScroll = math.max(0, (#options - 4) * 20)
+                
+                optionsList.Size = UDim2.new(0, 111, 0, math.min(#options * 20 + 25, 105))
+                local connections = {}
+                
+                optionsList.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dropdownClicking = true
+                    end
+                end)
+                
+                local optionButtons = {}
+                
+                for i, option in ipairs(options) do
+                    local optionButton = Instance.new("TextButton")
+                    optionButton.Parent = optionsContainer
+                    optionButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                    optionButton.BackgroundTransparency = 1
+                    optionButton.Size = UDim2.new(1, 0, 0, 20)
+                    optionButton.Font = Enum.Font.SourceSans
+                    optionButton.Text = option
+                    optionButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
+                    optionButton.TextSize = 12
+                    optionButton.ZIndex = 2001
+                    optionButton.LayoutOrder = i
+                    
+                    optionButtons[option] = optionButton
+                    
+                    optionButton.MouseEnter:Connect(function()
+                        optionButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                        optionButton.BackgroundTransparency = 0.95
+                    end)
+                    
+                    optionButton.MouseLeave:Connect(function()
+                        optionButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                        optionButton.BackgroundTransparency = 1
+                    end)
+                    
+                    optionButton.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            dropdownClicking = true
+                        end
+                    end)
+                    
+                    optionButton.MouseButton1Click:Connect(function()
+                        for opt, btn in pairs(optionButtons) do
+                            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        end
+                        
+                        currentValue = option
+                        Selected.Text = option
+                        optionButton.TextColor3 = Color3.fromRGB(150, 17, 255)
+                        
+                        if optionSaveEnabled then
+                            settings[saveKey] = currentValue
+                            saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        end
+                        if callback then callback(currentValue) end
+                    end)
+                end
+                
+                -- Функциональность поиска
+                searchInput:GetPropertyChangedSignal("Text"):Connect(function()
+                    local searchText = searchInput.Text:lower()
+                    
+                    for _, child in pairs(optionsContainer:GetChildren()) do
+                        if child:IsA("TextButton") then
+                            child:Destroy()
+                        end
+                    end
+                    
+                    for i, option in ipairs(options) do
+                        if searchText == "" or option:lower():find(searchText, 1, true) then
+                            local newButton = Instance.new("TextButton")
+                            newButton.Parent = optionsContainer
+                            newButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                            newButton.BackgroundTransparency = 1
+                            newButton.Size = UDim2.new(1, 0, 0, 20)
+                            newButton.Font = Enum.Font.SourceSans
+                            newButton.Text = option
+                            newButton.TextColor3 = option == currentValue and Color3.fromRGB(150, 17, 255) or Color3.fromRGB(255, 255, 255)
+                            newButton.TextSize = 12
+                            newButton.ZIndex = 2001
+                            newButton.LayoutOrder = i
+                            
+                            newButton.MouseEnter:Connect(function()
+                                newButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                                newButton.BackgroundTransparency = 0.95
+                            end)
+                            
+                            newButton.MouseLeave:Connect(function()
+                                newButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                                newButton.BackgroundTransparency = 1
+                            end)
+                            
+                            newButton.MouseButton1Click:Connect(function()
+                                currentValue = option
+                                Selected.Text = option
+                                if optionSaveEnabled then
+                                    settings[saveKey] = currentValue
+                                    saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                                end
+                                if callback then callback(currentValue) end
+                                
+                                dropdownData.isOpen = false
+                                Arrow.Rotation = 0
+                                optionsList.Visible = false
+                            end)
+                        end
+                    end
+                end)
+                
+
+                
+                local updatePosition
+                updatePosition = RunService.Heartbeat:Connect(function()
+                    if optionsList and optionsList.Parent and ClickDetector and ClickDetector.Parent and dropdownData.isOpen then
+                        local buttonPos = ClickDetector.AbsolutePosition
+                        optionsList.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + 24)
+                    elseif not optionsList or not optionsList.Parent then
+                        updatePosition:Disconnect()
+                    end
+                end)
+                
+                optionsList.MouseEnter:Connect(function()
+                    ElementZone.ScrollingEnabled = false
+                end)
+                
+                optionsList.MouseLeave:Connect(function()
+                    ElementZone.ScrollingEnabled = true
+                end)
+                
+                local scrollBar = Instance.new("Frame")
+                scrollBar.Parent = optionsList
+                scrollBar.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                scrollBar.BorderSizePixel = 0
+                scrollBar.Position = UDim2.new(1, -4, 0, 20)
+                scrollBar.Size = UDim2.new(0, 4, 0, 80)
+                scrollBar.ClipsDescendants = true
+                scrollBar.ZIndex = 1002
+                
+                local thumbHeight = math.min(0.8, math.max(0.1, 80 / (#options * 20)))
+                
+                local scrollThumb = Instance.new("Frame")
+                scrollThumb.Parent = scrollBar
+                scrollThumb.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+                scrollThumb.BorderSizePixel = 0
+                scrollThumb.Size = UDim2.new(1, 0, thumbHeight, 0)
+                scrollThumb.Position = UDim2.new(0, 0, 0, 0)
+                scrollThumb.ZIndex = 1003
+                
+                local thumbDragging = false
+                local dragStartOffset = 0
+                local dragConnection = nil
+                
+                scrollThumb.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        thumbDragging = true
+                        local mouseY = UserInputService:GetMouseLocation().Y
+                        dragStartOffset = mouseY - scrollThumb.AbsolutePosition.Y
+                        
+                        dragConnection = UserInputService.InputChanged:Connect(function(input)
+                            if thumbDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                                local mouseY = UserInputService:GetMouseLocation().Y
+                                local barY = scrollBar.AbsolutePosition.Y
+                                local barHeight = scrollBar.AbsoluteSize.Y
+                                local thumbHeightPixels = scrollThumb.AbsoluteSize.Y
+                                
+                                local targetY = mouseY - dragStartOffset - barY
+                                local maxY = barHeight - thumbHeightPixels
+                                local clampedY = math.clamp(targetY, 0, maxY)
+                                
+                                scrollThumb.Position = UDim2.new(0, 0, 0, clampedY)
+                                
+                                if maxScroll > 0 and maxY > 0 then
+                                    scrollOffset = (clampedY / maxY) * maxScroll
+                                    optionsContainer.Position = UDim2.new(0, 0, 0, 20 - scrollOffset)
+                                end
+                            end
+                        end)
+                    end
+                end)
+                
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 and thumbDragging then
+                        thumbDragging = false
+                        if dragConnection then
+                            dragConnection:Disconnect()
+                            dragConnection = nil
+                        end
+                    end
+                end)
+                
+                optionsList.InputChanged:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseWheel and optionsList.Visible then
+                        local scrollDirection = input.Position.Z > 0 and -1 or 1
+                        scrollOffset = math.clamp(scrollOffset + scrollDirection * 20, 0, maxScroll)
+                        optionsContainer.Position = UDim2.new(0, 0, 0, 20 - scrollOffset)
+                        
+                        if maxScroll > 0 then
+                            local thumbPos = (scrollOffset / maxScroll) * (1 - thumbHeight)
+                            scrollThumb.Position = UDim2.new(0, 0, thumbPos, 0)
+                        end
+                    end
+                end)
+                
+
+                
+                ClickDetector.MouseButton1Click:Connect(function()
+                    dropdownData.isOpen = not dropdownData.isOpen
+                    if dropdownData.isOpen then
+                        Arrow.Rotation = 180
+                        scrollOffset = 0
+                        optionsContainer.Position = UDim2.new(0, 0, 0, 20)
+                    else
+                        Arrow.Rotation = 0
+                    end
+                    optionsList.Visible = dropdownData.isOpen
+                end)
+
+                local Option_Dropdown = Instance.new("ImageButton")
+                Option_Dropdown.Name = "Option"
+                Option_Dropdown.Parent = DropdownZone
+                Option_Dropdown.BackgroundTransparency = 1.000
+                Option_Dropdown.BorderSizePixel = 0
+                Option_Dropdown.Position = UDim2.new(0.905565798, 0, 0.4, -2)
+                Option_Dropdown.Rotation = 90.000
+                Option_Dropdown.Size = UDim2.new(0, 14, 0, 13)
+                Option_Dropdown.Image = "rbxassetid://136882854117051"
+
+                local optionWindow = nil
+                if not _G.PizdecWareOptionWindows then
+                    _G.PizdecWareOptionWindows = {}
+                end
+                Option_Dropdown.MouseButton1Click:Connect(function()
+                    if optionWindow and optionWindow.Visible then
+                        optionWindow.Visible = false
+                        return
+                    end
+                    
+                    optionWindow = Instance.new("Frame")
+                    optionWindow.Parent = UI
+                    table.insert(_G.PizdecWareOptionWindows, optionWindow)
+                    optionWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    optionWindow.BorderSizePixel = 0
+                    optionWindow.Position = UDim2.new(0, Option_Dropdown.AbsolutePosition.X + 14, 0, Option_Dropdown.AbsolutePosition.Y - 5)
+                    optionWindow.Size = UDim2.new(0, 68, 0, 23)
+                    optionWindow.ZIndex = 1000
+                    
+                    local windowCorner = Instance.new("UICorner")
+                    windowCorner.Parent = optionWindow
+                    
+                    local saveToggle = Instance.new("TextButton")
+                    saveToggle.Parent = optionWindow
+                    saveToggle.BackgroundColor3 = optionSaveEnabled and Color3.fromRGB(138, 43, 226) or Color3.fromRGB(89, 89, 89)
+                    saveToggle.BorderSizePixel = 0
+                    saveToggle.Position = UDim2.new(0, 8, 0, 4)
+                    saveToggle.Size = UDim2.new(0, 15, 0, 15)
+                    saveToggle.Font = Enum.Font.SourceSans
+                    saveToggle.Text = optionSaveEnabled and "✔" or ""
+                    saveToggle.TextColor3 = Color3.fromRGB(138, 43, 226)
+                    saveToggle.TextSize = 10
+                    saveToggle.ZIndex = 1001
+                    
+                    local saveLabel = Instance.new("TextLabel")
+                    saveLabel.Parent = optionWindow
+                    saveLabel.BackgroundTransparency = 1
+                    saveLabel.Position = UDim2.new(0, 30, 0, 2)
+                    saveLabel.Size = UDim2.new(0, 35, 0, 19)
+                    saveLabel.Font = Enum.Font.SourceSansBold
+                    saveLabel.Text = "Save"
+                    saveLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    saveLabel.TextSize = 13
+                    saveLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    saveLabel.ZIndex = 1001
+                    
+                    local toggleCorner = Instance.new("UICorner")
+                    toggleCorner.CornerRadius = UDim.new(0, 3)
+                    toggleCorner.Parent = saveToggle
+                    
+                    saveToggle.MouseButton1Click:Connect(function()
+                        optionSaveEnabled = not optionSaveEnabled
+                        settings["_option_save_" .. name] = optionSaveEnabled
+                        saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        if optionSaveEnabled then
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+                            saveToggle.Text = "✔"
+
+                            settings[saveKey] = currentValue
+                            saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        else
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
+                            saveToggle.Text = ""
+                        end
+                    end)
+                end)
+
+                if callback then
+                    spawn(function() callback(currentValue) end)
+                end
+
+                elementCount = elementCount + 1
+                updateSectionSize()
+                hideLastElementLine()
+            end
+
+            function section:CreateBind(name, default, callback, saveId)
+                local saveKey = saveId or name
+                local optionSaveEnabled
+                if settings["_option_save_" .. name] ~= nil then
+                    optionSaveEnabled = settings["_option_save_" .. name]
+                else
+                    optionSaveEnabled = false
+                end
+                
+                local currentBind
+                if optionSaveEnabled and settings[saveKey] then
+                    currentBind = settings[saveKey]
+                else
+                    currentBind = default or "None"
+                end
+
+                local BindZone = Instance.new("Frame")
+                BindZone.Parent = sectionFrame
+                BindZone.BackgroundTransparency = 1.000
+                local yPos = 0
+                for i = 1, elementCount do
+                    yPos = yPos + (elementHeights[i] or 30)
+                end
+                BindZone.Position = UDim2.new(0, 0, 0, yPos)
+                elementHeights[elementCount + 1] = 30
+                BindZone.Size = UDim2.new(0, 210, 0, 30)
+
+                local BindName = Instance.new("TextLabel")
+                BindName.Parent = BindZone
+                BindName.BackgroundTransparency = 1.000
+                BindName.Position = UDim2.new(0.0512225926, 0, -0.0333333351, 0)
+                BindName.Size = UDim2.new(0, 79, 0, 30)
+                BindName.Font = Enum.Font.SourceSansBold
+                BindName.Text = name
+                BindName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                BindName.TextSize = 12.000
+                BindName.TextXAlignment = Enum.TextXAlignment.Left
+
+                local Line_7 = Instance.new("Frame")
+                Line_7.Name = "Line"
+                Line_7.Parent = BindZone
+                Line_7.BackgroundColor3 = Color3.fromRGB(161, 161, 161)
+                Line_7.BackgroundTransparency = 0.950
+                Line_7.BorderSizePixel = 0
+                Line_7.Position = UDim2.new(0.0540540554, 0, 0.993768334, 0)
+                Line_7.Size = UDim2.new(0, 190, 0, 1)
+
+                local Option_5 = Instance.new("ImageButton")
+                Option_5.Name = "Option"
+                Option_5.Parent = BindZone
+                Option_5.BackgroundTransparency = 1.000
+                Option_5.BorderSizePixel = 0
+                Option_5.Position = UDim2.new(0.905565798, 0, 0.233333334, 0)
+                Option_5.Rotation = 90.000
+                Option_5.Size = UDim2.new(0, 14, 0, 13)
+                Option_5.Image = "rbxassetid://136882854117051"
+
+                local Bind = Instance.new("TextButton")
+                Bind.Parent = BindZone
+                Bind.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                Bind.BorderSizePixel = 0
+                Bind.Position = UDim2.new(0.600000024, 0, 0.233333334, 0)
+                Bind.Size = UDim2.new(0, 60, 0, 15)
+                Bind.Font = Enum.Font.SourceSansBold
+                Bind.Text = tostring(currentBind):gsub("Enum%.KeyCode%.", "")
+                Bind.TextColor3 = Color3.fromRGB(255, 255, 255)
+                Bind.TextSize = 12.000
+
+                local UICorner_20 = Instance.new("UICorner")
+                UICorner_20.CornerRadius = UDim.new(0, 4)
+                UICorner_20.Parent = Bind
+                
+                local UIStroke_Bind = Instance.new("UIStroke")
+                UIStroke_Bind.Color = Color3.fromRGB(161, 161, 161)
+                UIStroke_Bind.Thickness = 1
+                UIStroke_Bind.Transparency = 0.9
+                UIStroke_Bind.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                UIStroke_Bind.Parent = Bind
+
+                local isBinding = false
+                
+                Bind.MouseButton1Click:Connect(function()
+                    if not isBinding then
+                        isBinding = true
+                        Bind.Text = "..."
+                        
+                        local connection
+                        connection = UserInputService.InputBegan:Connect(function(input, processed)
+                            if not processed then
+                                local keyName = input.KeyCode.Name
+                                if keyName ~= "Unknown" then
+                                    currentBind = keyName
+                                    Bind.Text = tostring(keyName):gsub("Enum%.KeyCode%.", "")
+                                    if optionSaveEnabled then
+                                        settings[saveKey] = currentBind
+                                        saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                                    end
+                                    isBinding = false
+                                    connection:Disconnect()
+                                end
+                            end
+                        end)
+                    end
+                end)
+                
+                UserInputService.InputBegan:Connect(function(input, processed)
+                    if not processed and input.KeyCode.Name == currentBind and callback then
+                        callback()
+                    end
+                end)
+
+                local optionWindow = nil
+                if not _G.PizdecWareOptionWindows then
+                    _G.PizdecWareOptionWindows = {}
+                end
+                Option_5.MouseButton1Click:Connect(function()
+                    if optionWindow and optionWindow.Visible then
+                        optionWindow.Visible = false
+                        return
+                    end
+                    
+                    optionWindow = Instance.new("Frame")
+                    optionWindow.Parent = UI
+                    table.insert(_G.PizdecWareOptionWindows, optionWindow)
+                    optionWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    optionWindow.BorderSizePixel = 0
+                    optionWindow.Position = UDim2.new(0, Option_5.AbsolutePosition.X + 14, 0, Option_5.AbsolutePosition.Y - 5)
+                    optionWindow.Size = UDim2.new(0, 68, 0, 23)
+                    optionWindow.ZIndex = 1000
+                    
+                    local windowCorner = Instance.new("UICorner")
+                    windowCorner.Parent = optionWindow
+                    
+                    local saveToggle = Instance.new("TextButton")
+                    saveToggle.Parent = optionWindow
+                    saveToggle.BackgroundColor3 = optionSaveEnabled and Color3.fromRGB(138, 43, 226) or Color3.fromRGB(89, 89, 89)
+                    saveToggle.BorderSizePixel = 0
+                    saveToggle.Position = UDim2.new(0, 8, 0, 4)
+                    saveToggle.Size = UDim2.new(0, 15, 0, 15)
+                    saveToggle.Font = Enum.Font.SourceSans
+                    saveToggle.Text = optionSaveEnabled and "✔" or ""
+                    saveToggle.TextColor3 = Color3.fromRGB(138, 43, 226)
+                    saveToggle.TextSize = 10
+                    saveToggle.ZIndex = 1001
+                    
+                    local saveLabel = Instance.new("TextLabel")
+                    saveLabel.Parent = optionWindow
+                    saveLabel.BackgroundTransparency = 1
+                    saveLabel.Position = UDim2.new(0, 30, 0, 2)
+                    saveLabel.Size = UDim2.new(0, 35, 0, 19)
+                    saveLabel.Font = Enum.Font.SourceSansBold
+                    saveLabel.Text = "Save"
+                    saveLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    saveLabel.TextSize = 13
+                    saveLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    saveLabel.ZIndex = 1001
+                    
+                    local toggleCorner = Instance.new("UICorner")
+                    toggleCorner.CornerRadius = UDim.new(0, 3)
+                    toggleCorner.Parent = saveToggle
+                    
+                    saveToggle.MouseButton1Click:Connect(function()
+                        optionSaveEnabled = not optionSaveEnabled
+                        settings["_option_save_" .. name] = optionSaveEnabled
+                        saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        if optionSaveEnabled then
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+                            saveToggle.Text = "✔"
+
+                            settings[saveKey] = currentBind
+                            saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        else
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
+                            saveToggle.Text = ""
+                        end
+                    end)
+                end)
+
+                elementCount = elementCount + 1
+                updateSectionSize()
+                hideLastElementLine()
+            end
+
+            function section:CreateInput(name, placeholder, callback, saveId)
+                local saveKey = saveId or name
+                local optionSaveEnabled
+                if settings["_option_save_" .. name] ~= nil then
+                    optionSaveEnabled = settings["_option_save_" .. name]
+                else
+                    optionSaveEnabled = false
+                end
+                
+                local currentValue
+                if optionSaveEnabled and settings[saveKey] then
+                    currentValue = settings[saveKey]
+                else
+                    currentValue = ""
+                end
+
+                local InputZone = Instance.new("Frame")
+                InputZone.Parent = sectionFrame
+                InputZone.BackgroundTransparency = 1.000
+                local yPos = 0
+                for i = 1, elementCount do
+                    yPos = yPos + (elementHeights[i] or 30)
+                end
+                InputZone.Position = UDim2.new(0, 0, 0, yPos)
+                elementHeights[elementCount + 1] = 40
+                InputZone.Size = UDim2.new(0, 210, 0, 40)
+
+                local InputName = Instance.new("TextLabel")
+                InputName.Parent = InputZone
+                InputName.BackgroundTransparency = 1.000
+                InputName.Position = UDim2.new(0.137346908, 0, -0.00832824688, 0)
+                InputName.Size = UDim2.new(0, 79, 0, 14)
+                InputName.Font = Enum.Font.SourceSans
+                InputName.Text = name
+                InputName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                InputName.TextSize = 10.000
+                InputName.TextXAlignment = Enum.TextXAlignment.Left
+
+                local Line_8 = Instance.new("Frame")
+                Line_8.Name = "Line"
+                Line_8.Parent = InputZone
+                Line_8.BackgroundColor3 = Color3.fromRGB(161, 161, 161)
+                Line_8.BackgroundTransparency = 0.950
+                Line_8.BorderSizePixel = 0
+                Line_8.Position = UDim2.new(0.0540540554, 0, 0.993768334, 0)
+                Line_8.Size = UDim2.new(0, 190, 0, 1)
+
+                local Input = Instance.new("TextBox")
+                Input.Parent = InputZone
+                Input.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                Input.BorderSizePixel = 0
+                Input.Position = UDim2.new(0.0909999982, 0, 0.349999994, 0)
+                Input.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local UIPadding = Instance.new("UIPadding")
+                UIPadding.PaddingLeft = UDim.new(0, 5)
+                UIPadding.Parent = Input
+                
+                local UIStroke_Input = Instance.new("UIStroke")
+                UIStroke_Input.Color = Color3.fromRGB(161, 161, 161)
+                UIStroke_Input.Thickness = 1
+                UIStroke_Input.Transparency = 0.9
+                UIStroke_Input.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                UIStroke_Input.Parent = Input
+                Input.Size = UDim2.new(0, 170, 0, 20)
+                Input.Font = Enum.Font.SourceSansBold
+                Input.Text = currentValue
+                Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+                Input.TextSize = 10.000
+                Input.TextXAlignment = Enum.TextXAlignment.Left
+                Input.PlaceholderText = placeholder or "Input..."
+                Input.PlaceholderColor3 = Color3.fromRGB(104, 104, 104)
+
+                local UICorner_21 = Instance.new("UICorner")
+                UICorner_21.CornerRadius = UDim.new(0, 4)
+                UICorner_21.Parent = Input
+
+                Input.FocusLost:Connect(function()
+                    currentValue = Input.Text
+                    if optionSaveEnabled then
+                        settings[saveKey] = currentValue
+                        saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                    end
+                    if callback then callback(currentValue) end
+                end)
+
+                local Option_6 = Instance.new("ImageButton")
+                Option_6.Name = "Option"
+                Option_6.Parent = InputZone
+                Option_6.BackgroundTransparency = 1.000
+                Option_6.BorderSizePixel = 0
+                Option_6.Position = UDim2.new(0.905565798, 0, 0.375, 2)
+                Option_6.Rotation = 90.000
+                Option_6.Size = UDim2.new(0, 14, 0, 13)
+                Option_6.Image = "rbxassetid://136882854117051"
+
+                local optionWindow = nil
+                if not _G.PizdecWareOptionWindows then
+                    _G.PizdecWareOptionWindows = {}
+                end
+                Option_6.MouseButton1Click:Connect(function()
+                    if optionWindow and optionWindow.Visible then
+                        optionWindow.Visible = false
+                        return
+                    end
+                    
+                    optionWindow = Instance.new("Frame")
+                    optionWindow.Parent = UI
+                    table.insert(_G.PizdecWareOptionWindows, optionWindow)
+                    optionWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    optionWindow.BorderSizePixel = 0
+                    optionWindow.Position = UDim2.new(0, Option_6.AbsolutePosition.X + 14, 0, Option_6.AbsolutePosition.Y - 5)
+                    optionWindow.Size = UDim2.new(0, 68, 0, 23)
+                    optionWindow.ZIndex = 1000
+                    
+                    local windowCorner = Instance.new("UICorner")
+                    windowCorner.Parent = optionWindow
+                    
+                    local saveToggle = Instance.new("TextButton")
+                    saveToggle.Parent = optionWindow
+                    saveToggle.BackgroundColor3 = optionSaveEnabled and Color3.fromRGB(138, 43, 226) or Color3.fromRGB(89, 89, 89)
+                    saveToggle.BorderSizePixel = 0
+                    saveToggle.Position = UDim2.new(0, 8, 0, 4)
+                    saveToggle.Size = UDim2.new(0, 15, 0, 15)
+                    saveToggle.Font = Enum.Font.SourceSans
+                    saveToggle.Text = optionSaveEnabled and "✔" or ""
+                    saveToggle.TextColor3 = Color3.fromRGB(138, 43, 226)
+                    saveToggle.TextSize = 10
+                    saveToggle.ZIndex = 1001
+                    
+                    local saveLabel = Instance.new("TextLabel")
+                    saveLabel.Parent = optionWindow
+                    saveLabel.BackgroundTransparency = 1
+                    saveLabel.Position = UDim2.new(0, 30, 0, 2)
+                    saveLabel.Size = UDim2.new(0, 35, 0, 19)
+                    saveLabel.Font = Enum.Font.SourceSansBold
+                    saveLabel.Text = "Save"
+                    saveLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    saveLabel.TextSize = 13
+                    saveLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    saveLabel.ZIndex = 1001
+                    
+                    local toggleCorner = Instance.new("UICorner")
+                    toggleCorner.CornerRadius = UDim.new(0, 3)
+                    toggleCorner.Parent = saveToggle
+                    
+                    saveToggle.MouseButton1Click:Connect(function()
+                        optionSaveEnabled = not optionSaveEnabled
+                        settings["_option_save_" .. name] = optionSaveEnabled
+                        saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        if optionSaveEnabled then
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+                            saveToggle.Text = "✔"
+
+                            settings[saveKey] = currentValue
+                            saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        else
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
+                            saveToggle.Text = ""
+                        end
+                    end)
+                end)
+
+                elementCount = elementCount + 1
+                updateSectionSize()
+                hideLastElementLine()
+            end
+
+            function section:CreateMultiDropdown(name, options, defaults, callback, saveId)
+                local saveKey = saveId or name
+                local selectedOptions = settings[saveKey] or defaults or {}
+
+                local DropdownZone = Instance.new("Frame")
+                DropdownZone.Parent = sectionFrame
+                DropdownZone.BackgroundTransparency = 1.000
+                local yPos = 0
+                for i = 1, elementCount do
+                    yPos = yPos + (elementHeights[i] or 30)
+                end
+                DropdownZone.Position = UDim2.new(0, 0, 0, yPos)
+                elementHeights[elementCount + 1] = 35
+                DropdownZone.Size = UDim2.new(0, 210, 0, 35)
+
+                local Line_9 = Instance.new("Frame")
+                Line_9.Name = "Line"
+                Line_9.Parent = DropdownZone
+                Line_9.BackgroundColor3 = Color3.fromRGB(161, 161, 161)
+                Line_9.BackgroundTransparency = 0.950
+                Line_9.BorderSizePixel = 0
+                Line_9.Position = UDim2.new(0.0540540554, 0, 0.993768334, 0)
+                Line_9.Size = UDim2.new(0, 190, 0, 1)
+
+                local DropdownName = Instance.new("TextLabel")
+                DropdownName.Parent = DropdownZone
+                DropdownName.BackgroundTransparency = 1.000
+                DropdownName.Position = UDim2.new(0.0540540405, 0, 0.0114222933, 0)
+                DropdownName.Size = UDim2.new(0, 76, 0, 34)
+                DropdownName.Font = Enum.Font.SourceSansBold
+                DropdownName.Text = name
+                DropdownName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                DropdownName.TextSize = 12.000
+                DropdownName.TextXAlignment = Enum.TextXAlignment.Left
+
+                local DropdownButton = Instance.new("Frame")
+                DropdownButton.Name = "DropdownButton"
+                DropdownButton.Parent = DropdownZone
+                DropdownButton.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                DropdownButton.BorderSizePixel = 0
+                DropdownButton.ClipsDescendants = true
+                DropdownButton.Position = UDim2.new(0.422651023, 0, 0.134209335, 0)
+                DropdownButton.Size = UDim2.new(0, 111, 0, 24)
+                
+                local UICorner_23 = Instance.new("UICorner")
+                UICorner_23.CornerRadius = UDim.new(0, 4)
+                UICorner_23.Parent = DropdownButton
+                
+                local UIStroke_Dropdown = Instance.new("UIStroke")
+                UIStroke_Dropdown.Color = Color3.fromRGB(161, 161, 161)
+                UIStroke_Dropdown.Thickness = 1
+                UIStroke_Dropdown.Transparency = 0.9
+                UIStroke_Dropdown.Parent = DropdownButton
+                
+                local Selected = Instance.new("TextLabel")
+                Selected.Name = "Selected"
+                Selected.Parent = DropdownButton
+                Selected.BackgroundTransparency = 1.000
+                Selected.Position = UDim2.new(0.0558559671, 0, 0.208333328, 0)
+                Selected.Size = UDim2.new(0, 104, 0, 13)
+                Selected.Font = Enum.Font.SourceSansBold
+                Selected.Text = #selectedOptions > 0 and table.concat(selectedOptions, ", ") or "None"
+                Selected.TextColor3 = Color3.fromRGB(255, 255, 255)
+                Selected.TextSize = 12.000
+                Selected.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local Blur = Instance.new("Frame")
+                Blur.Name = "Blur"
+                Blur.Parent = DropdownButton
+                Blur.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
+                Blur.BorderSizePixel = 0
+                Blur.Position = UDim2.new(0.641831398, 0, 0.208333328, 0)
+                Blur.Size = UDim2.new(0, 41, 0, 14)
+                
+                local UIGradient_2 = Instance.new("UIGradient")
+                UIGradient_2.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0.00, 1.00), NumberSequenceKeypoint.new(0.10, 0.75), NumberSequenceKeypoint.new(0.38, 0.19), NumberSequenceKeypoint.new(0.61, 0.00), NumberSequenceKeypoint.new(0.80, 0.02), NumberSequenceKeypoint.new(1.00, 0.00)}
+                UIGradient_2.Parent = Blur
+                
+                local Arrow = Instance.new("ImageButton")
+                Arrow.Name = "Arrow"
+                Arrow.Parent = DropdownButton
+                Arrow.BackgroundTransparency = 1.000
+                Arrow.Position = UDim2.new(0.867056608, 0, 0.265472412, 0)
+                Arrow.Size = UDim2.new(0, 10, 0, 10)
+                Arrow.Image = "rbxassetid://13116390649"
+                
+                local ClickDetector = Instance.new("TextButton")
+                ClickDetector.Parent = DropdownButton
+                ClickDetector.BackgroundTransparency = 1
+                ClickDetector.Size = UDim2.new(1, 0, 1, 0)
+                ClickDetector.Text = ""
+
+                local maxHeight = math.min(#options, 4) * 20
+                
+                local isOpen = false
+                local optionsList = Instance.new("ScrollingFrame")
+                optionsList.Parent = UI
+                optionsList.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                optionsList.BorderSizePixel = 0
+                optionsList.Size = UDim2.new(0, 111, 0, maxHeight)
+                optionsList.CanvasSize = UDim2.new(0, 0, 0, 0)
+                optionsList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+                optionsList.ScrollBarThickness = 4
+                optionsList.ScrollBarImageColor3 = Color3.fromRGB(150, 17, 255)
+                optionsList.ScrollingDirection = Enum.ScrollingDirection.Y
+                optionsList.ElasticBehavior = Enum.ElasticBehavior.Never
+                optionsList.ScrollingEnabled = true
+                optionsList.Visible = false
+                optionsList.ZIndex = 1000
+                
+                local listCorner = Instance.new("UICorner")
+                listCorner.Parent = optionsList
+                
+                local listLayout = Instance.new("UIListLayout")
+                listLayout.Parent = optionsList
+                listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                
+                for i, option in ipairs(options) do
+                    local optionButton = Instance.new("TextButton")
+                    optionButton.Parent = optionsList
+                    optionButton.BackgroundTransparency = 1
+                    optionButton.Size = UDim2.new(1, 0, 0, 20)
+                    optionButton.LayoutOrder = i
+                    optionButton.Font = Enum.Font.SourceSans
+                    optionButton.Text = option
+                    optionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    optionButton.TextSize = 12
+                    optionButton.ZIndex = 1001
+                    
+                    local function isSelected(opt)
+                        for _, selected in pairs(selectedOptions) do
+                            if selected == opt then return true end
+                        end
+                        return false
+                    end
+                    
+                    if isSelected(option) then
+                        optionButton.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+                        optionButton.BackgroundTransparency = 0.7
+                    end
+                    
+                    optionButton.MouseButton1Click:Connect(function()
+                        if isSelected(option) then
+                            for j, selected in pairs(selectedOptions) do
+                                if selected == option then
+                                    table.remove(selectedOptions, j)
+                                    break
+                                end
+                            end
+                            optionButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                            optionButton.BackgroundTransparency = 1
+                        else
+                            table.insert(selectedOptions, option)
+                            optionButton.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+                            optionButton.BackgroundTransparency = 0.7
+                        end
+                        
+                        Selected.Text = #selectedOptions > 0 and table.concat(selectedOptions, ", ") or "None"
+                        settings[saveKey] = selectedOptions
+                        saveSettings(config.FileName or "pizdecware_settings.json", settings)
+                        if callback then callback(selectedOptions) end
+                    end)
+                end
+                
+                ClickDetector.MouseButton1Click:Connect(function()
+                    isOpen = not isOpen
+                    if isOpen then
+                        local absolutePos = ClickDetector.AbsolutePosition
+                        optionsList.Position = UDim2.new(0, absolutePos.X, 0, absolutePos.Y + 24)
+                    end
+                    optionsList.Visible = isOpen
+                end)
+
+                if callback then
+                    spawn(function() callback(selectedOptions) end)
+                end
+
+                elementCount = elementCount + 1
+                updateSectionSize()
+                hideLastElementLine()
+            end
+
+            return section
+        end
+
+        return tab
+    end
+
+    function ui:Notify(text, duration)
+        duration = duration or 3
+        notificationCount = notificationCount + 1
+        
+        -- Сдвигаем все существующие уведомления вверх
+        for i, notif in ipairs(notifications) do
+            if notif and notif.Parent then
+                local currentY = notif.Position.Y.Scale
+                notif:TweenPosition(UDim2.new(0, 0, currentY - 0.2, 0), "Out", "Quad", 0.2, true)
+            end
+        end
+        
+        local notification = Instance.new("Frame")
+        notification.Name = "Notification" .. notificationCount
+        notification.Parent = NotifiList
+        notification.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+        notification.BackgroundTransparency = 0.4
+        notification.BorderSizePixel = 0
+        notification.ClipsDescendants = true
+        notification.Position = UDim2.new(1, 0, 0.827, 0)
+        notification.Size = UDim2.new(0, 250, 0, 25)
+        notification.ZIndex = 3001
+        
+        local corner = Instance.new("UICorner")
+        corner.Parent = notification
+        
+        local point = Instance.new("Frame")
+        point.Name = "Point"
+        point.Parent = notification
+        point.BackgroundColor3 = Color3.fromRGB(150, 17, 255)
+        point.BorderSizePixel = 0
+        point.Position = UDim2.new(0.101, 0, -0.28, 0)
+        point.Size = UDim2.new(0, 2, 0, 55)
+        
+        local pointCorner = Instance.new("UICorner")
+        pointCorner.CornerRadius = UDim.new(1, 0)
+        pointCorner.Parent = point
+        
+        local image = Instance.new("ImageLabel")
+        image.Name = "ImageNotifi"
+        image.Parent = notification
+        image.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+        image.BorderSizePixel = 0
+        image.Position = UDim2.new(0.02, 0, 0.2, 0)
+        image.Size = UDim2.new(0, 15, 0, 15)
+        image.ZIndex = 3002
+        image.Image = "rbxassetid://125196888175857"
+        
+        local imageCorner = Instance.new("UICorner")
+        imageCorner.CornerRadius = UDim.new(0, 4)
+        imageCorner.Parent = image
+        
+        -- Парсинг текста для поддержки жирного шрифта
+        local function parseText(inputText)
+            local parts = {}
+            local currentPos = 1
+            
+            while currentPos <= #inputText do
+                local boldStart = string.find(inputText, "%[b%]", currentPos)
+                if boldStart then
+                    -- Добавляем обычный текст до [b]
+                    if boldStart > currentPos then
+                        table.insert(parts, {text = string.sub(inputText, currentPos, boldStart - 1), bold = false})
+                    end
+                    
+                    -- Ищем закрывающий тег
+                    local boldEnd = string.find(inputText, "%[/b%]", boldStart + 3)
+                    if boldEnd then
+                        -- Добавляем жирный текст
+                        local boldText = string.sub(inputText, boldStart + 3, boldEnd - 1)
+                        table.insert(parts, {text = boldText, bold = true})
+                        currentPos = boldEnd + 4
+                    else
+                        -- Нет закрывающего тега, добавляем как обычный текст
+                        table.insert(parts, {text = string.sub(inputText, boldStart), bold = false})
+                        break
+                    end
+                else
+                    -- Нет больше тегов, добавляем оставшийся текст
+                    table.insert(parts, {text = string.sub(inputText, currentPos), bold = false})
+                    break
+                end
+            end
+            
+            return parts
+        end
+        
+        local textParts = parseText(text)
+        local xOffset = 0
+        
+        for i, part in ipairs(textParts) do
+            local textLabel = Instance.new("TextLabel")
+            textLabel.Name = "NotifiText" .. i
+            textLabel.Parent = notification
+            textLabel.BackgroundTransparency = 1
+            textLabel.BorderSizePixel = 0
+            textLabel.Position = UDim2.new(0, 33 + xOffset, 0, 2)
+            textLabel.Size = UDim2.new(0, 200, 0, 19)
+            textLabel.Font = part.bold and Enum.Font.SourceSansBold or Enum.Font.SourceSans
+            textLabel.Text = part.text
+            textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            textLabel.TextSize = 13
+            textLabel.TextXAlignment = Enum.TextXAlignment.Left
+            textLabel.ZIndex = 3002
+            
+            -- Вычисляем ширину текста для следующего элемента
+            local textBounds = game:GetService("TextService"):GetTextSize(part.text, 13, textLabel.Font, Vector2.new(200, 19))
+            xOffset = xOffset + textBounds.X
+        end
+        
+        table.insert(notifications, notification)
+        
+        -- Анимация появления
+        notification:TweenPosition(UDim2.new(0, 0, 0.827, 0), "Out", "Quad", 0.3, true)
+        
+        -- Удаление через duration секунд
+        spawn(function()
+            wait(duration)
+            notification:TweenPosition(UDim2.new(1, 0, notification.Position.Y.Scale, 0), "In", "Quad", 0.3, true)
+            wait(0.3)
+            
+            -- Удаляем из списка
+            for i, notif in ipairs(notifications) do
+                if notif == notification then
+                    table.remove(notifications, i)
+                    break
+                end
+            end
+            
+            notification:Destroy()
+        end)
+    end
+
+    return ui
+end
+
+function create(elementType, config)
+    local saveName = config.SaveName
+    
+    if elementType == "Toggle" then
+        return config.Section:CreateToggle(
+            config.Name or "Toggle",
+            config.Default or false,
+            config.Callback,
+            saveName
+        )
+    elseif elementType == "Button" then
+        return config.Section:CreateButton(
+            config.Name or "Button",
+            config.Callback
+        )
+    elseif elementType == "Slider" then
+        return config.Section:CreateSlider(
+            config.Name or "Slider",
+            config.Min or 0,
+            config.Max or 100,
+            config.Default or 0,
+            config.Callback,
+            saveName
+        )
+    elseif elementType == "Dropdown" then
+        return config.Section:CreateDropdown(
+            config.Name or "Dropdown",
+            config.Options or {"Option 1"},
+            config.Default,
+            config.Callback,
+            saveName
+        )
+    elseif elementType == "Bind" then
+        return config.Section:CreateBind(
+            config.Name or "Bind",
+            config.Default or "None",
+            config.Callback,
+            saveName
+        )
+    elseif elementType == "Input" then
+        return config.Section:CreateInput(
+            config.Name or "Input",
+            config.Placeholder or "Input...",
+            config.Callback,
+            saveName
+        )
+    end
+end
+
+_G.create = create
+
+return UILibrary
