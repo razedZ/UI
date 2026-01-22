@@ -1330,7 +1330,7 @@ function UILibrary.new(config)
                     end)
                     
                     optionButton.MouseButton1Click:Connect(function()
-                        for opt, btn in pairs(optionButtons) do
+                        for _, btn in pairs(optionButtons) do
                             btn.TextColor3 = Color3.fromRGB(255, 255, 255)
                         end
                         
@@ -1344,7 +1344,6 @@ function UILibrary.new(config)
                         end
                         if callback then callback(currentValue) end
                         
-                        -- Закрываем дропдаун
                         dropdownData.isOpen = false
                         Arrow.Rotation = 0
                         optionsList.Visible = false
