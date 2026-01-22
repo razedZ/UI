@@ -1518,6 +1518,7 @@ function UILibrary.new(config)
                 ClickDetector.MouseButton1Click:Connect(function()
                     dropdownData.isOpen = not dropdownData.isOpen
                     if dropdownData.isOpen then
+                        optionButtons = {}
                         Arrow.Rotation = 180
                         scrollOffset = 0
                         optionsContainer.Position = UDim2.new(0, 0, 0, 20)
