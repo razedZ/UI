@@ -115,6 +115,10 @@ function UILibrary.new(config)
     Logo.Size = UDim2.new(0, 30, 0, 30)
     Logo.Image = "rbxassetid://116059932418685"
 
+    local LogoCorner = Instance.new("UICorner")
+    LogoCorner.CornerRadius = UDim.new(0, 6)
+    LogoCorner.Parent = Logo
+
     local PizdecWare = Instance.new("TextLabel")
     PizdecWare.Name = "PizdecWare"
     PizdecWare.Parent = Logo
