@@ -113,7 +113,7 @@ function UILibrary.new(config)
     Logo.BorderSizePixel = 0
     Logo.Position = UDim2.new(0.0642857179, 0, 0.155555561, 0)
     Logo.Size = UDim2.new(0, 30, 0, 30)
-    Logo.Image = "rbxassetid://125196888175857"
+    Logo.Image = "rbxassetid://116059932418685"
 
     local PizdecWare = Instance.new("TextLabel")
     PizdecWare.Name = "PizdecWare"
