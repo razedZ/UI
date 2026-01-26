@@ -258,25 +258,6 @@ function UILibrary.new(config)
         end
     end)
     
-    MainFrame.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            uiDragging = false
-            if dragConnection then
-                dragConnection:Disconnect()
-                dragConnection = nil
-            end
-        end
-    end)
-    
-    return ui
-end
-
-return UILibrarydelta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-                end
-            end)
-        end
-    end)
-    
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 and uiDragging then
             uiDragging = false
@@ -969,12 +950,7 @@ return UILibrarydelta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
                 TextLabel.Position = UDim2.new(0.0270263664, 0, 0, 0)
                 TextLabel.Size = UDim2.new(0, 29, 0, 10)
                 TextLabel.Font = Enum.Font.SourceSans
-                -- Форматируем начальное значение
-                if currentValue % 1 == 0 then
-                    TextLabel.Text = tostring(math.floor(currentValue))
-                else
-                    TextLabel.Text = string.format("%.2f", currentValue)
-                end
+                TextLabel.Text = tostring(currentValue)
                 TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
                 TextLabel.TextSize = 10.000
 
@@ -983,21 +959,10 @@ return UILibrarydelta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
                 
                 local function updateSlider(input)
                     local pos = math.clamp((input.Position.X - SliderLine.AbsolutePosition.X) / SliderLine.AbsoluteSize.X, 0, 1)
-                    currentValue = min + (max - min) * pos
-                    -- Округляем до 2 знаков после запятой для дробных чисел
-                    if currentValue % 1 ~= 0 then
-                        currentValue = math.floor(currentValue * 100) / 100
-                    else
-                        currentValue = math.floor(currentValue)
-                    end
+                    currentValue = math.floor(min + (max - min) * pos)
                     Frame.Position = UDim2.new(pos * 0.875, 0, -0.75, 0)
                     SliderFill.Size = UDim2.new(pos, 0, 1, 0)
-                    -- Форматируем отображение значения
-                    if currentValue % 1 == 0 then
-                        TextLabel.Text = tostring(math.floor(currentValue))
-                    else
-                        TextLabel.Text = string.format("%.2f", currentValue)
-                    end
+                    TextLabel.Text = tostring(currentValue)
                     if optionSaveEnabled then
                         settings[saveKey] = currentValue
                         saveSettings(config.FileName or "pizdecware_settings.json", settings)
@@ -1054,24 +1019,14 @@ return UILibrarydelta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
                         if mousePos.X >= sliderPos.X and mousePos.X <= sliderPos.X + sliderSize.X and
                            mousePos.Y >= sliderPos.Y and mousePos.Y <= sliderPos.Y + sliderSize.Y then
                             local scrollDirection = input.Position.Z > 0 and 1 or -1
-                            local step = (max - min) / 100
+                            local step = math.max(1, (max - min) / 100)
                             currentValue = math.clamp(currentValue + scrollDirection * step, min, max)
-                            -- Округляем до 2 знаков после запятой для дробных чисел
-                            if currentValue % 1 ~= 0 then
-                                currentValue = math.floor(currentValue * 100) / 100
-                            else
-                                currentValue = math.floor(currentValue)
-                            end
+                            currentValue = math.floor(currentValue)
                             
                             local pos = (currentValue - min) / (max - min)
                             Frame.Position = UDim2.new(pos * 0.875, 0, -0.75, 0)
                             SliderFill.Size = UDim2.new(pos, 0, 1, 0)
-                            -- Форматируем отображение значения
-                            if currentValue % 1 == 0 then
-                                TextLabel.Text = tostring(math.floor(currentValue))
-                            else
-                                TextLabel.Text = string.format("%.2f", currentValue)
-                            end
+                            TextLabel.Text = tostring(currentValue)
                             
                             if optionSaveEnabled then
                                 settings[saveKey] = currentValue
